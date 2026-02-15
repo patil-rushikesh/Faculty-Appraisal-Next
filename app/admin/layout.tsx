@@ -3,6 +3,7 @@ import { ReactNode, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import AdminSidebar from "@/components/admin-sidebar";
 import { DashboardHeader } from "@/components/dashboard-header";
+import { Toaster } from "@/components/ui/toaster";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -40,23 +41,26 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }, [pathname]);
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
-      <AdminSidebar 
-        isOpen={sidebarOpen}
-        isExpanded={sidebarExpanded}
-        onClose={() => setSidebarOpen(false)}
-        onToggle={() => setSidebarExpanded(!sidebarExpanded)}
-      />
-      <main className={`flex-1 overflow-y-auto transition-all duration-300 ${sidebarExpanded ? 'lg:ml-72' : 'lg:ml-20'}`}>
-        <div className="min-h-screen p-4 md:p-6 lg:p-8">
-          <DashboardHeader
-            title={header.title}
-            description={header.description}
-            onMenuClick={() => setSidebarOpen(true)}
-          />
-          {children}
-        </div>
-      </main>
-    </div>
+    <>
+      <div className="flex h-screen bg-background overflow-hidden">
+        <AdminSidebar 
+          isOpen={sidebarOpen}
+          isExpanded={sidebarExpanded}
+          onClose={() => setSidebarOpen(false)}
+          onToggle={() => setSidebarExpanded(!sidebarExpanded)}
+        />
+        <main className={`flex-1 overflow-y-auto transition-all duration-300 ${sidebarExpanded ? 'lg:ml-72' : 'lg:ml-20'}`}>
+          <div className="min-h-screen p-4 md:p-6 lg:p-8">
+            <DashboardHeader
+              title={header.title}
+              description={header.description}
+              onMenuClick={() => setSidebarOpen(true)}
+            />
+            {children}
+          </div>
+        </main>
+      </div>
+      <Toaster />
+    </>
   );
 }

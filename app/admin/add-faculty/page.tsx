@@ -29,12 +29,15 @@ import { useAuth } from "@/app/AuthProvider";
 import { tokenManager } from "@/lib/api-client";
 
 interface FormData {
+  userId: string;
   name: string;
-  dept: string;
+  department: string;
   role: string;
-  mail: string;
-  mob: string;
-  desg: string;
+  email: string;
+  mobile: string;
+  designation: string;
+  status: string;
+  password: string;
   higherDean: string;
   date_added: string;
   year: string;
@@ -56,26 +59,26 @@ export default function AddFacultyPage() {
   const [showDeanSuggestions, setShowDeanSuggestions] = useState(false);
 
   const departments = [
-    "Computer",
-    "IT",
-    "Mechanical",
-    "Civil",
-    "ENTC",
-    "Computer(Regional)",
-    "AIML",
-    "ASH",
+    { label: 'Computer Engineering', value: 'computer' },
+    { label: 'Information Technology', value: 'it' },
+    { label: 'Mechanical Engineering', value: 'mechanical' },
+    { label: 'Civil Engineering', value: 'civil' },
+    { label: 'Electronics and Telecommunication Engineering', value: 'entc' },
+    { label: 'Computer Engineering (Regional)', value: 'computer_regional' },
+    { label: 'Artificial Intelligence and Machine Learning', value: 'aiml' },
+    { label: 'Applied Sciences and Humanities', value: 'ash' },
   ];
 
-  const designations = [
-    "Associate Dean",
-    "Director",
-    "HOD",
-    "Dean",
-    "Admin",
-    "Faculty",
+  const roles = [
+    { label: 'Associate Dean', value: 'associate_dean' },
+    { label: 'Director', value: 'director' },
+    { label: 'HOD', value: 'hod' },
+    { label: 'Dean', value: 'dean' },
+    { label: 'Admin', value: 'admin' },
+    { label: 'Faculty', value: 'faculty' },
   ];
 
-  const roles = ["Professor", "Assistant Professor", "Associate Professor"];
+  const designations = ["Professor", "Assistant Professor", "Associate Professor"];
 
   const calculateAcademicYear = (dateString: string): string => {
     if (!dateString) return "";
@@ -96,13 +99,16 @@ export default function AddFacultyPage() {
     const today = new Date();
     const formattedDate = today.toISOString().split("T")[0];
     return {
+      userId: "",
       name: "",
-      dept: "",
+      department: "",
       role: "",
-      mail: "",
-      mob: "",
-      desg: "",
+      email: "",
+      mobile: "",
+      designation: "",
       higherDean: "",
+      status: "active",
+      password: "",
       date_added: formattedDate,
       year: calculateAcademicYear(formattedDate),
     };
@@ -161,6 +167,7 @@ export default function AddFacultyPage() {
     setFormData((prev) => ({
       ...prev,
       [field]: value,
+      ...(field === "userId" && { password: value }),
     }));
 
     if (field === "higherDean" && value.length > 0) {
@@ -191,13 +198,16 @@ export default function AddFacultyPage() {
 
     // Validation
     if (
+      !formData.userId ||
       !formData.name ||
-      !formData.dept ||
+      !formData.department ||
       !formData.role ||
-      !formData.mail ||
-      !formData.mob ||
-      !formData.desg
+      !formData.email ||
+      !formData.mobile ||
+      !formData.designation ||
+      !formData.password
     ) {
+      console.warn("Validation failed: Missing required fields", formData);
       toast({
         title: "Validation Error",
         description: "Please fill in all required fields",
@@ -208,7 +218,7 @@ export default function AddFacultyPage() {
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(formData.mail)) {
+    if (!emailRegex.test(formData.email)) {
       toast({
         title: "Validation Error",
         description: "Please enter a valid email address",
@@ -219,7 +229,7 @@ export default function AddFacultyPage() {
 
     // Phone validation
     const phoneRegex = /^[0-9]{10}$/;
-    if (!phoneRegex.test(formData.mob)) {
+    if (!phoneRegex.test(formData.mobile)) {
       toast({
         title: "Validation Error",
         description: "Please enter a valid 10-digit mobile number",
@@ -240,7 +250,7 @@ export default function AddFacultyPage() {
         headers["Authorization"] = `Bearer ${token}`;
       }
 
-      const response = await fetch("/api/admin/faculty", {
+      const response = await fetch("/api/admin/create-user", {
         method: "POST",
         headers,
         credentials: "include",
@@ -249,7 +259,8 @@ export default function AddFacultyPage() {
 
       const data = await response.json();
 
-      if (data.success) {
+      // Check if response is successful (2xx status codes)
+      if (response.ok || response.status === 201) {
         setSuccessMessage(
           `Faculty ${formData.name} has been added successfully!`
         );
@@ -257,7 +268,7 @@ export default function AddFacultyPage() {
         resetForm();
         toast({
           title: "Success",
-          description: "Faculty added successfully",
+          description: data.message || "Faculty added successfully",
         });
       } else {
         toast({
@@ -282,22 +293,25 @@ export default function AddFacultyPage() {
     const today = new Date();
     const formattedDate = today.toISOString().split("T")[0];
     setFormData({
+      userId: "",
       name: "",
-      dept: "",
+      department: "",
       role: "",
-      mail: "",
-      mob: "",
-      desg: "",
+      email: "",
+      mobile: "",
+      designation: "",
       higherDean: "",
       date_added: formattedDate,
       year: calculateAcademicYear(formattedDate),
+      status: "active",
+      password: "",
     });
   };
 
   const filteredDeanSuggestions = deanSuggestions.filter(
     (dean) =>
       dean.name.toLowerCase().includes(formData.higherDean.toLowerCase()) &&
-      dean.dept === formData.dept
+      dean.dept === formData.department
   );
 
   return (
@@ -315,6 +329,21 @@ export default function AddFacultyPage() {
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* User ID */}
+              <div className="space-y-2">
+                <Label htmlFor="userId" className="text-sm font-semibold text-gray-800">
+                  User ID <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="userId"
+                  placeholder="Enter user ID"
+                  value={formData.userId}
+                  onChange={(e) => handleInputChange(e, "userId")}
+                  className="h-11 bg-white border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-base"
+                  required
+                />
+              </div>
+
               {/* Name */}
               <div className="space-y-2">
                 <Label htmlFor="name" className="text-sm font-semibold text-gray-800">
@@ -332,15 +361,15 @@ export default function AddFacultyPage() {
 
               {/* Email */}
               <div className="space-y-2">
-                <Label htmlFor="mail" className="text-sm font-semibold text-gray-800">
+                <Label htmlFor="email" className="text-sm font-semibold text-gray-800">
                   Email <span className="text-red-500">*</span>
                 </Label>
                 <Input
-                  id="mail"
+                  id="email"
                   type="email"
                   placeholder="name@example.com"
-                  value={formData.mail}
-                  onChange={(e) => handleInputChange(e, "mail")}
+                  value={formData.email}
+                  onChange={(e) => handleInputChange(e, "email")}
                   className="h-11 bg-white border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-base"
                   required
                 />
@@ -355,8 +384,8 @@ export default function AddFacultyPage() {
                   id="mob"
                   type="tel"
                   placeholder="10-digit mobile number"
-                  value={formData.mob}
-                  onChange={(e) => handleInputChange(e, "mob")}
+                  value={formData.mobile}
+                  onChange={(e) => handleInputChange(e, "mobile")}
                   maxLength={10}
                   className="h-11 bg-white border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-base"
                   required
@@ -378,8 +407,9 @@ export default function AddFacultyPage() {
                   Department <span className="text-red-500">*</span>
                 </Label>
                 <Select
-                  value={formData.dept}
-                  onValueChange={(value) => handleSelectChange("dept", value)}
+                  key={`dept-${formData.department || 'empty'}`}
+                  value={formData.department || undefined}
+                  onValueChange={(value) => handleSelectChange("department", value)}
                   required
                 >
                   <SelectTrigger className="h-11 bg-white border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-base">
@@ -387,8 +417,8 @@ export default function AddFacultyPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {departments.map((dept) => (
-                      <SelectItem key={dept} value={dept}>
-                        {dept}
+                      <SelectItem key={dept.value} value={dept.value}>
+                        {dept.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -401,7 +431,8 @@ export default function AddFacultyPage() {
                   Role <span className="text-red-500">*</span>
                 </Label>
                 <Select
-                  value={formData.role}
+                  key={`role-${formData.role || 'empty'}`}
+                  value={formData.role || undefined}
                   onValueChange={(value) => handleSelectChange("role", value)}
                   required
                 >
@@ -410,8 +441,8 @@ export default function AddFacultyPage() {
                   </SelectTrigger>
                   <SelectContent>
                     {roles.map((role) => (
-                      <SelectItem key={role} value={role}>
-                        {role}
+                      <SelectItem key={role.value} value={role.value}>
+                        {role.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -420,12 +451,13 @@ export default function AddFacultyPage() {
 
               {/* Designation */}
               <div className="space-y-2">
-                <Label htmlFor="desg" className="text-sm font-semibold text-gray-800">
+                <Label htmlFor="designation" className="text-sm font-semibold text-gray-800">
                   Designation <span className="text-red-500">*</span>
                 </Label>
                 <Select
-                  value={formData.desg}
-                  onValueChange={(value) => handleSelectChange("desg", value)}
+                  key={`designation-${formData.designation || 'empty'}`}
+                  value={formData.designation || undefined}
+                  onValueChange={(value) => handleSelectChange("designation", value)}
                   required
                 >
                   <SelectTrigger className="h-11 bg-white border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-base">

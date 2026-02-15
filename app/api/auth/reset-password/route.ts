@@ -3,11 +3,11 @@ import { NextResponse } from "next/server"
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    const { email, otp, newPassword } = body
+    const { token, newPassword } = body
 
-    if (!email || !otp || !newPassword) {
+    if (!token || !newPassword) {
       return NextResponse.json(
-        { success: false, message: "Email, OTP, and new password are required" },
+        { success: false, message: "Token and new password are required" },
         { status: 400 }
       )
     }
@@ -17,7 +17,7 @@ export async function POST(req: Request) {
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ email, otp, newPassword }),
+      body: JSON.stringify({ token, newPassword }),
       credentials: "include",
     })
 

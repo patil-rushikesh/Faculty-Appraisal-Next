@@ -1,27 +1,21 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Mail, KeyRound } from "lucide-react"
+import { ArrowLeft, Mail } from "lucide-react"
 import Link from "next/link"
 
 export default function ForgotPasswordPage() {
-  const router = useRouter()
-  const [step, setStep] = useState<"email" | "otp">("email")
   const [email, setEmail] = useState("")
-  const [otp, setOtp] = useState("")
-  const [newPassword, setNewPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
 
-  const handleSendOTP = async (e: React.FormEvent) => {
+  const handleSendResetLink = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     setSuccess("")
@@ -37,57 +31,11 @@ export default function ForgotPasswordPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        setError(data.message || "Failed to send OTP")
+        setError(data.message || "Failed to send password reset link")
         return
       }
 
-      setSuccess("OTP has been sent to your email address")
-      setTimeout(() => {
-        setStep("otp")
-        setSuccess("")
-      }, 2000)
-    } catch (err) {
-      setError("Failed to connect to the server. Please try again.")
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError("")
-    setSuccess("")
-
-    if (newPassword !== confirmPassword) {
-      setError("Passwords do not match")
-      return
-    }
-
-    if (newPassword.length < 6) {
-      setError("Password must be at least 6 characters long")
-      return
-    }
-
-    setIsLoading(true)
-
-    try {
-      const response = await fetch("/api/auth/reset-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, otp, newPassword }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        setError(data.message || "Failed to reset password")
-        return
-      }
-
-      setSuccess("Password reset successfully! Redirecting to login...")
-      setTimeout(() => {
-        router.push("/")
-      }, 2000)
+      setSuccess("Password reset link has been sent to your email address. Please check your email to reset your password.")
     } catch (err) {
       setError("Failed to connect to the server. Please try again.")
     } finally {
@@ -147,133 +95,52 @@ export default function ForgotPasswordPage() {
           <Card className="border-border">
             <CardHeader className="flex flex-col items-center justify-center">
               <CardTitle className="text-2xl font-serif font-bold">
-                {step === "email" ? "Forgot Password" : "Reset Password"}
+                Forgot Password
               </CardTitle>
               <CardDescription className="text-muted-foreground text-center">
-                {step === "email"
-                  ? "Please enter the email address you used while registering your account. We'll send a one-time password (OTP) to reset your password on the same email."
-                  : "Enter the OTP sent to your email and your new password"}
+                Please enter the email address you used while registering your account. We'll send a password reset link to your email.
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {step === "email" ? (
-                <form onSubmit={handleSendOTP} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email" className="font-bold text-lg flex items-center gap-2">
-                      <Mail className="w-4 h-4" />
-                      Email Address
-                    </Label>
-                    <Input
-                      id="email"
-                      name="email"
-                      type="email"
-                      placeholder="Enter your registered email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      className="text-lg"
-                    />
-                  </div>
+              <form onSubmit={handleSendResetLink} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="font-bold text-lg flex items-center gap-2">
+                    <Mail className="w-4 h-4" />
+                    Email Address
+                  </Label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="Enter your registered email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="text-lg"
+                  />
+                </div>
 
-                  <Button
-                    type="submit"
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Sending OTP..." : "Send OTP"}
-                  </Button>
+                <Button
+                  type="submit"
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Sending..." : "Send Reset Link"}
+                </Button>
 
-                  <div className="text-center">
-                    <Link href="/">
-                      <Button
-                        type="button"
-                        variant="link"
-                        className="text-indigo-600 hover:text-indigo-800 text-sm font-bold transition-colors flex items-center gap-2 mx-auto"
-                      >
-                        <ArrowLeft className="w-4 h-4" />
-                        Back to Login
-                      </Button>
-                    </Link>
-                  </div>
-                </form>
-              ) : (
-                <form onSubmit={handleResetPassword} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="otp" className="font-bold text-lg flex items-center gap-2">
-                      <KeyRound className="w-4 h-4" />
-                      OTP
-                    </Label>
-                    <Input
-                      id="otp"
-                      name="otp"
-                      type="text"
-                      placeholder="Enter 6-digit OTP"
-                      value={otp}
-                      onChange={(e) => setOtp(e.target.value)}
-                      required
-                      maxLength={6}
-                      className="text-lg"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="newPassword" className="font-bold text-lg">
-                      New Password
-                    </Label>
-                    <Input
-                      id="newPassword"
-                      name="newPassword"
-                      type="password"
-                      placeholder="Enter new password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                      required
-                      className="text-lg"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="confirmPassword" className="font-bold text-lg">
-                      Confirm Password
-                    </Label>
-                    <Input
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      type="password"
-                      placeholder="Confirm new password"
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      required
-                      className="text-lg"
-                    />
-                  </div>
-
-                  <Button
-                    type="submit"
-                    className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
-                    disabled={isLoading}
-                  >
-                    {isLoading ? "Resetting..." : "Reset Password"}
-                  </Button>
-
-                  <div className="text-center">
+                <div className="text-center">
+                  <Link href="/">
                     <Button
                       type="button"
                       variant="link"
-                      className="text-indigo-600 hover:text-indigo-800 text-sm font-bold transition-colors"
-                      onClick={() => {
-                        setStep("email")
-                        setOtp("")
-                        setNewPassword("")
-                        setConfirmPassword("")
-                        setError("")
-                      }}
+                      className="text-indigo-600 hover:text-indigo-800 text-sm font-bold transition-colors flex items-center gap-2 mx-auto"
                     >
-                      Resend OTP
+                      <ArrowLeft className="w-4 h-4" />
+                      Back to Login
                     </Button>
-                  </div>
-                </form>
-              )}
+                  </Link>
+                </div>
+              </form>
 
               <div className="text-center mt-4 text-xs text-gray-500 font-semibold">
                 © 2025 PCCOE. All rights reserved by team AANSH

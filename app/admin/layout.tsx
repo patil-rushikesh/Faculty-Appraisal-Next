@@ -27,6 +27,16 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           title: "Faculty Management",
           description: "View and manage all faculty members",
         };
+      case "/admin/verification-team":
+        return {
+          title: "Verification Team",
+          description: "Create and manage verification committees for each department",
+        };
+      case "/admin/assign-faculty-to-verification-team":
+        return {
+          title: "Assign Faculty to Verification Team",
+          description: "Assign faculty members to verification committee members",
+        };
       default:
         return {
           title: "Super Admin Dashboard",

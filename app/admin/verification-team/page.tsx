@@ -67,7 +67,11 @@ export default function VerificationTeamPage() {
 
   const fetchFacultyData = async () => {
     try {
-      const response = await fetch('/api/verification-team/users');
+      const response = await fetch('/api/verification-team/users', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
       if (!response.ok) throw new Error('Failed to fetch faculty data');
       const data = await response.json();
       setAllFaculty(data);

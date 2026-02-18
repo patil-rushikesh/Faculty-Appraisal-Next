@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Loader from "@/components/loader";
 import { Users, Save, Check, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/app/AuthProvider";
@@ -146,18 +147,18 @@ export default function AssignFacultyToVerificationTeamPage() {
   const handleFacultyAssignment = (committeeId: string, facultyId: string) => {
     setAssignedFaculty(prev => {
       const newAssignments = { ...prev };
-      
+
       // Remove faculty from all committees first
       Object.keys(newAssignments).forEach(key => {
         newAssignments[key] = newAssignments[key].filter(id => id !== facultyId);
       });
-      
+
       // Add faculty to selected committee
       if (!newAssignments[committeeId]) {
         newAssignments[committeeId] = [];
       }
       newAssignments[committeeId].push(facultyId);
-      
+
       return newAssignments;
     });
   };
@@ -255,9 +256,7 @@ export default function AssignFacultyToVerificationTeamPage() {
 
           {/* Loading State */}
           {loading && committees.length === 0 && (
-            <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600"></div>
-            </div>
+            <Loader />
           )}
 
           {/* No Committee Message */}
@@ -346,7 +345,7 @@ export default function AssignFacultyToVerificationTeamPage() {
                 >
                   {loading ? (
                     <>
-                      <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white mr-2"></div>
+                      <Loader variant="inline" className="mr-2" />
                       Saving...
                     </>
                   ) : (

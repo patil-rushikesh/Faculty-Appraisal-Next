@@ -195,7 +195,7 @@ export function Sidebar({
           }
         }}
         className={`
-          flex items-center ${expanded ? "space-x-3" : "justify-center"} p-3 rounded-lg
+          flex items-start ${expanded ? "space-x-3" : "justify-center"} p-3 rounded-lg
           transition-all duration-200 ease-in-out
           hover:scale-[1.02] transform relative group
           ${
@@ -216,8 +216,8 @@ export function Sidebar({
         `}
         title={expanded ? "" : item.label}
       >
-        <Icon size={20} strokeWidth={2} className="flex-shrink-0" />
-        {expanded && <span className="text-sm font-medium whitespace-nowrap">{item.label}</span>}
+        <Icon size={20} strokeWidth={2} className="flex-shrink-0 mt-0.5" />
+        {expanded && <span className="text-sm font-medium break-words leading-tight">{item.label}</span>}
       </Link>
     )
   }

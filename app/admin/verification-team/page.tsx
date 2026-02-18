@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Loader from "@/components/loader";
 import { Users, Plus, Check, Trash2, RefreshCw, Edit2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/app/AuthProvider";
@@ -55,7 +56,7 @@ export default function VerificationTeamPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState<string | null>(null);
   const [deletedVerifiers, setDeletedVerifiers] = useState<string[]>([]);
-  
+
   const { toast } = useToast();
   const { token } = useAuth();
 
@@ -84,7 +85,7 @@ export default function VerificationTeamPage() {
     setIsLoading(true);
     try {
       const teamsData: Record<string, VerificationTeam> = {};
-      
+
       const promises = DEPARTMENTS.map(async (dept) => {
         try {
           const response = await fetch('/api/verification-team/committee', {
@@ -103,7 +104,7 @@ export default function VerificationTeamPage() {
           console.error(`Error fetching ${dept.value} verification team:`, error);
         }
       });
-      
+
       await Promise.all(promises);
       setVerificationTeams(teamsData);
     } catch (err: any) {
@@ -126,9 +127,9 @@ export default function VerificationTeamPage() {
 
     if (value.trim() && selectedDepartment) {
       const filtered = allFaculty
-        .filter(faculty => 
+        .filter(faculty =>
           (faculty.userId.toLowerCase().includes(value.toLowerCase()) ||
-           faculty.name.toLowerCase().includes(value.toLowerCase())) &&
+            faculty.name.toLowerCase().includes(value.toLowerCase())) &&
           faculty.department !== selectedDepartment &&
           !committeeIds.includes(faculty.userId)
         )
@@ -148,7 +149,7 @@ export default function VerificationTeamPage() {
 
   const handleDeleteVerifier = (indexToDelete: number) => {
     const deletedId = committeeIds[indexToDelete];
-    
+
     if (deletedId && deletedId.trim() !== "") {
       setDeletedVerifiers(prev => {
         if (!prev.includes(deletedId)) {
@@ -157,17 +158,17 @@ export default function VerificationTeamPage() {
         return prev;
       });
     }
-    
+
     setCommitteeIds(committeeIds.filter((_, index) => index !== indexToDelete));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-  
+
     try {
       setLoading(true);
       setError(null);
-      
+
       const response = await fetch('/api/verification-team/create', {
         method: 'POST',
         headers: {
@@ -180,23 +181,23 @@ export default function VerificationTeamPage() {
           deleted_verifiers: deletedVerifiers
         }),
       });
-  
+
       const data = await response.json();
-  
+
       if (!response.ok) {
         throw new Error(data.error || 'Failed to create verification committee');
       }
-  
+
       setSuccessMessage(`Verification committee ${editingDepartment ? 'updated' : 'created'} successfully!`);
       setShowSuccessDialog(true);
-      
+
       if (!editingDepartment) {
         setSelectedDepartment('');
       }
       setCommitteeIds(['']);
       setDeletedVerifiers([]);
       fetchAllVerificationTeams();
-  
+
     } catch (error: any) {
       console.error('Error creating verification committee:', error);
       setError(error.message);
@@ -218,12 +219,12 @@ export default function VerificationTeamPage() {
           const idPart = key.split(' ')[0];
           return idPart;
         });
-        
+
         setSelectedDepartment(department);
         setCommitteeIds(committeeIdsToEdit.length > 0 ? committeeIdsToEdit : [""]);
         setEditingDepartment(department);
         setDeletedVerifiers([]);
-        
+
         setTimeout(() => {
           const formElement = document.querySelector('.allocate-committee-form');
           if (formElement) {
@@ -323,7 +324,7 @@ export default function VerificationTeamPage() {
                       </Button>
                     )}
                   </div>
-                  
+
                   {/* Suggestions Dropdown */}
                   {suggestions.length > 0 && activeInputIndex === index && (
                     <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg">
@@ -365,7 +366,14 @@ export default function VerificationTeamPage() {
                 type="submit"
                 disabled={loading}
               >
-                {loading ? "Processing..." : editingDepartment ? "Update Committee" : "Save Committee"}
+                {loading ? (
+                  <>
+                    <Loader variant="inline" className="mr-2" />
+                    Processing...
+                  </>
+                ) : (
+                  editingDepartment ? "Update Committee" : "Save Committee"
+                )}
               </Button>
             </div>
           </form>
@@ -380,7 +388,7 @@ export default function VerificationTeamPage() {
               <Users className="mr-2 text-blue-600" />
               Current Verification Committees
             </CardTitle>
-            <Button 
+            <Button
               variant="outline"
               size="sm"
               onClick={fetchAllVerificationTeams}
@@ -393,9 +401,7 @@ export default function VerificationTeamPage() {
 
         <CardContent className="p-6">
           {isLoading ? (
-            <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600"></div>
-            </div>
+            <Loader />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {DEPARTMENTS.map(department => {
@@ -406,7 +412,7 @@ export default function VerificationTeamPage() {
                       <div className="flex justify-between items-center">
                         <CardTitle className="text-base">{department.label}</CardTitle>
                         {teamData && teamData.committees && Object.keys(teamData.committees).length > 0 && (
-                          <Button 
+                          <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handleEditTeam(department.value)}
@@ -424,13 +430,13 @@ export default function VerificationTeamPage() {
                           {Object.entries(teamData.committees).map(([verifier, verifiees], index) => {
                             let verifierId = verifier;
                             let verifierName = "";
-                            
+
                             const parenthesesMatch = verifier.match(/^(.*?)\s*\((.*?)\)$/);
                             if (parenthesesMatch) {
                               verifierId = parenthesesMatch[1].trim();
                               verifierName = parenthesesMatch[2].trim();
                             }
-                            
+
                             return (
                               <li key={index} className="pb-3 border-b border-gray-100 last:border-0">
                                 <div className="flex items-center gap-2 text-sm mb-1">

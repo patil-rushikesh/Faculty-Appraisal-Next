@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/app/AuthProvider"
 import { api } from "@/lib/api-client"
+import Loader from "@/components/loader"
 
 interface ChangePasswordDialogProps {
   isOpen: boolean
@@ -189,7 +190,14 @@ export function ChangePasswordDialogContent({ onClose }: ChangePasswordDialogCon
             Cancel
           </Button>
           <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Changing..." : "Change Password"}
+            {isLoading ? (
+              <>
+                <Loader variant="inline" className="mr-2" />
+                Changing...
+              </>
+            ) : (
+              "Change Password"
+            )}
           </Button>
         </DialogFooter>
       </form>

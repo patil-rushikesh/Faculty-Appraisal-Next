@@ -8,6 +8,8 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ArrowLeft, Mail } from "lucide-react"
 import Link from "next/link"
+import { COPYRIGHT_TEXT } from "@/lib/constants"
+import Loader from "@/components/loader"
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("")
@@ -125,7 +127,14 @@ export default function ForgotPasswordPage() {
                   className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Sending..." : "Send Reset Link"}
+                  {isLoading ? (
+                    <>
+                      <Loader variant="inline" className="mr-2" />
+                      Sending...
+                    </>
+                  ) : (
+                    "Send Reset Link"
+                  )}
                 </Button>
 
                 <div className="text-center">
@@ -143,7 +152,7 @@ export default function ForgotPasswordPage() {
               </form>
 
               <div className="text-center mt-4 text-xs text-gray-500 font-semibold">
-                © 2025 PCCOE. All rights reserved by team AANSH
+                {COPYRIGHT_TEXT}
               </div>
             </CardContent>
           </Card>

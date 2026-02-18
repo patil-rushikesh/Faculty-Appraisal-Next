@@ -3,10 +3,11 @@
 
 import React, { useState } from "react";
 import {
-  Loader2,
   Check,
   User,
 } from "lucide-react";
+import Loader from "@/components/loader";
+import { DEPARTMENTS, ROLES, DESIGNATIONS } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -59,27 +60,7 @@ export default function AddFacultyPage() {
   const [deanSuggestions, setDeanSuggestions] = useState<DeanSuggestion[]>([]);
   const [showDeanSuggestions, setShowDeanSuggestions] = useState(false);
 
-  const departments = [
-    { label: 'Computer Engineering', value: 'computer' },
-    { label: 'Information Technology', value: 'it' },
-    { label: 'Mechanical Engineering', value: 'mechanical' },
-    { label: 'Civil Engineering', value: 'civil' },
-    { label: 'Electronics and Telecommunication Engineering', value: 'entc' },
-    { label: 'Computer Engineering (Regional)', value: 'computer_regional' },
-    { label: 'Artificial Intelligence and Machine Learning', value: 'aiml' },
-    { label: 'Applied Sciences and Humanities', value: 'ash' },
-  ];
 
-  const roles = [
-    { label: 'Associate Dean', value: 'associate_dean' },
-    { label: 'Director', value: 'director' },
-    { label: 'HOD', value: 'hod' },
-    { label: 'Dean', value: 'dean' },
-    { label: 'Admin', value: 'admin' },
-    { label: 'Faculty', value: 'faculty' },
-  ];
-
-  const designations = ["Professor", "Assistant Professor", "Associate Professor"];
 
   const calculateAcademicYear = (dateString: string): string => {
     if (!dateString) return "";
@@ -121,7 +102,7 @@ export default function AddFacultyPage() {
       const headers: HeadersInit = {
         "Content-Type": "application/json",
       };
-      
+
       if (token) {
         headers["Authorization"] = `Bearer ${token}`;
       }
@@ -246,7 +227,7 @@ export default function AddFacultyPage() {
       const headers: HeadersInit = {
         "Content-Type": "application/json",
       };
-      
+
       if (token) {
         headers["Authorization"] = `Bearer ${token}`;
       }
@@ -328,7 +309,7 @@ export default function AddFacultyPage() {
             <div className="flex items-center gap-2 pb-3 border-b border-gray-200">
               <h2 className="text-base font-semibold text-gray-900 uppercase tracking-wide">Basic Details</h2>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* User ID */}
               <div className="space-y-2">
@@ -400,7 +381,7 @@ export default function AddFacultyPage() {
             <div className="flex items-center gap-2 pb-3 border-b border-gray-200">
               <h2 className="text-base font-semibold text-gray-900 uppercase tracking-wide">Professional Details</h2>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Department */}
               <div className="space-y-2">
@@ -417,7 +398,7 @@ export default function AddFacultyPage() {
                     <SelectValue placeholder="Select department" />
                   </SelectTrigger>
                   <SelectContent>
-                    {departments.map((dept) => (
+                    {DEPARTMENTS.map((dept) => (
                       <SelectItem key={dept.value} value={dept.value}>
                         {dept.label}
                       </SelectItem>
@@ -441,7 +422,7 @@ export default function AddFacultyPage() {
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
                   <SelectContent>
-                    {roles.map((role) => (
+                    {ROLES.map((role) => (
                       <SelectItem key={role.value} value={role.value}>
                         {role.label}
                       </SelectItem>
@@ -465,9 +446,9 @@ export default function AddFacultyPage() {
                     <SelectValue placeholder="Select designation" />
                   </SelectTrigger>
                   <SelectContent>
-                    {designations.map((desg) => (
-                      <SelectItem key={desg} value={desg}>
-                        {desg}
+                    {DESIGNATIONS.map((desg) => (
+                      <SelectItem key={desg.value} value={desg.value}>
+                        {desg.label}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -481,7 +462,7 @@ export default function AddFacultyPage() {
             <div className="flex items-center gap-2 pb-3 border-b border-gray-200">
               <h2 className="text-base font-semibold text-gray-900 uppercase tracking-wide">Academic Details</h2>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Date of Joining */}
               <div className="space-y-2">
@@ -572,7 +553,7 @@ export default function AddFacultyPage() {
             >
               {loading ? (
                 <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  <Loader variant="inline" className="mr-2 h-5 w-5" />
                   Adding...
                 </>
               ) : (

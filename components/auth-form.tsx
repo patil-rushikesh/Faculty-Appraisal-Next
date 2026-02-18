@@ -4,11 +4,14 @@ import type React from "react"
 
 import { useState } from "react"
 import { motion } from "framer-motion"
+import { fadeInUp } from "@/lib/animations"
+import { COPYRIGHT_TEXT } from "@/lib/constants"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import Loader from "@/components/loader"
 
 interface AuthFormProps {
   type: "login" | "register"
@@ -38,17 +41,10 @@ export default function AuthForm({ type, onSubmit }: AuthFormProps) {
     setIsLoading(false)
   }
 
-  const containerVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: { duration: 0.6 },
-    },
-  }
+
 
   return (
-    <motion.div className="w-full max-w-md" variants={containerVariants} initial="hidden" animate="visible">
+    <motion.div className="w-full max-w-md" variants={fadeInUp} initial="hidden" animate="visible">
       <Card className="border-border">
         <CardHeader className="flex flex-col items-center justify-center">
           <CardTitle className="text-2xl font-serif font-bold">Welcome</CardTitle>
@@ -103,11 +99,18 @@ export default function AuthForm({ type, onSubmit }: AuthFormProps) {
               className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
               disabled={isLoading}
             >
-              {isLoading ? "Loading..." : "Sign In"}
+              {isLoading ? (
+                <>
+                  <Loader variant="inline" className="mr-2" />
+                  Signing In...
+                </>
+              ) : (
+                "Sign In"
+              )}
             </Button>
 
             <div className="text-center mt-4 text-xs text-gray-500 font-semibold">
-              © 2025 PCCOE. All rights reserved by team AANSH
+              {COPYRIGHT_TEXT}
             </div>
           </form>
         </CardContent>

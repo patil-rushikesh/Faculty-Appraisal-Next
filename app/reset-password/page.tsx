@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Lock } from "lucide-react"
+import { COPYRIGHT_TEXT } from "@/lib/constants"
+import Loader from "@/components/loader"
 
 export default function ResetPasswordPage() {
   const router = useRouter()
@@ -158,11 +160,18 @@ export default function ResetPasswordPage() {
                   className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
                   disabled={isLoading}
                 >
-                  {isLoading ? "Resetting..." : "Submit"}
+                  {isLoading ? (
+                    <>
+                      <Loader variant="inline" className="mr-2" />
+                      Resetting...
+                    </>
+                  ) : (
+                    "Submit"
+                  )}
                 </Button>
 
                 <div className="text-center mt-4 text-xs text-gray-500 font-semibold">
-                  © 2025 PCCOE. All rights reserved by team AANSH
+                  {COPYRIGHT_TEXT}
                 </div>
               </form>
             </CardContent>

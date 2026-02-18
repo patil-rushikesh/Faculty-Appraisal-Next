@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search, Plus, Trash2, Users, Loader, X } from "lucide-react";
+import { Search, Plus, Trash2, Users, X } from "lucide-react";
+import Loader from "@/components/loader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -48,6 +49,7 @@ export default function FacultyListPage() {
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<User[]>([]);
   const [userToDelete, setUserToDelete] = useState<User | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { toast } = useToast();
   const { token } = useAuth();
   const router = useRouter();
@@ -101,6 +103,7 @@ export default function FacultyListPage() {
   const handleDeleteUser = async () => {
     if (!userToDelete) return;
 
+    setIsDeleting(true);
     try {
       const res = await fetch(
         `/api/admin/faculty`,
@@ -134,6 +137,7 @@ export default function FacultyListPage() {
         variant: "destructive",
       });
     } finally {
+      setIsDeleting(false);
       setUserToDelete(null);
     }
   };
@@ -283,10 +287,7 @@ export default function FacultyListPage() {
           <CardContent>
             <div className="overflow-x-auto">
               {loading ? (
-                <div className="w-full py-12 flex flex-col justify-center items-center text-muted-foreground">
-                  <Loader className="w-8 h-8 animate-spin mb-2" />
-                  <p className="text-sm">Loading faculty...</p>
-                </div>
+                <Loader message="Loading faculty..." />
               ) : filteredUsers.length > 0 ? (
                 <table className="w-full">
                   <thead>
@@ -384,12 +385,20 @@ export default function FacultyListPage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteUser}
+              disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Delete
+              {isDeleting ? (
+                <>
+                  <Loader variant="inline" className="mr-2" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

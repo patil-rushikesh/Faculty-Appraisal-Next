@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Loader from "@/components/loader";
 import { Users, Plus, Check, Trash2, RefreshCw, Building } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -101,9 +102,8 @@ export default function AssignDeanToDepartmentPage() {
       );
       setAllFaculty(deanFaculty);
     } catch (err) {
-      const errorMessage = `Error loading faculty data: ${
-        err instanceof Error ? err.message : String(err)
-      }`;
+      const errorMessage = `Error loading faculty data: ${err instanceof Error ? err.message : String(err)
+        }`;
       setError(errorMessage);
       toast({
         title: "Error",
@@ -152,9 +152,8 @@ export default function AssignDeanToDepartmentPage() {
       await Promise.all(promises);
       setDepartmentDeans(deansData);
     } catch (err) {
-      const errorMessage = `Error loading interaction deans: ${
-        err instanceof Error ? err.message : String(err)
-      }`;
+      const errorMessage = `Error loading interaction deans: ${err instanceof Error ? err.message : String(err)
+        }`;
       setError(errorMessage);
       toast({
         title: "Error",
@@ -409,7 +408,7 @@ export default function AssignDeanToDepartmentPage() {
               <Button type="submit" disabled={loading} className="gap-2">
                 {loading ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white" />
+                    <Loader variant="inline" />
                     Processing...
                   </>
                 ) : (
@@ -448,9 +447,7 @@ export default function AssignDeanToDepartmentPage() {
 
         <div className="p-6">
           {isLoading ? (
-            <div className="flex justify-center items-center py-12">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-600" />
-            </div>
+            <Loader />
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {departments.map((department) => {
@@ -471,8 +468,8 @@ export default function AssignDeanToDepartmentPage() {
                     </div>
                     <div className="p-4">
                       {!deansData ||
-                      !deansData.deans ||
-                      deansData.deans.length === 0 ? (
+                        !deansData.deans ||
+                        deansData.deans.length === 0 ? (
                         <p className="text-muted-foreground text-sm italic">
                           No interaction deans assigned
                         </p>

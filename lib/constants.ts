@@ -32,3 +32,6 @@ export const DESIGNATIONS = [
 export type DepartmentValue = typeof DEPARTMENTS[number]["value"];
 export type RoleValue = typeof ROLES[number]["value"];
 export type DesignationValue = typeof DESIGNATIONS[number]["value"];
+
+// Copyright text
+export const COPYRIGHT_TEXT = "© 2025 PCCOE. All rights reserved.";

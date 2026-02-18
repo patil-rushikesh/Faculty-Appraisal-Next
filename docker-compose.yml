@@ -5,6 +5,11 @@ services:
       dockerfile: Dockerfile
       args:
         - NEXT_PUBLIC_BACKEND_URL=${NEXT_PUBLIC_BACKEND_URL}
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
     env_file:
       - .env

@@ -12,7 +12,7 @@ WORKDIR /app
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # Accept the backend URL at build time so Next.js can inline it into client bundles
-ARG NEXT_PUBLIC_BACKEND_URL=http://localhost:8080
+ARG NEXT_PUBLIC_BACKEND_URL=http://host.docker.internal:8080
 ENV NEXT_PUBLIC_BACKEND_URL=$NEXT_PUBLIC_BACKEND_URL
 
 COPY --from=deps /app/node_modules ./node_modules
@@ -22,6 +22,7 @@ RUN pnpm run build
 FROM node:20-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
+ENV HOSTNAME=0.0.0.0
 
 # Standalone output — only copy what's needed (~100 MB instead of ~500 MB)
 COPY --from=builder /app/.next/standalone ./

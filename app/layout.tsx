@@ -3,6 +3,7 @@ import { Montserrat, Open_Sans } from "next/font/google"
 import "./globals.css"
 import AuthProvider from "./AuthProvider"
 import { cookies } from "next/headers"
+import AppShell from "./AppShell"
 const montserrat = Montserrat({
   subsets: ["latin"],
   variable: "--font-serif",
@@ -37,7 +38,7 @@ export default async function RootLayout({
     <html lang="en">
       <body className={`${montserrat.variable} ${openSans.variable} font-sans antialiased`}>
         <AuthProvider preToken={token} initialUser={initialUser}>
-          {children}
+          <AppShell>{children}</AppShell>
         </AuthProvider>
       </body>
     </html>

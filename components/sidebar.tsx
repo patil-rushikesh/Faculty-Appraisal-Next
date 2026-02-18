@@ -1,126 +1,358 @@
 "use client"
 
-import { useState } from "react"
+import { Fragment, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { motion } from "framer-motion"
-import { LayoutDashboard, Users, Settings, LogOut, Menu, X, BarChart3, FileText, Bell, Trophy } from "lucide-react"
-import { Button } from "@/components/ui/button"
+import {
+  LayoutDashboard,
+  Users,
+  LogOut,
+  Menu,
+  X,
+  UserPlus,
+  UserCheck,
+  Building,
+  ChevronDown,
+  ChevronRight,
+  ChevronLeft,
+} from "lucide-react"
+import type { LucideIcon } from "lucide-react"
 import { useAuth } from "@/app/AuthProvider"
+import type { User } from "@/lib/types"
 
 interface SidebarProps {
-  userRole: "admin" | "head" | "reviewer" | "coordinator" | "participant"
+  userRole: User["role"]
+  isOpen?: boolean
+  isExpanded?: boolean
+  onClose?: () => void
+  onOpen?: () => void
+  onToggle?: () => void
 }
 
-export function Sidebar({ userRole }: SidebarProps) {
-  const [isOpen, setIsOpen] = useState(false)
+interface NavItem {
+  icon: LucideIcon
+  label: string
+  href: string
+}
+
+interface SidebarSection {
+  key: string
+  label?: string
+  icon?: LucideIcon
+  items: NavItem[]
+  collapsible?: boolean
+}
+
+interface RoleConfig {
+  title: string
+  sections: SidebarSection[]
+}
+
+const ROLE_CONFIG: Record<User["role"], RoleConfig> = {
+  admin: {
+    title: "Admin Panel",
+    sections: [
+      {
+        key: "admin-dashboard",
+        items: [{ icon: LayoutDashboard, label: "Dashboard", href: "/admin/dashboard" }],
+      },
+      {
+        key: "manage-faculty",
+        label: "Manage Faculty",
+        icon: Users,
+        collapsible: true,
+        items: [
+          { icon: UserPlus, label: "Add Faculty", href: "/admin/add-faculty" },
+          { icon: Users, label: "Faculty List", href: "/admin/faculty" },
+        ],
+      },
+      {
+        key: "verification-team",
+        label: "Verification Team",
+        icon: UserCheck,
+        collapsible: true,
+        items: [
+          { icon: UserCheck, label: "Verification Team", href: "/admin/verification-team" },
+          {
+            icon: UserCheck,
+            label: "Assign Faculty to Verification Team",
+            href: "/admin/assign-faculty-to-verification-team",
+          },
+        ],
+      },
+      {
+        key: "admin-other",
+        items: [
+          { icon: Building, label: "Assign Dean To Department", href: "/admin/assign-dean-to-department" },
+        ],
+      },
+    ],
+  },
+  associate_dean: {
+    title: "Associate Dean",
+    sections: [
+      {
+        key: "associate-dean-dashboard",
+        items: [{ icon: LayoutDashboard, label: "Dashboard", href: "/associate-dean/dashboard" }],
+      },
+    ],
+  },
+  director: {
+    title: "Director",
+    sections: [
+      {
+        key: "director-dashboard",
+        items: [{ icon: LayoutDashboard, label: "Dashboard", href: "/director/dashboard" }],
+      },
+    ],
+  },
+  hod: {
+    title: "HOD",
+    sections: [
+      {
+        key: "hod-dashboard",
+        items: [{ icon: LayoutDashboard, label: "Dashboard", href: "/hod/dashboard" }],
+      },
+    ],
+  },
+  dean: {
+    title: "Dean",
+    sections: [
+      {
+        key: "dean-dashboard",
+        items: [{ icon: LayoutDashboard, label: "Dashboard", href: "/dean/dashboard" }],
+      },
+    ],
+  },
+  faculty: {
+    title: "Faculty Portal",
+    sections: [
+      {
+        key: "faculty-dashboard",
+        items: [{ icon: LayoutDashboard, label: "Dashboard", href: "/faculty/dashboard" }],
+      },
+    ],
+  },
+}
+
+export function Sidebar({
+  userRole,
+  isOpen,
+  isExpanded,
+  onClose,
+  onOpen,
+  onToggle,
+}: SidebarProps) {
   const pathname = usePathname()
-  const menuItems = {
-    "admin": [
-      { icon: LayoutDashboard, label: "Dashboard", href: "/admin/dashboard" },
-    ],
-    "coordinator": [
-      { icon: LayoutDashboard, label: "Dashboard", href: "/coordinator/dashboard" },
-      { icon: FileText, label: "Submissions", href: "/coordinator/submissions" },
-      { icon: Bell, label: "Announcements", href: "/coordinator/announcements" },
-      { icon: Users, label: "Teams", href: "/coordinator/teams" },
-      { icon: Settings, label: "Settings", href: "/coordinator/settings" },
-    ],
-    "head": [
-      { icon: LayoutDashboard, label: "Dashboard", href: "/head/dashboard" },
-      { icon: Users, label: "Evaluators", href: "/head/evaluators" },
-      { icon: Settings, label: "Criteria", href: "/head/set-criteria" },
-    ],
-    "reviewer": [
-      { icon: LayoutDashboard, label: "Dashboard", href: "/reviewer/dashboard" },
-      { icon: FileText, label: "Reviews", href: "/reviewer/reviews" },
-    ],
-    "participant": [
-      { icon: LayoutDashboard, label: "Dashboard", href: "/participant/dashboard" },
-      { icon: FileText, label: "My Project", href: "/participant/project" },
-      { icon: Users, label: "Team", href: "/participant/team" },
-    ],
+  const { logout, isLoading } = useAuth()
+
+  const [internalOpen, setInternalOpen] = useState(false)
+  const [internalExpanded, setInternalExpanded] = useState(false)
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({})
+
+  const open = isOpen ?? internalOpen
+  const expanded = isExpanded ?? internalExpanded
+
+  const closeSidebar = onClose ?? (() => setInternalOpen(false))
+  const openSidebar = onOpen ?? (() => setInternalOpen(true))
+  const toggleExpanded = onToggle ?? (() => setInternalExpanded((prev) => !prev))
+
+  const config = useMemo<RoleConfig>(() => {
+    return ROLE_CONFIG[userRole] ?? ROLE_CONFIG.faculty
+  }, [userRole])
+
+  const panelTitle = config.title
+
+  useEffect(() => {
+    setOpenSections((prev) => {
+      const next = { ...prev }
+      config.sections
+        .filter((section) => section.collapsible)
+        .forEach((section) => {
+          if (section.items.some((item) => item.href === pathname)) {
+            next[section.key] = true
+          }
+        })
+      return next
+    })
+  }, [pathname, config])
+
+  const isActive = (href: string) => pathname === href
+
+  interface NavLinkProps {
+    item: NavItem
+    isDropdownItem?: boolean
   }
 
-  const {logout,isLoading} = useAuth();
+  const NavLink = ({ item, isDropdownItem = false }: NavLinkProps) => {
+    const Icon = item.icon
+    return (
+      <Link
+        href={item.href}
+        onClick={() => {
+          if (typeof window !== "undefined" && window.innerWidth < 1024) {
+            closeSidebar()
+          }
+        }}
+        className={`
+          flex items-center ${expanded ? "space-x-3" : "justify-center"} p-3 rounded-lg
+          transition-all duration-200 ease-in-out
+          hover:scale-[1.02] transform relative group
+          ${
+            isDropdownItem && expanded
+              ? `
+                ml-3 border-l-2 border-indigo-500 pl-4
+                before:content-[""]
+                before:absolute
+                before:left-[-0.75rem]
+                before:top-1/2
+                before:w-3
+                before:h-[2px]
+                before:bg-indigo-500
+              `
+              : ""
+          }
+          ${isActive(item.href) ? "bg-indigo-700 text-white shadow-md" : "text-indigo-100 hover:bg-indigo-700/70"}
+        `}
+        title={expanded ? "" : item.label}
+      >
+        <Icon size={20} strokeWidth={2} className="flex-shrink-0" />
+        {expanded && <span className="text-sm font-medium whitespace-nowrap">{item.label}</span>}
+      </Link>
+    )
+  }
 
-  const handleLogout = async () => {
-    logout();
-  };
+  const toggleSection = (sectionKey: string) => {
+    if (expanded) {
+      setOpenSections((prev) => ({ ...prev, [sectionKey]: !prev[sectionKey] }))
+    } else {
+      toggleExpanded()
+      setOpenSections((prev) => ({ ...prev, [sectionKey]: true }))
+    }
+  }
 
-  const items = menuItems[userRole]
   return (
     <>
-      {/* Mobile Menu Button */}
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="fixed top-4 left-4 z-50 md:hidden p-2 rounded-lg bg-primary text-primary-foreground"
-      >
-        {isOpen ? <X size={24} /> : <Menu size={24} />}
-      </button>
+      {!open && (
+        <button
+          onClick={openSidebar}
+          className="fixed top-4 left-4 z-50 lg:hidden p-2 rounded-lg bg-indigo-700 text-white shadow-md"
+          aria-label="Open sidebar"
+        >
+          <Menu size={22} />
+        </button>
+      )}
 
-      {/* Sidebar */}
-      <motion.aside
-        className={`fixed left-0 top-0 h-screen w-64 bg-gradient-to-b from-blue-900 via-blue-800 to-blue-700 border-r border-blue-600 z-40 flex flex-col transition-transform duration-300 ${
-          isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-        }`}
-        initial={{ x: -256 }}
-        animate={{ x: 0 }}
-        transition={{ duration: 0.3 }}
+      {open && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-30 lg:hidden backdrop-blur-sm transition-opacity duration-300"
+          onClick={closeSidebar}
+        />
+      )}
+
+      <div
+        className={`
+          fixed top-0 left-0 h-screen bg-indigo-800 text-white z-40
+          transform transition-all duration-300 ease-in-out
+          ${expanded ? "w-72" : "w-20"} overflow-y-auto flex flex-col
+          ${open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
+        `}
       >
-        {/* Logo */}
-        <div className="p-6 border-b border-blue-600">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-blue-700 rounded-lg flex items-center justify-center">
-              <span className="text-white font-serif font-bold">H</span>
-            </div>
-            <span className="font-serif font-bold text-lg text-white">HackHub</span>
-          </Link>
+        <div className="border-b border-indigo-700">
+          <div className="flex items-center justify-between p-4">
+            {expanded && <h2 className="text-xl font-bold tracking-tight">{panelTitle}</h2>}
+            <button
+              onClick={toggleExpanded}
+              className="p-2 hover:bg-indigo-700 rounded-lg transition-all duration-200 hover:scale-110 hidden lg:block"
+              title={expanded ? "Collapse sidebar" : "Expand sidebar"}
+            >
+              {expanded ? <ChevronLeft size={20} /> : <Menu size={20} />}
+            </button>
+            <button
+              onClick={closeSidebar}
+              className="p-2 hover:bg-indigo-700 rounded-full lg:hidden transition-colors duration-200"
+              aria-label="Close sidebar"
+            >
+              <X size={24} />
+            </button>
+          </div>
         </div>
 
-        {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
-          {items.map((item) => {
-            const Icon = item.icon
-            const isActive = pathname === item.href
-            return (
-              <Link key={item.href} href={item.href}>
-                <motion.button
-                  onClick={() => setIsOpen(false)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                    isActive
-                      ? "bg-blue-600 text-white shadow-md"
-                      : "text-blue-100 hover:bg-blue-800 hover:text-white"
-                  }`}
-                  whileHover={{ x: 4 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Icon size={20} />
-                  <span className="font-medium">{item.label}</span>
-                </motion.button>
-              </Link>
-            )
-          })}
-        </nav>
+        <div className={`${expanded ? "px-4" : "px-2"} py-4 flex-grow overflow-y-auto`}>
+          <nav className="space-y-1">
+            {config.sections.map((section) => {
+              if (!section.collapsible) {
+                return (
+                  <Fragment key={section.key}>
+                    {section.items.map((item) => (
+                      <NavLink key={item.href} item={item} />
+                    ))}
+                  </Fragment>
+                )
+              }
 
-        {/* Logout */}
-        <div className="p-4 border-t border-blue-600">
-          <Button
-            variant="outline"
-            className="w-full flex items-center gap-2 justify-center bg-blue-800 text-white border-blue-600 hover:bg-blue-700 hover:text-white"
-            onClick={() => {
-              handleLogout()
-            }}
+              const sectionOpen = !!openSections[section.key]
+              const SectionIcon = section.icon ?? Users
+              return (
+                <div key={section.key} className="mb-2">
+                  <button
+                    onClick={() => toggleSection(section.key)}
+                    className={`w-full flex items-center ${expanded ? "justify-between" : "justify-center"} p-3 rounded-lg text-indigo-100 hover:bg-indigo-700/70 transition-colors duration-200`}
+                    title={expanded ? "" : section.label}
+                  >
+                    <div className={`flex items-center ${expanded ? "space-x-3" : ""}`}>
+                      <SectionIcon size={20} strokeWidth={2} />
+                      {expanded && <span className="text-sm font-medium">{section.label}</span>}
+                    </div>
+                    {expanded && (
+                      <div className="transition-transform duration-300 ease-in-out">
+                        {sectionOpen ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
+                      </div>
+                    )}
+                  </button>
+
+                  <div
+                    className={`
+                      overflow-hidden transition-all duration-300 ease-in-out
+                      ${sectionOpen && expanded ? "max-h-96 opacity-100" : "max-h-0 opacity-0"}
+                    `}
+                  >
+                    <div
+                      className={`
+                        relative pl-3 mt-1
+                        before:content-[""]
+                        before:absolute
+                        before:left-0
+                        before:top-0
+                        before:bottom-2
+                        before:w-[2px]
+                        before:bg-indigo-500
+                        space-y-1
+                      `}
+                    >
+                      {section.items.map((item) => (
+                        <NavLink key={item.href} item={item} isDropdownItem={true} />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </nav>
+        </div>
+
+        <div className={`${expanded ? "p-4" : "p-2"} border-t border-indigo-700`}>
+          <button
+            onClick={logout}
+            className="w-full px-3 py-2.5 bg-indigo-700 text-white rounded-lg hover:bg-red-600 flex items-center justify-center text-sm font-medium transition-colors duration-200"
+            title={expanded ? "" : "Logout"}
             disabled={isLoading}
           >
-            <LogOut size={18} />
-            {isLoading ? "Logging out..." : "Logout"}
-          </Button>
+            <LogOut className={expanded ? "mr-2" : ""} size={18} />
+            {expanded && (isLoading ? "Logging out..." : "Logout")}
+          </button>
         </div>
-      </motion.aside>
-
-      {/* Overlay for mobile */}
-      {isOpen && <div className="fixed inset-0 bg-black/50 z-30 md:hidden" onClick={() => setIsOpen(false)} />}
+      </div>
     </>
   )
 }

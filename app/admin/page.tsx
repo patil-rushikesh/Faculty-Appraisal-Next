@@ -3,16 +3,12 @@
 import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { Users, Trophy, FileText, TrendingUp } from "lucide-react"
-import { Sidebar } from "@/components/sidebar"
-import { DashboardHeader } from "@/components/dashboard-header"
 import { StatCard } from "@/components/stat-card"
-import { useAuth } from "@/app/AuthProvider"
 import { api } from "@/lib/api-client"
 import type { DashboardStats } from "@/lib/types"
 
 
 export default function AdminPage() {
-  const { user } = useAuth()
   const [stats, setStats] = useState<DashboardStats>({
     totalUsers: 0,
     activeEvents: 0,
@@ -70,67 +66,56 @@ export default function AdminPage() {
   } as const
 
   return (
-    <div className="flex h-screen bg-background">
-      {/* Sidebar */}
-      <Sidebar userRole="admin" />
-      <main className="flex-1 md:ml-64 overflow-auto">
-        <div className="p-4 md:p-8">
-          <DashboardHeader
-            title={`Super Admin Dashboard`}
-            description="Manage your hackathon platform and monitor all activities"
-          />
-          
-          {error && (
-            <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg text-yellow-800 dark:text-yellow-200">
-              {error} (showing demo data)
-            </div>
-          )}
-
-          <motion.div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-          >
-            <motion.div variants={itemVariants}>
-              <StatCard
-                title="Total Users"
-                value={isLoading ? "..." : stats.totalUsers.toLocaleString()}
-                icon={Users}
-                trend={{ value: 12, isPositive: true }}
-                color="primary"
-              />
-            </motion.div>
-            <motion.div variants={itemVariants}>
-              <StatCard
-                title="Active Events"
-                value={isLoading ? "..." : stats.activeEvents}
-                icon={Trophy}
-                trend={{ value: 2, isPositive: true }}
-                color="secondary"
-              />
-            </motion.div>
-            <motion.div variants={itemVariants}>
-              <StatCard
-                title="Total Submissions"
-                value={isLoading ? "..." : stats.totalSubmissions.toLocaleString()}
-                icon={FileText}
-                trend={{ value: 5, isPositive: true }}
-                color="accent"
-              />
-            </motion.div>
-            <motion.div variants={itemVariants}>
-              <StatCard
-                title="Platform Growth"
-                value={isLoading ? "..." : `${stats.platformGrowth}%`}
-                icon={TrendingUp}
-                trend={{ value: 8, isPositive: true }}
-                color="primary"
-              />
-            </motion.div>
-          </motion.div>
+    <>
+      {error && (
+        <div className="mb-4 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg text-yellow-800 dark:text-yellow-200">
+          {error} (showing demo data)
         </div>
-      </main>
-    </div>
+      )}
+
+      <motion.div
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div variants={itemVariants}>
+          <StatCard
+            title="Total Users"
+            value={isLoading ? "..." : stats.totalUsers.toLocaleString()}
+            icon={Users}
+            trend={{ value: 12, isPositive: true }}
+            color="primary"
+          />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <StatCard
+            title="Active Events"
+            value={isLoading ? "..." : stats.activeEvents}
+            icon={Trophy}
+            trend={{ value: 2, isPositive: true }}
+            color="secondary"
+          />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <StatCard
+            title="Total Submissions"
+            value={isLoading ? "..." : stats.totalSubmissions.toLocaleString()}
+            icon={FileText}
+            trend={{ value: 5, isPositive: true }}
+            color="accent"
+          />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <StatCard
+            title="Platform Growth"
+            value={isLoading ? "..." : `${stats.platformGrowth}%`}
+            icon={TrendingUp}
+            trend={{ value: 8, isPositive: true }}
+            color="primary"
+          />
+        </motion.div>
+      </motion.div>
+    </>
   )
 }

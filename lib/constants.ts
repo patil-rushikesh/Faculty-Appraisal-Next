@@ -25,7 +25,6 @@ export const DESIGNATIONS = [
   { label: 'Professor', value: 'Professor' },
   { label: 'Associate Professor', value: 'Associate Professor' },
   { label: 'Assistant Professor', value: 'Assistant Professor' },
-  { label: 'Stake Holder', value: 'stakeholder' },
 ] as const;
 
 // Type exports

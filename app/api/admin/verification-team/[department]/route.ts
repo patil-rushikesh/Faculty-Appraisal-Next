@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server"
 
-export async function GET(req: Request) {
+export async function GET(req: Request, { params }: { params: { department: string } }) {
   try {
     const token = req.headers.get("authorization")?.split(" ")[1]
     
@@ -11,21 +11,28 @@ export async function GET(req: Request) {
       )
     }
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/admin/stats`, {
+    const department = params.department
+    
+    if (!department) {
+      return NextResponse.json(
+        { success: false, message: "Department parameter is required" },
+        { status: 400 }
+      )
+    }
+    
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/admin/verification-committee/${department}`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      credentials: "include",
     })
-
     const data = await res.json()
     return NextResponse.json(data, { status: res.status })
   } catch (error) {
-    console.error("Admin stats API Error:", error)
+    console.error("Get Verification Committee API Error:", error)
     return NextResponse.json(
-      { success: false, message: "Failed to fetch stats" },
+      { success: false, message: "Failed to fetch verification committee" },
       { status: 500 }
     )
   }

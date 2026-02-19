@@ -12,7 +12,7 @@ export async function GET(req: Request) {
       headers["Authorization"] = `Bearer ${token}`;
     }
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/all-faculties`, {
+    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/common/faculties`, {
       method: "GET",
       headers,
       credentials: "include",

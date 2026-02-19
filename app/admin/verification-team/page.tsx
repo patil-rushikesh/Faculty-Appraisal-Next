@@ -1,519 +1,553 @@
-"use client";
+'use client'
 
-import React, { useState, useEffect } from "react";
-import Loader from "@/components/loader";
-import { Users, Plus, Check, Trash2, RefreshCw, Edit2 } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/app/AuthProvider";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { DEPARTMENTS } from "@/lib/constants";
+import { useState, useEffect } from 'react'
+import { Plus, Trash2, Check, Pencil } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { useToast } from '@/hooks/use-toast'
+import { DEPARTMENTS } from '@/lib/constants'
+import { apiClient } from '@/lib/api-client'
+import type { User } from '@/lib/types'
+import { useAuth } from '@/app/AuthProvider'
 
-interface Faculty {
-  _id: string;
-  userId: string;
-  name: string;
-  email: string;
-  department: string;
-  designation: string;
-  role: string;
+interface VerifierRow {
+  id: string
+  verifierName: string
+  verifierEmail: string
+  verifierId: string
+  assignedFaculties: { userId: string; name: string }[]
 }
 
-interface VerificationTeam {
-  department: string;
-  committees: Record<string, string[]>;
+interface VerificationTeamPayload {
+  department: string
+  verificationTeam: Array<{
+    userId: string
+    facultyIds: string[]
+  }>
 }
 
 export default function VerificationTeamPage() {
-  const [selectedDepartment, setSelectedDepartment] = useState("");
-  const [committeeIds, setCommitteeIds] = useState([""]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
-  const [successMessage, setSuccessMessage] = useState("");
-  const [allFaculty, setAllFaculty] = useState<Faculty[]>([]);
-  const [suggestions, setSuggestions] = useState<Faculty[]>([]);
-  const [activeInputIndex, setActiveInputIndex] = useState<number | null>(null);
-  const [verificationTeams, setVerificationTeams] = useState<Record<string, VerificationTeam>>({});
-  const [isLoading, setIsLoading] = useState(false);
-  const [editingDepartment, setEditingDepartment] = useState<string | null>(null);
-  const [deletedVerifiers, setDeletedVerifiers] = useState<string[]>([]);
+  const { toast } = useToast()
+  const [selectedDepartment, setSelectedDepartment] = useState('')
+  const [verifierRows, setVerifierRows] = useState<VerifierRow[]>([])
+  const [allFaculties, setAllFaculties] = useState<User[]>([])
+  const [departmentFaculties, setDepartmentFaculties] = useState<User[]>([])
+  const [isLoadingFaculties, setIsLoadingFaculties] = useState(false)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [editingRowId, setEditingRowId] = useState<string | null>(null)
+  const [selectedVerifier, setSelectedVerifier] = useState<User | null>(null)
+  const [selectedFacultiesForAdd, setSelectedFacultiesForAdd] = useState<Set<string>>(new Set())
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isLoadingCommittee, setIsLoadingCommittee] = useState(false)
+  const { token } = useAuth()
 
-  const { toast } = useToast();
-  const { token } = useAuth();
-
-  // Fetch all faculty data when component mounts
   useEffect(() => {
-    fetchFacultyData();
-    fetchAllVerificationTeams();
-  }, []);
-
-  const fetchFacultyData = async () => {
-    try {
-      const response = await fetch('/api/admin/faculty', {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-      if (!response.ok) throw new Error('Failed to fetch faculty data');
-      const data = await response.json();
-      setAllFaculty(data);
-    } catch (err: any) {
-      setError('Error loading faculty data: ' + err.message);
-    }
-  };
-
-  const fetchAllVerificationTeams = async () => {
-    setIsLoading(true);
-    try {
-      const teamsData: Record<string, VerificationTeam> = {};
-
-      const promises = DEPARTMENTS.map(async (dept) => {
-        try {
-          const response = await fetch('/api/verification-team/committee', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`,
-            },
-            body: JSON.stringify({ department: dept.value }),
-          });
-          if (response.ok) {
-            const data = await response.json();
-            teamsData[dept.value] = data;
-          }
-        } catch (error) {
-          console.error(`Error fetching ${dept.value} verification team:`, error);
-        }
-      });
-
-      await Promise.all(promises);
-      setVerificationTeams(teamsData);
-    } catch (err: any) {
-      setError('Error loading verification teams: ' + err.message);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleAddMore = () => {
-    setCommitteeIds([...committeeIds, ""]);
-    setSuggestions([]);
-  };
-
-  const handleCommitteeIdChange = (index: number, value: string) => {
-    const newCommitteeIds = [...committeeIds];
-    newCommitteeIds[index] = value;
-    setCommitteeIds(newCommitteeIds);
-    setActiveInputIndex(index);
-
-    if (value.trim() && selectedDepartment) {
-      const filtered = allFaculty
-        .filter(faculty =>
-          (faculty.userId.toLowerCase().includes(value.toLowerCase()) ||
-            faculty.name.toLowerCase().includes(value.toLowerCase())) &&
-          faculty.department !== selectedDepartment &&
-          !committeeIds.includes(faculty.userId)
-        )
-        .slice(0, 5);
-      setSuggestions(filtered);
-    } else {
-      setSuggestions([]);
-    }
-  };
-
-  const handleSuggestionClick = (index: number, faculty: Faculty) => {
-    const newCommitteeIds = [...committeeIds];
-    newCommitteeIds[index] = faculty.userId;
-    setCommitteeIds(newCommitteeIds);
-    setSuggestions([]);
-  };
-
-  const handleDeleteVerifier = (indexToDelete: number) => {
-    const deletedId = committeeIds[indexToDelete];
-
-    if (deletedId && deletedId.trim() !== "") {
-      setDeletedVerifiers(prev => {
-        if (!prev.includes(deletedId)) {
-          return [...prev, deletedId];
-        }
-        return prev;
-      });
-    }
-
-    setCommitteeIds(committeeIds.filter((_, index) => index !== indexToDelete));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    try {
-      setLoading(true);
-      setError(null);
-
-      const response = await fetch('/api/verification-team/create', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          department: selectedDepartment,
-          committee_ids: committeeIds,
-          deleted_verifiers: deletedVerifiers
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to create verification committee');
-      }
-
-      setSuccessMessage(`Verification committee ${editingDepartment ? 'updated' : 'created'} successfully!`);
-      setShowSuccessDialog(true);
-
-      if (!editingDepartment) {
-        setSelectedDepartment('');
-      }
-      setCommitteeIds(['']);
-      setDeletedVerifiers([]);
-      fetchAllVerificationTeams();
-
-    } catch (error: any) {
-      console.error('Error creating verification committee:', error);
-      setError(error.message);
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleEditTeam = (department: string) => {
-    const teamData = verificationTeams[department];
-    if (teamData && teamData.committees) {
+    setIsLoadingFaculties(true)
+    const fetchFaculties = async () => {
       try {
-        const committeeIdsToEdit = Object.keys(teamData.committees).map(key => {
-          const idPart = key.split(' ')[0];
-          return idPart;
-        });
-
-        setSelectedDepartment(department);
-        setCommitteeIds(committeeIdsToEdit.length > 0 ? committeeIdsToEdit : [""]);
-        setEditingDepartment(department);
-        setDeletedVerifiers([]);
-
-        setTimeout(() => {
-          const formElement = document.querySelector('.allocate-committee-form');
-          if (formElement) {
-            formElement.scrollIntoView({ behavior: 'smooth' });
+        const res = await fetch(
+          `/api/admin/faculty`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           }
-        }, 100);
+        );
+        const data = await res.json()
+        console.log('All Faculties Response:', data)
+        setAllFaculties(data || [])
       } catch (error) {
-        console.error("Error preparing team for editing:", error);
-        setError("Failed to load committee data for editing.");
+        toast({ title: 'Error', description: 'Failed to fetch faculties' })
+      } finally {
+        setIsLoadingFaculties(false)
       }
     }
-  };
+    fetchFaculties()
+  }, [])
 
-  const handleCancelEdit = () => {
-    setEditingDepartment(null);
-    setSelectedDepartment("");
-    setCommitteeIds([""]);
-    setError(null);
-  };
+  // Load existing verification committee for selected department
+  const loadExistingCommittee = async (department: string) => {
+    if (!department) return
 
-  const getDepartmentLabel = (value: string) => {
-    const dept = DEPARTMENTS.find(d => d.value === value);
-    return dept?.label || value;
-  };
+    try {
+      setIsLoadingCommittee(true)
+      const response = await apiClient.get(`/admin/verification-team/${department}`) as { success: boolean; data?: { verificationTeam: any[] } }
+      if (response.success && Array.isArray(response.data?.verificationTeam) && response.data.verificationTeam.length > 0) {
+        const existingRows: VerifierRow[] = response.data.verificationTeam.map((team: any, index: number) => ({
+          id: `verifier-${index + 1}`,
+          verifierId: team.verifier.userId,
+          verifierName: team.verifier.name,
+          verifierEmail: team.verifier.email,
+          assignedFaculties: team.assignedFaculties || []
+        }))
+        
+        setVerifierRows(existingRows)
+        toast({
+          title: 'Loaded',
+          description: `Found ${existingRows.length} existing verifier(s) for ${department}`
+        })
+      } else {
+        setVerifierRows([])
+      }
+    } catch (error: any) {
+      if (error?.message && !error.message.includes('404')) {
+        toast({
+          title: 'Warning',
+          description: 'Could not load existing committee data. Starting fresh.'
+        })
+      }
+      setVerifierRows([])
+    } finally {
+      setIsLoadingCommittee(false)
+    }
+  }
+
+  useEffect(() => {
+    if (selectedDepartment) {
+      loadExistingCommittee(selectedDepartment)
+    } else {
+      setVerifierRows([])
+    }
+  }, [selectedDepartment])
+
+  useEffect(() => {
+    if (selectedDepartment && allFaculties.length > 0) {
+      const deptFaculties = allFaculties.filter(f => f.department === selectedDepartment)
+      setDepartmentFaculties(deptFaculties)
+    } else {
+      setDepartmentFaculties([])
+    }
+  }, [selectedDepartment, allFaculties])
+
+  // Get available verifiers (faculties not in selected department)
+  const getAvailableVerifiers = () => allFaculties.filter(f => f.department !== selectedDepartment)
+
+  // Get available faculties for this verifier
+  const getAvailableFacultiesForVerifier = () => {
+    if (editingRowId) {
+      return departmentFaculties
+    }
+    const assignedInOtherRows = verifierRows.flatMap(row => row.assignedFaculties.map(f => f.userId))
+    return departmentFaculties.filter(f => !assignedInOtherRows.includes(f.userId))
+  }
+
+  // Render faculty list in dialog
+  const renderFacultyList = () => {
+    const availableFaculties = getAvailableFacultiesForVerifier()
+    
+    if (!editingRowId && availableFaculties.length === 0) {
+      return <p className="text-sm text-muted-foreground">All faculties are already assigned to other verifiers</p>
+    }
+    
+    return availableFaculties.map(faculty => {
+      const isAssignedToOther = editingRowId && verifierRows
+        .filter(row => row.id !== editingRowId)
+        .some(row => row.assignedFaculties.some(f => f.userId === faculty.userId))
+      
+      return (
+        <div
+          key={faculty.userId}
+          className={`flex items-center gap-3 p-2 rounded ${
+            isAssignedToOther ? 'bg-amber-50' : 'hover:bg-muted'
+          }`}
+        >
+          <input
+            type="checkbox"
+            id={`faculty-${faculty.userId}`}
+            checked={selectedFacultiesForAdd.has(faculty.userId)}
+            onChange={() => toggleFacultySelection(faculty.userId)}
+            className="rounded border-gray-300"
+          />
+          <label
+            htmlFor={`faculty-${faculty.userId}`}
+            className="flex-1 cursor-pointer text-sm"
+          >
+            <div className="font-medium">{faculty.name}</div>
+            <div className="text-xs text-muted-foreground">{faculty.email}</div>
+            {isAssignedToOther && (
+              <div className="text-xs text-amber-700 mt-1">
+                ⚠️ Currently assigned to another verifier (will be moved)
+              </div>
+            )}
+          </label>
+        </div>
+      )
+    })
+  }
+
+  const handleAddVerifier = () => {
+    if (!selectedVerifier) {
+      toast({ title: 'Error', description: 'Please select a verifier' })
+      return
+    }
+
+    if (selectedFacultiesForAdd.size === 0) {
+      toast({ title: 'Error', description: 'Please select at least one faculty' })
+      return
+    }
+
+    const newRow: VerifierRow = {
+      id: Date.now().toString(),
+      verifierName: selectedVerifier.name,
+      verifierEmail: selectedVerifier.email,
+      verifierId: selectedVerifier.userId,
+      assignedFaculties: departmentFaculties.filter(f => selectedFacultiesForAdd.has(f.userId)),
+    }
+
+    setVerifierRows([...verifierRows, newRow])
+    closeDialog()
+    toast({ title: 'Success', description: `${selectedVerifier.name} added to verification team` })
+  }
+
+  const handleEditVerifier = (row: VerifierRow) => {
+    setEditingRowId(row.id)
+    setSelectedVerifier({
+      userId: row.verifierId,
+      name: row.verifierName,
+      email: row.verifierEmail,
+    } as User)
+    setSelectedFacultiesForAdd(new Set(row.assignedFaculties.map(f => f.userId)))
+    setIsDialogOpen(true)
+  }
+
+  const handleUpdateVerifier = () => {
+    if (!editingRowId || !selectedVerifier) {
+      toast({ title: 'Error', description: 'Please select a verifier' })
+      return
+    }
+
+    if (selectedFacultiesForAdd.size === 0) {
+      toast({ title: 'Error', description: 'Please select at least one faculty' })
+      return
+    }
+
+    const newAssignedFaculties = departmentFaculties.filter(f => selectedFacultiesForAdd.has(f.userId))
+
+    // Update verifier rows: assign faculties to edited row and remove them from others
+    setVerifierRows(
+      verifierRows.map(row => {
+        if (row.id === editingRowId) {
+          return { ...row, assignedFaculties: newAssignedFaculties }
+        } else {
+          return {
+            ...row,
+            assignedFaculties: row.assignedFaculties.filter(fac => !selectedFacultiesForAdd.has(fac.userId))
+          }
+        }
+      })
+    )
+
+    closeDialog()
+    toast({ title: 'Success', description: 'Verifier assignments updated' })
+  }
+
+  const closeDialog = () => {
+    setIsDialogOpen(false)
+    setEditingRowId(null)
+    setSelectedVerifier(null)
+    setSelectedFacultiesForAdd(new Set())
+  }
+
+  const handleRemoveVerifier = (id: string) => {
+    setVerifierRows(verifierRows.filter(row => row.id !== id))
+    toast({ title: 'Success', description: 'Verifier removed' })
+  }
+
+  const toggleFacultySelection = (facultyId: string) => {
+    const newSelection = new Set(selectedFacultiesForAdd)
+    if (newSelection.has(facultyId)) {
+      newSelection.delete(facultyId)
+    } else {
+      newSelection.add(facultyId)
+    }
+    setSelectedFacultiesForAdd(newSelection)
+  }
+
+  const handleSubmit = async () => {
+    if (!selectedDepartment) {
+      toast({ title: 'Error', description: 'Please select a department' })
+      return
+    }
+
+    if (verifierRows.length === 0) {
+      toast({ title: 'Error', description: 'Please add at least one verifier' })
+      return
+    }
+
+    // Validate that all verifiers have assigned faculties
+    const invalidRows = verifierRows.filter(row => 
+      !row.verifierId || row.assignedFaculties.length === 0
+    )
+
+    if (invalidRows.length > 0) {
+      toast({ 
+        title: 'Error', 
+        description: 'Please ensure all verifiers are selected and have at least one faculty assigned' 
+      })
+      return
+    }
+
+    // Check for duplicate verifiers
+    const verifierIds = verifierRows.map(row => row.verifierId)
+    const duplicateVerifiers = verifierIds.filter((id, index) => verifierIds.indexOf(id) !== index)
+    if (duplicateVerifiers.length > 0) {
+      toast({ 
+        title: 'Error', 
+        description: 'Each verifier can only be assigned once in the committee' 
+      })
+      return
+    }
+
+    try {
+      setIsSubmitting(true)
+      const payload: VerificationTeamPayload = {
+        department: selectedDepartment,
+        verificationTeam: verifierRows.map(row => ({
+          userId: row.verifierId,
+          facultyIds: row.assignedFaculties.map(f => f.userId)
+        }))
+      }
+      console.log('Submitting Verification Team Payload:', payload)
+      
+      const response = await apiClient.post('/admin/verification-team', payload) as { success: boolean; message?: string }
+      if (response.success) {
+        toast({ title: 'Success', description: response.message || 'Verification committee created successfully' })
+        setVerifierRows([])
+        setSelectedDepartment('')
+      } else {
+        toast({ title: 'Error', description: response.message || 'Failed to create verification committee' })
+      }
+    } catch (error: any) {
+      console.error('Error creating verification committee:', error)
+      toast({ 
+        title: 'Error', 
+        description: error.message || 'Failed to create verification committee' 
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
+
+  const departmentLabel = DEPARTMENTS.find(d => d.value === selectedDepartment)?.label || ''
 
   return (
-    <div className="space-y-8 p-6">
-      {/* Form to allocate verification committee */}
-      <Card className="allocate-committee-form">
-        <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center">
-              <Users className="mr-2 text-blue-600" />
-              {editingDepartment ? `Edit ${getDepartmentLabel(editingDepartment)} Verification Committee` : "Allocate Verification Committee"}
-            </CardTitle>
-            {editingDepartment && (
-              <Button
-                variant="ghost"
-                onClick={handleCancelEdit}
-                size="sm"
-              >
-                Cancel Editing
-              </Button>
-            )}
-          </div>
-        </CardHeader>
+    <div className="space-y-6 p-6">
+      <div>
+        <h1 className="text-3xl font-bold tracking-tight">Verification Committee</h1>
+        <p className="text-muted-foreground mt-2">Create and manage verification committees for each department</p>
+      </div>
 
-        <CardContent className="p-6">
-          <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl">
-            {/* Department Selection */}
-            <div className="space-y-2">
-              <Label>Select Department</Label>
+      <Card className="p-6">
+        <label className="text-sm font-medium">Select Department</label>
+        <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
+          <SelectTrigger className="mt-2 w-full md:w-80">
+            <SelectValue placeholder="Choose a department..." />
+          </SelectTrigger>
+          <SelectContent>
+            {DEPARTMENTS.map(dept => (
+              <SelectItem key={dept.value} value={dept.value}>
+                {dept.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </Card>
+
+      {selectedDepartment && (
+        <Card className="p-6 space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Verification Team for {departmentLabel}</h2>
+            <Button onClick={() => setIsDialogOpen(true)} disabled={!selectedDepartment || isLoadingCommittee}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Verifier
+            </Button>
+          </div>
+
+          {isLoadingCommittee ? (
+            <div className="py-8 text-center text-muted-foreground">
+              <div className="flex items-center justify-center gap-2">
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                Loading existing verification committee...
+              </div>
+            </div>
+          ) : verifierRows.length === 0 ? (
+            <div className="py-8 text-center text-muted-foreground border border-dashed rounded-lg">
+              <p>No verifiers added yet. Click "Add Verifier" to get started.</p>
+            </div>
+          ) : (
+            <div className="border rounded-lg overflow-hidden">
+              <Table>
+                <TableHeader className="bg-muted/50">
+                  <TableRow>
+                    <TableHead className="font-semibold">Verifier Name</TableHead>
+                    <TableHead className="font-semibold">Email</TableHead>
+                    <TableHead className="font-semibold">Assigned Faculties</TableHead>
+                    <TableHead className="w-10"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {verifierRows.map(row => (
+                    <TableRow key={row.id} className="hover:bg-muted/50">
+                      <TableCell className="font-medium">{row.verifierName}</TableCell>
+                      <TableCell className="text-sm">{row.verifierEmail}</TableCell>
+                      <TableCell>
+                        <div className="space-y-1">
+                          {row.assignedFaculties.length > 0 ? (
+                            <>
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-xs font-medium text-muted-foreground">
+                                  {row.assignedFaculties.length} Faculty Assigned
+                                </span>
+                              </div>
+                              <div className="flex flex-wrap gap-1 max-w-md">
+                                {row.assignedFaculties.slice(0, 3).map(fac => (
+                                  <div
+                                    key={fac.userId}
+                                    className="group relative inline-flex items-center"
+                                  >
+                                    <span className="inline-flex items-center px-3 py-1 rounded-md text-xs font-medium bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border border-blue-200 hover:border-blue-300 transition-colors">
+                                      {fac.name}
+                                    </span>
+                                  </div>
+                                ))}
+                                {row.assignedFaculties.length > 3 && (
+                                  <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                                    +{row.assignedFaculties.length - 3} more
+                                  </span>
+                                )}
+                              </div>
+                            </>
+                          ) : (
+                            <span className="text-xs text-muted-foreground italic">No faculties assigned</span>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEditVerifier(row)}
+                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveVerifier(row.id)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          {verifierRows.length > 0 && (
+            <div className="flex gap-3 justify-end pt-4">
+              <Button variant="outline" onClick={() => setVerifierRows([])} disabled={isLoadingCommittee}>
+                Clear All
+              </Button>
+              <Button onClick={handleSubmit} disabled={isSubmitting || isLoadingCommittee} className="gap-2">
+                <Check className="w-4 h-4" />
+                {isSubmitting ? 'Submitting...' : 'Save Verification Committee'}
+              </Button>
+            </div>
+          )}
+        </Card>
+      )}
+
+      {/* Add Verifier Dialog */}
+      <Dialog open={isDialogOpen} onOpenChange={closeDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>
+              {editingRowId ? 'Edit Verifier Assignments' : `Add Verifier to ${departmentLabel}`}
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {/* Verifier Selection */}
+            <div>
+              <label className="text-sm font-medium">Select Verifier</label>
               <Select
-                value={selectedDepartment}
-                onValueChange={setSelectedDepartment}
-                disabled={editingDepartment !== null}
+                value={selectedVerifier?.userId || ''}
+                onValueChange={val => {
+                  const verifier = getAvailableVerifiers().find(v => v.userId === val)
+                  setSelectedVerifier(verifier || null)
+                }}
+                disabled={editingRowId !== null}
               >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Department" />
+                <SelectTrigger className="mt-2">
+                  <SelectValue placeholder="Choose a verifier..." />
                 </SelectTrigger>
                 <SelectContent>
-                  {DEPARTMENTS.map((dept) => (
-                    <SelectItem key={dept.value} value={dept.value}>
-                      {dept.label}
+                  {getAvailableVerifiers().map(v => (
+                    <SelectItem key={v.userId} value={v.userId}>
+                      {v.name} ({v.department})
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              {selectedDepartment && (
-                <p className="text-sm text-gray-600">
-                  Note: You can only select verification committee members from departments other than {getDepartmentLabel(selectedDepartment)}
+            </div>
+
+            {/* Faculty Selection */}
+            {selectedVerifier && departmentFaculties.length > 0 && (
+              <div>
+                <label className="text-sm font-medium">Assign Faculties</label>
+                <p className="text-xs text-muted-foreground mt-1 mb-3">
+                  {editingRowId 
+                    ? `Select faculties for ${selectedVerifier.name}. If a faculty is already assigned to another verifier, it will be automatically removed from them.`
+                    : `Select one or more faculties from ${departmentLabel} to assign to this verifier`
+                  }
                 </p>
-              )}
-            </div>
-
-            {/* Committee Head IDs */}
-            <div className="space-y-4">
-              {committeeIds.map((id, index) => (
-                <div key={index} className="relative">
-                  <div className="flex gap-2">
-                    <Input
-                      type="text"
-                      value={id}
-                      onChange={(e) => handleCommitteeIdChange(index, e.target.value)}
-                      placeholder="Enter faculty ID or name"
-                      required
-                    />
-                    {(committeeIds.length > 1 || editingDepartment) && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => editingDepartment ? handleDeleteVerifier(index) : handleDeleteVerifier(index)}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 size={20} />
-                      </Button>
-                    )}
-                  </div>
-
-                  {/* Suggestions Dropdown */}
-                  {suggestions.length > 0 && activeInputIndex === index && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg">
-                      {suggestions.map((faculty) => (
-                        <div
-                          key={faculty._id}
-                          onClick={() => handleSuggestionClick(index, faculty)}
-                          className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex justify-between items-center"
-                        >
-                          <div>
-                            <span className="font-medium">{faculty.userId}</span>
-                            <span className="text-gray-600 ml-2">({faculty.name})</span>
-                          </div>
-                          <span className="text-gray-500 text-sm">{getDepartmentLabel(faculty.department)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
+                <div className="border rounded-lg p-4 space-y-2 max-h-64 overflow-y-auto">
+                  {renderFacultyList()}
                 </div>
-              ))}
-            </div>
-
-            {/* Error Message */}
-            {error && (
-              <p className="text-red-600 text-sm">{error}</p>
+                <p className="text-xs text-muted-foreground mt-2">
+                  {selectedFacultiesForAdd.size} faculty/faculties selected
+                </p>
+              </div>
             )}
 
-            {/* Buttons */}
-            <div className="flex gap-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleAddMore}
-              >
-                <Plus className="mr-2" size={18} />
-                Add Another Head
-              </Button>
-              <Button
-                type="submit"
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <Loader variant="inline" className="mr-2" />
-                    Processing...
-                  </>
-                ) : (
-                  editingDepartment ? "Update Committee" : "Save Committee"
-                )}
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
-      {/* Display Verification Teams */}
-      <Card>
-        <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center">
-              <Users className="mr-2 text-blue-600" />
-              Current Verification Committees
-            </CardTitle>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={fetchAllVerificationTeams}
-            >
-              <RefreshCw size={16} className="mr-1" />
-              Refresh
-            </Button>
+            {departmentFaculties.length === 0 && selectedVerifier && (
+              <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800">
+                No faculties available for {departmentLabel}
+              </div>
+            )}
           </div>
-        </CardHeader>
 
-        <CardContent className="p-6">
-          {isLoading ? (
-            <Loader />
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {DEPARTMENTS.map(department => {
-                const teamData = verificationTeams[department.value];
-                return (
-                  <Card key={department.value}>
-                    <CardHeader className="bg-gray-50">
-                      <div className="flex justify-between items-center">
-                        <CardTitle className="text-base">{department.label}</CardTitle>
-                        {teamData && teamData.committees && Object.keys(teamData.committees).length > 0 && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditTeam(department.value)}
-                          >
-                            <Edit2 size={16} />
-                          </Button>
-                        )}
-                      </div>
-                    </CardHeader>
-                    <CardContent className="p-4">
-                      {!teamData ? (
-                        <p className="text-gray-600 text-sm italic">No verification committee assigned</p>
-                      ) : teamData.committees && Object.keys(teamData.committees).length > 0 ? (
-                        <ul className="space-y-4">
-                          {Object.entries(teamData.committees).map(([verifier, verifiees], index) => {
-                            let verifierId = verifier;
-                            let verifierName = "";
-
-                            const parenthesesMatch = verifier.match(/^(.*?)\s*\((.*?)\)$/);
-                            if (parenthesesMatch) {
-                              verifierId = parenthesesMatch[1].trim();
-                              verifierName = parenthesesMatch[2].trim();
-                            }
-
-                            return (
-                              <li key={index} className="pb-3 border-b border-gray-100 last:border-0">
-                                <div className="flex items-center gap-2 text-sm mb-1">
-                                  <span className="w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-xs">
-                                    {index + 1}
-                                  </span>
-                                  <div>
-                                    {verifierName ? (
-                                      <>
-                                        <span className="font-medium">{verifierName}</span>
-                                        <span className="text-gray-500 text-xs ml-2">({verifierId})</span>
-                                      </>
-                                    ) : (
-                                      <span className="font-medium">{verifierId}</span>
-                                    )}
-                                  </div>
-                                </div>
-                                {Array.isArray(verifiees) && verifiees.length > 0 ? (
-                                  <div className="ml-8 mt-2">
-                                    <span className="text-xs font-medium text-gray-500 block mb-1">Assigned Faculty:</span>
-                                    <ul className="space-y-1">
-                                      {verifiees.map((faculty, idx) => (
-                                        <li key={idx} className="text-xs text-gray-600 flex items-center">
-                                          <span className="w-4 h-4 bg-gray-100 rounded-full flex items-center justify-center text-gray-600 text-xs mr-2">
-                                            {idx + 1}
-                                          </span>
-                                          {faculty}
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                ) : (
-                                  <div className="ml-8 mt-1">
-                                    <span className="text-xs text-gray-500 italic">No faculty assigned yet</span>
-                                  </div>
-                                )}
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      ) : (
-                        <p className="text-gray-600 text-sm italic">No verification committee assigned</p>
-                      )}
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Success Dialog */}
-      <AlertDialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <div className="flex items-center justify-center w-12 h-12 rounded-full mx-auto mb-4">
-              <Check className="text-green-600" size={36} />
-            </div>
-            <AlertDialogTitle className="text-center">Success</AlertDialogTitle>
-            <AlertDialogDescription className="text-center">
-              {successMessage}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction
-              onClick={() => {
-                setShowSuccessDialog(false);
-                setSuccessMessage("");
-              }}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              OK
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeDialog}>
+              Cancel
+            </Button>
+            {editingRowId ? (
+              <Button
+                onClick={handleUpdateVerifier}
+                disabled={!selectedVerifier || selectedFacultiesForAdd.size === 0}
+                className="gap-2"
+              >
+                <Check className="w-4 h-4" />
+                Save Changes
+              </Button>
+            ) : (
+              <Button onClick={handleAddVerifier} disabled={!selectedVerifier || selectedFacultiesForAdd.size === 0}>
+                Add to Committee
+              </Button>
+            )}
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
-  );
+  )
 }

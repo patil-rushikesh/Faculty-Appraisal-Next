@@ -63,7 +63,7 @@ const ROLE_CONFIG: Record<User["role"], RoleConfig> = {
         collapsible: true,
         items: [
           { icon: UserPlus, label: "Add Faculty", href: "/admin/add-faculty" },
-          { icon: Users, label: "Faculty List", href: "/admin/faculty" },
+          { icon: Users, label: "Faculty List", href: "/admin/view-faculty" },
         ],
       },
       {

@@ -38,7 +38,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           onOpen={() => setSidebarOpen(true)}
         />
         <main
-          className={`flex-1 overflow-y-auto transition-all duration-300 ${
+          className={ `flex-1 overflow-y-auto transition-all duration-300 ${
             sidebarExpanded ? "lg:ml-72" : "lg:ml-20"
           }`}
         >

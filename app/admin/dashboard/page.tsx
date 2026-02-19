@@ -1,55 +1,49 @@
 "use client";
-import { motion } from "framer-motion";
-import { containerVariants, itemVariants } from "@/lib/animations";
-import { Users, Trophy, FileText, TrendingUp } from "lucide-react";
-import { StatCard } from "@/components/stat-card";
+import Dashboard from "@/components/dashboard";
+import { User, BookOpen, FileText, Building2, GraduationCap, CheckSquare } from "lucide-react";
 
-export default function DashboardPage() {
-
-
+export default function AdminDashboardPage() {
   return (
-    <motion.div
-      className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-    >
-      <motion.div variants={itemVariants}>
-        <StatCard
-          title="Total Users"
-          value="1,234"
-          icon={Users}
-          trend={{ value: 12, isPositive: true }}
-          color="primary"
-        />
-      </motion.div>
-      <motion.div variants={itemVariants}>
-        <StatCard
-          title="Active Events"
-          value="8"
-          icon={Trophy}
-          trend={{ value: 2, isPositive: true }}
-          color="secondary"
-        />
-      </motion.div>
-      <motion.div variants={itemVariants}>
-        <StatCard
-          title="Total Submissions"
-          value="456"
-          icon={FileText}
-          trend={{ value: 5, isPositive: true }}
-          color="accent"
-        />
-      </motion.div>
-      <motion.div variants={itemVariants}>
-        <StatCard
-          title="Platform Growth"
-          value="23%"
-          icon={TrendingUp}
-          trend={{ value: 8, isPositive: true }}
-          color="primary"
-        />
-      </motion.div>
-    </motion.div>
+    <Dashboard
+      userName="Admin"
+      quickLinks={[
+        {
+          href: "/admin/profile",
+          icon: <User className="w-6 h-6 text-indigo-600" />,
+          label: "Profile",
+          description: "View and update your profile",
+        },
+        {
+          href: "/admin/faculty",
+          icon: <BookOpen className="w-6 h-6 text-indigo-600" />,
+          label: "Faculty List",
+          description: "Manage all faculty members",
+        },
+        {
+          href: "/admin/add-faculty",
+          icon: <FileText className="w-6 h-6 text-indigo-600" />,
+          label: "Add Faculty",
+          description: "Add a new faculty member",
+        },
+        {
+          href: "/admin/verification-team",
+          icon: <CheckSquare className="w-6 h-6 text-indigo-600" />,
+          label: "Verification Team",
+          description: "Manage verification teams",
+        },
+        {
+          href: "/admin/assign-faculty-to-verification-team",
+          icon: <Building2 className="w-6 h-6 text-indigo-600" />,
+          label: "Assign Faculty to Team",
+          description: "Assign faculty to verification teams",
+        },
+        {
+          href: "/admin/assign-dean-to-department",
+          icon: <GraduationCap className="w-6 h-6 text-indigo-600" />,
+          label: "Assign Dean",
+          description: "Assign dean to department",
+        },
+      ]}
+    />
   );
 }

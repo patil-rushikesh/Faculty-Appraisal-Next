@@ -74,13 +74,12 @@ export default function AssignFacultyToVerificationTeamPage() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/verification-team/committee', {
-        method: 'POST',
+      // Fetch verification committee for this department
+      const response = await fetch(`/api/admin/verification-team/${encodeURIComponent(department)}`, {
+        method: 'GET',
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({ department }),
       });
 
       if (!response.ok) {
@@ -89,25 +88,24 @@ export default function AssignFacultyToVerificationTeamPage() {
 
       const data = await response.json();
 
-      // Extract committee members
+      // Extract committee members from backend response
+      // Backend returns: { data: { department, verificationTeam: [{ verifier: { userId, name, ... }, assignedFaculties: [...] }] } }
       const committeeMembers: Member[] = [];
       const initialAssignments: AssignedFaculty = {};
 
-      if (data.committees) {
-        Object.entries(data.committees).forEach(([verifier, verifiees]) => {
-          // Parse verifier ID and name
-          const match = verifier.match(/^(.*?)\s*\((.*?)\)$/);
-          const verifierId = match ? match[1].trim() : verifier;
-          const verifierName = match ? match[2].trim() : "";
-
+      if (data.data?.verificationTeam) {
+        data.data.verificationTeam.forEach((team: any) => {
+          const verifier = team.verifier;
           committeeMembers.push({
-            _id: verifierId,
-            userId: verifierId,
-            name: verifierName,
+            _id: verifier.userId,
+            userId: verifier.userId,
+            name: verifier.name,
           });
 
-          // Set initial assignments
-          initialAssignments[verifierId] = Array.isArray(verifiees) ? verifiees : [];
+          // Set initial assignments (array of faculty userIds)
+          initialAssignments[verifier.userId] = Array.isArray(team.assignedFaculties)
+            ? team.assignedFaculties.map((f: any) => f.userId)
+            : [];
         });
       }
 
@@ -115,7 +113,8 @@ export default function AssignFacultyToVerificationTeamPage() {
       setAssignedFaculty(initialAssignments);
 
       // Fetch faculty list for this department
-      const facultyResponse = await fetch('/api/verification-team/users', {
+      const facultyResponse = await fetch('/api/all-faculties', {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
         },
@@ -126,7 +125,7 @@ export default function AssignFacultyToVerificationTeamPage() {
       }
 
       const facultyData = await facultyResponse.json();
-      const departmentFaculty = facultyData.filter(
+      const departmentFaculty = (facultyData.users || []).filter(
         (f: Faculty) => f.department === department
       );
       setFaculties(departmentFaculty);
@@ -168,7 +167,16 @@ export default function AssignFacultyToVerificationTeamPage() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/verification-team/assign', {
+      // Transform assignments into the backend's expected format:
+      // { department, verificationTeam: [{ userId, facultyIds }] }
+      const verificationTeam = Object.entries(assignedFaculty)
+        .filter(([_, facultyIds]) => facultyIds.length > 0)
+        .map(([committeeUserId, facultyIds]) => ({
+          userId: committeeUserId,
+          facultyIds,
+        }));
+
+      const response = await fetch('/api/admin/verification-team', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -176,7 +184,7 @@ export default function AssignFacultyToVerificationTeamPage() {
         },
         body: JSON.stringify({
           department: selectedDepartment,
-          assignments: assignedFaculty,
+          verificationTeam,
         }),
       });
 

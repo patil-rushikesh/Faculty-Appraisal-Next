@@ -1,16 +1,42 @@
 "use client"
 
-import { useState } from "react"
+import { use, useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "./AuthProvider"
 import { motion } from "framer-motion"
 import AuthForm from "@/components/auth-form"
+import Loader from "@/components/loader"
 
 export default function LoginPage() {
   const router = useRouter()
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-  const { login } = useAuth()
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
+  const { login, user } = useAuth()
+
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (user && user.role) {
+      const normalizeRole = (role: string) => {
+        const r = role.toLowerCase();
+        // Map role values to route paths
+        if (r === "associate_dean") return "associate_dean";
+        if (r === "director") return "director";
+        if (r === "hod") return "hod";
+        if (r === "dean") return "dean";
+        if (r === "admin") return "admin";
+        if (r === "faculty") return "faculty";
+        return r;
+      };
+      
+      const rolePath = normalizeRole(user.role);
+      router.push(`/${rolePath}/dashboard`);
+    } else {
+      // User is not logged in, stop showing loader
+      setIsCheckingAuth(false);
+    }
+  }, [user, router]);
+
 
   const handleLogin = async (data: any) => {
     setError("")
@@ -34,6 +60,15 @@ export default function LoginPage() {
       setIsLoading(false)
     }
   };
+
+  // Show loader while checking authentication
+  if (isCheckingAuth) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-blue-50 dark:to-slate-900 flex items-center justify-center px-4">
+        <Loader variant="page" message="Loading..." />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-blue-50 dark:to-slate-900 flex items-center justify-center px-4">

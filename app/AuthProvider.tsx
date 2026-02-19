@@ -13,8 +13,12 @@ import { tokenManager } from "@/lib/api-client";
 
 type Role = User["role"];
 
-export interface AuthUser
-  extends Pick<User, "id" | "email" | "name" | "role"> {}
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  role: User["role"];
+}
 
 interface AuthContextValue {
   user: AuthUser | null;
@@ -62,8 +66,13 @@ export default function AuthProvider({
   const normalizeRolePath = useCallback((r?: string | null) => {
     if (!r) return undefined;
     const s = String(r).toLowerCase();
-    if (s === "event coordinator" || s === "coordinator") return "coordinator";
-    if (s === "evaluator head" || s === "head") return "head";
+    // Map role values to route paths
+    if (s === "associate_dean") return "associate_dean";
+    if (s === "director") return "director";
+    if (s === "hod") return "hod";
+    if (s === "dean") return "dean";
+    if (s === "admin") return "admin";
+    if (s === "faculty") return "faculty";
     return s;
   }, []);
 

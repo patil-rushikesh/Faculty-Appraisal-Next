@@ -107,11 +107,12 @@ export default function AddFacultyPage() {
         headers["Authorization"] = `Bearer ${token}`;
       }
 
-      const response = await fetch("/api/admin/faculty/deans", {
+      const response = await fetch("/api/admin/faculty", {
         headers,
         credentials: "include",
       });
-      const data = await response.json();
+      const allFaculties = await response.json();
+      const data = allFaculties.filter((faculty: any) => faculty.role.toLowerCase() === "dean");
 
       if (data.success && Array.isArray(data.data)) {
         setDeanSuggestions(data.data);

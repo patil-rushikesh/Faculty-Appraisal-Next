@@ -5,18 +5,23 @@ import { useIsMobile } from "./hooks/use-mobile";
 const PUBLIC_PATHS = ["/", "/forgot-password", "/reset-password"];
 const ROLE_PATHS = {
   admin: ["/admin"],
-  coordinator: ["/coordinator"],
-  head: ["/head"],
-  participant: ["/participant"],
+  associate_dean: ["/associate_dean"],
+  director: ["/director"],
+  hod: ["/hod"],
+  dean: ["/dean"],
+  faculty: ["/faculty"],
 };
 
 function normalizeRole(role?: string): string | undefined {
   if (!role) return undefined;
   const r = role.toLowerCase();
-  if (r.includes("coordinator")) return "coordinator";
-  if (r.includes("head")) return "head";
-  if (r.includes("admin")) return "admin";
-  if (r.includes("participant")) return "participant";
+  // Map role values to route paths
+  if (r === "associate_dean") return "associate_dean";
+  if (r === "director") return "director";
+  if (r === "hod") return "hod";
+  if (r === "dean") return "dean";
+  if (r === "admin") return "admin";
+  if (r === "faculty") return "faculty";
   return r;
 }
 

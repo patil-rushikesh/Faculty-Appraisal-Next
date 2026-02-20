@@ -61,7 +61,7 @@ export default function MetricField({
                             value={value === 0 ? "" : value}
                             onChange={onChange}
                             placeholder={placeholder}
-                            className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm text-right text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50"
+                            className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm text-right text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50"
                         />
                     </div>
 
@@ -73,7 +73,7 @@ export default function MetricField({
                             onChange={onProofChange}
                             disabled={disabled}
                             placeholder={proofPlaceholder}
-                            className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition disabled:opacity-50"
+                            className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition disabled:opacity-50"
                         />
                     </div>
 

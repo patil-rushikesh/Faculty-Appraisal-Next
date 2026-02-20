@@ -111,7 +111,7 @@ export default function PartFReview({ apiBase, department, userId }: PartFReview
             <div className="rounded-xl border border-border bg-card p-5">
                 <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
                     <div>
-                        <h2 className="text-sm font-black text-foreground uppercase tracking-widest">Appraisal Review</h2>
+                        <h2 className="text-sm font-black text-foreground uppercase tracking-widest">Review & Submit</h2>
                         <p className="text-[10px] text-muted-foreground uppercase opacity-70">Generate, save and freeze your appraisal document</p>
                     </div>
                     <div className="flex flex-wrap gap-2">

@@ -21,7 +21,7 @@ const tabs = [
     { id: "C", label: "Part C", description: "Self Development" },
     { id: "D", label: "Part D", description: "Portfolio" },
     { id: "E", label: "Part E", description: "Extra Contributions" },
-    { id: "F", label: "Part F", description: "Review & Submit" },
+    { id: "F", label: "Review & Submit", description: "" },
 ];
 
 const VALID_TABS = ["A", "B", "C", "D", "E", "F"];

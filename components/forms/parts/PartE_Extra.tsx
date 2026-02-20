@@ -120,7 +120,7 @@ function PartEExtra({ apiBase, department, userId }: PartEExtraProps) {
                     </div>
                     <div className="flex items-center justify-between py-2 border-t border-border pt-4">
                         <div>
-                            <p className="text-sm font-medium text-indigo-700 uppercase tracking-tight">
+                            <p className="text-sm font-medium text-foreground uppercase tracking-tight">
                                 Self-Awarded Marks
                             </p>
                             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">

@@ -282,11 +282,11 @@ function PartDPortfolio({
                                     {scores.superior} / {PART_D_SELF_MAX}
                                 </td>
                             </tr>
-                            <tr className="bg-indigo-600 text-white">
-                                <td className="px-4 py-4 font-black uppercase tracking-widest text-indigo-50">
+                            <tr className="bg-muted/10 font-bold border-t-2 border-border">
+                                <td className="px-4 py-4 font-black uppercase tracking-widest text-foreground">
                                     Total Portfolio Score
                                 </td>
-                                <td className="px-4 py-4 text-right font-black tabular-nums text-lg">
+                                <td className="px-4 py-4 text-right font-black tabular-nums text-lg text-foreground">
                                     {totalScore} / {PART_D_MAX}
                                 </td>
                             </tr>

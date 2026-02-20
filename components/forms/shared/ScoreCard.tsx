@@ -19,7 +19,7 @@ export default function ScoreCard({
         <div className={cn("mt-4 space-y-2", className)}>
             <div className="flex items-center justify-between rounded-lg border border-border bg-muted/40 px-4 py-3">
                 <span className="text-sm font-medium text-muted-foreground">{label}</span>
-                <span className="text-base font-bold text-indigo-600">
+                <span className="text-base font-bold text-foreground">
                     {score}
                     <span className="text-muted-foreground font-normal"> / {total}</span>
                 </span>

@@ -115,7 +115,7 @@ function PartAAcademicInvolvement({ userDesignation = "Professor" }: PartAAcadem
                   </span>
                 </div>
               ) : (
-                <span className="font-semibold text-indigo-700 tabular-nums">
+                <span className="font-semibold text-foreground tabular-nums">
                   {scores[field]}
                   <span className="font-normal text-muted-foreground text-[10px] uppercase ml-1.5 tracking-tighter">
                     / {PART_A_MAXES[field]}
@@ -145,10 +145,10 @@ function PartAAcademicInvolvement({ userDesignation = "Professor" }: PartAAcadem
             </thead>
             <tbody className="divide-y divide-border bg-card">
               <tr>
-                <td className="px-4 py-3 text-indigo-700 font-medium">
+                <td className="px-4 py-3 text-foreground font-medium">
                   Raw Sum of All Sections
                 </td>
-                <td className="px-4 py-3 text-right text-indigo-700 tabular-nums font-semibold">
+                <td className="px-4 py-3 text-right text-foreground tabular-nums font-semibold">
                   {rawSum.toFixed(1)}
                 </td>
                 <td className="px-4 py-3 text-right text-muted-foreground tabular-nums">
@@ -156,11 +156,11 @@ function PartAAcademicInvolvement({ userDesignation = "Professor" }: PartAAcadem
                 </td>
               </tr>
               <tr>
-                <td className="px-4 py-3 text-indigo-700 italic flex items-center gap-2">
-                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-indigo-200" />
+                <td className="px-4 py-3 text-foreground italic flex items-center gap-2">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-muted-foreground/30" />
                   Role Factor ({userDesignation})
                 </td>
-                <td className="px-4 py-3 text-right text-indigo-700 tabular-nums font-semibold">
+                <td className="px-4 py-3 text-right text-foreground tabular-nums font-semibold">
                   × {factor.toFixed(2)}
                 </td>
                 <td className="px-4 py-3 text-right text-muted-foreground tabular-nums">
@@ -168,7 +168,7 @@ function PartAAcademicInvolvement({ userDesignation = "Professor" }: PartAAcadem
                 </td>
               </tr>
               <tr className="bg-muted/10 font-bold border-t-2 border-border">
-                <td className="px-4 py-4 text-indigo-700 uppercase tracking-wider font-extrabold">
+                <td className="px-4 py-4 text-foreground uppercase tracking-wider font-extrabold">
                   Final Adjusted Score
                 </td>
                 <td className="px-4 py-4 text-right text-indigo-600 tabular-nums text-lg font-black">

@@ -56,7 +56,7 @@ function NumericRow({
     return (
         <div className="flex items-center justify-between gap-4 py-3 border-b border-border last:border-0 hover:bg-muted/5 transition-colors px-1">
             <div className="min-w-0">
-                <p className="text-sm font-medium text-indigo-700">{label}</p>
+                <p className="text-sm font-medium text-foreground">{label}</p>
                 {hint && (
                     <p className="text-[10px] text-muted-foreground uppercase tracking-tight">
                         {hint}
@@ -379,28 +379,32 @@ function PartCSelfDevelopment({
                 </SectionCard>
             )}
 
-            <div className="rounded-xl border border-border bg-card px-6 py-4 flex items-center justify-between">
-                <div>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                        Total Part C Score
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                        Maximum for {userDesignation}: {maxTotal}
-                    </p>
+            <SectionCard title="Score Summary">
+                <div className="overflow-hidden rounded-lg border border-border">
+                    <table className="w-full text-xs">
+                        <tbody className="divide-y divide-border">
+                            {verifiedScore !== undefined && (
+                                <tr className="bg-muted/10">
+                                    <td className="px-4 py-3 font-medium uppercase tracking-wider text-[10px] text-muted-foreground">
+                                        Verified Score
+                                    </td>
+                                    <td className="px-4 py-3 text-right font-bold tabular-nums">
+                                        {verifiedScore}
+                                    </td>
+                                </tr>
+                            )}
+                            <tr className="bg-muted/10 font-bold border-t-2 border-border">
+                                <td className="px-4 py-4 font-black uppercase tracking-widest text-foreground">
+                                    Total Part C Score
+                                </td>
+                                <td className="px-4 py-4 text-right font-black tabular-nums text-lg text-foreground">
+                                    {totalScore} / {maxTotal}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-                <span className="text-2xl font-black text-indigo-700 tabular-nums">{totalScore}</span>
-            </div>
-
-            {verifiedScore !== undefined && (
-                <div className="rounded-xl border border-border bg-muted/30 px-6 py-4 flex items-center justify-between mt-2">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                        Verified Score
-                    </p>
-                    <span className="text-xl font-bold text-indigo-700 tabular-nums">
-                        {verifiedScore}
-                    </span>
-                </div>
-            )}
+            </SectionCard>
 
             {submitSuccess && (
                 <p className="text-xs text-center text-muted-foreground font-medium italic">

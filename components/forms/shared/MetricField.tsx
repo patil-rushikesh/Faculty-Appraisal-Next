@@ -42,7 +42,7 @@ export default function MetricField({
             <div className="flex flex-col md:flex-row md:items-center gap-4">
                 {/* Label and Hint */}
                 <div className="flex-1 min-w-0">
-                    <label className="text-sm font-medium text-indigo-700 block">
+                    <label className="text-sm font-medium text-foreground block">
                         {label}
                     </label>
                     {hint && <p className="text-xs text-muted-foreground">{hint}</p>}

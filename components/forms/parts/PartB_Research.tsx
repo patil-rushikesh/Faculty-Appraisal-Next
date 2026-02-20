@@ -411,28 +411,32 @@ function PartBResearch({ apiBase, department, userId, userDesignation }: PartBRe
                 <ScoreCard label="Products Score" score={scores.product} total={50} />
             </SectionCard>
 
-            <div className="rounded-xl border border-border bg-card px-6 py-4 flex items-center justify-between">
-                <div>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                        Total Part B Score
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                        Maximum for {userDesignation}: {maxTotal}
-                    </p>
+            <SectionCard title="Score Summary">
+                <div className="overflow-hidden rounded-lg border border-border">
+                    <table className="w-full text-xs">
+                        <tbody className="divide-y divide-border">
+                            {verifiedTotalScore !== undefined && (
+                                <tr className="bg-muted/10">
+                                    <td className="px-4 py-3 font-medium uppercase tracking-wider text-[10px] text-muted-foreground">
+                                        Verified Score
+                                    </td>
+                                    <td className="px-4 py-3 text-right font-bold tabular-nums">
+                                        {verifiedTotalScore}
+                                    </td>
+                                </tr>
+                            )}
+                            <tr className="bg-muted/10 font-bold border-t-2 border-border">
+                                <td className="px-4 py-4 font-black uppercase tracking-widest text-foreground">
+                                    Total Part B Score
+                                </td>
+                                <td className="px-4 py-4 text-right font-black tabular-nums text-lg text-foreground">
+                                    {totalScore} / {maxTotal}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
-                <span className="text-2xl font-black text-indigo-700 tabular-nums">{totalScore}</span>
-            </div>
-
-            {verifiedTotalScore !== undefined && (
-                <div className="rounded-xl border border-border bg-muted/20 px-6 py-4 flex items-center justify-between">
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
-                        Verified Score
-                    </p>
-                    <span className="text-xl font-bold text-indigo-700 tabular-nums">
-                        {verifiedTotalScore}
-                    </span>
-                </div>
-            )}
+            </SectionCard>
 
             {submitSuccess && (
                 <p className="text-xs text-center text-muted-foreground font-medium italic">

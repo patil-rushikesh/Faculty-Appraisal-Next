@@ -31,7 +31,7 @@ export default function FormProgressBar({
             </div>
             <div className="h-1.5 w-full bg-muted rounded-full overflow-hidden border border-border/50">
                 <div
-                    className="h-full bg-foreground transition-all duration-500 ease-in-out dark:bg-primary"
+                    className="h-full bg-indigo-600 transition-all duration-500 ease-in-out"
                     style={{ width: `${clampedProgress}%` }}
                 />
             </div>

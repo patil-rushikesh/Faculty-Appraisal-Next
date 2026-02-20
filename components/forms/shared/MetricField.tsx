@@ -42,7 +42,7 @@ export default function MetricField({
             <div className="flex flex-col md:flex-row md:items-center gap-4">
                 {/* Label and Hint */}
                 <div className="flex-1 min-w-0">
-                    <label className="text-sm font-medium text-foreground block">
+                    <label className="text-sm font-medium text-indigo-700 block">
                         {label}
                     </label>
                     {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
@@ -61,7 +61,7 @@ export default function MetricField({
                             value={value === 0 ? "" : value}
                             onChange={onChange}
                             placeholder={placeholder}
-                            className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm text-right text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50"
+                            className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm text-right text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50"
                         />
                     </div>
 
@@ -73,7 +73,7 @@ export default function MetricField({
                             onChange={onProofChange}
                             disabled={disabled}
                             placeholder={proofPlaceholder}
-                            className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring transition disabled:opacity-50"
+                            className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition disabled:opacity-50"
                         />
                     </div>
 

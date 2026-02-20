@@ -12,6 +12,7 @@ import PartEExtra from "@/components/forms/parts/PartE_Extra";
 import PartFReview from "@/components/forms/parts/PartF_Review";
 import { GraduationCap } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DesignationValue } from "@/lib/constants";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
 
@@ -21,7 +22,7 @@ const tabs = [
     { id: "C", label: "Part C", description: "Self Development" },
     { id: "D", label: "Part D", description: "Portfolio" },
     { id: "E", label: "Part E", description: "Extra Contributions" },
-    { id: "F", label: "Part F", description: "Review & Submit" },
+    { id: "F", label: "Review", description: "Review and submit" },
 ];
 
 const VALID_TABS = ["A", "B", "C", "D", "E", "F"];
@@ -51,7 +52,7 @@ function AppraisalContent() {
     const department = user?.department ?? "";
     const userId = user?.id ?? "";
     const userRole = user?.role ?? "";
-    const userDesignation = user?.designation ?? "";
+    const userDesignation = (user?.designation as DesignationValue) ?? "Assistant Professor";
     const isAdminFromDesignation = ["Director", "Dean", "Associate Dean", "HOD", "Associate Director"].includes(userDesignation);
 
     return (
@@ -63,9 +64,7 @@ function AppraisalContent() {
                         <GraduationCap className="h-6 w-6 text-primary" />
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold text-foreground tracking-tight">
-                            Faculty Appraisal
-                        </h1>
+                        <h1 className="text-2xl font-bold text-foreground tracking-tight">Faculty Appraisal</h1>
                         <p className="text-xs text-muted-foreground mt-0.5 uppercase tracking-wider font-medium">
                             {user?.name} &bull; {userRole} &bull; {department}
                         </p>
@@ -83,8 +82,8 @@ function AppraisalContent() {
                                 key={tab.id}
                                 value={tab.id}
                                 className={cn(
-                                    "flex-1 min-w-[110px] flex flex-col items-center gap-0.5 py-3 px-2 rounded-lg text-sm transition-all duration-200",
-                                    "data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-foreground data-[state=active]:font-semibold"
+                                    "flex-1 min-w-[110px] flex flex-col items-center gap-0.5 py-3 px-2 rounded-lg text-sm transition-all duration-200 border-b-2 border-transparent",
+                                    "data-[state=active]:bg-card data-[state=active]:shadow-sm data-[state=active]:text-indigo-700 data-[state=active]:font-semibold data-[state=active]:border-indigo-600"
                                 )}
                             >
                                 <span className="text-sm font-medium">{tab.label}</span>
@@ -97,9 +96,8 @@ function AppraisalContent() {
 
                     {/* Part A */}
                     <TabsContent value="A" className="mt-0 focus-visible:outline-none">
-                        <PartAcademicInvolvement userRole={userRole} />
+                        <PartAcademicInvolvement userDesignation={userDesignation} />
                     </TabsContent>
-
 
                     {/* Part B */}
                     <TabsContent value="B" className="mt-0 focus-visible:outline-none">
@@ -107,7 +105,7 @@ function AppraisalContent() {
                             apiBase={API_BASE}
                             department={department}
                             userId={userId}
-                            userRole={userRole}
+                            userDesignation={userDesignation}
                         />
                     </TabsContent>
 
@@ -117,7 +115,7 @@ function AppraisalContent() {
                             apiBase={API_BASE}
                             department={department}
                             userId={userId}
-                            userRole={userRole}
+                            userDesignation={userDesignation}
                         />
                     </TabsContent>
 
@@ -134,20 +132,12 @@ function AppraisalContent() {
 
                     {/* Part E */}
                     <TabsContent value="E" className="mt-0 focus-visible:outline-none">
-                        <PartEExtra
-                            apiBase={API_BASE}
-                            department={department}
-                            userId={userId}
-                        />
+                        <PartEExtra apiBase={API_BASE} department={department} userId={userId} />
                     </TabsContent>
 
-                    {/* Part F */}
+                    {/* Review and submit */}
                     <TabsContent value="F" className="mt-0 focus-visible:outline-none">
-                        <PartFReview
-                            apiBase={API_BASE}
-                            department={department}
-                            userId={userId}
-                        />
+                        <PartFReview apiBase={API_BASE} department={department} userId={userId} />
                     </TabsContent>
                 </Tabs>
             </div>
@@ -157,7 +147,13 @@ function AppraisalContent() {
 
 export default function FacultyAppraisalPage() {
     return (
-        <Suspense fallback={<div className="flex h-screen items-center justify-center text-muted-foreground text-sm">Loading…</div>}>
+        <Suspense
+            fallback={
+                <div className="flex h-screen items-center justify-center text-muted-foreground text-sm">
+                    Loading…
+                </div>
+            }
+        >
             <AppraisalContent />
         </Suspense>
     );

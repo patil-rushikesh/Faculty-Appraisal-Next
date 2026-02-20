@@ -188,7 +188,7 @@ const ROLE_CONFIG: Record<User["role"], RoleConfig> = {
           { icon: Building2, label: "Part C: Self Development", href: "/faculty/appraisal?tab=C" },
           { icon: GraduationCap, label: "Part D: Portfolio", href: "/faculty/appraisal?tab=D" },
           { icon: Award, label: "Part E: Extraordinary Contribution", href: "/faculty/appraisal?tab=E" },
-          { icon: CheckSquare, label: "Part F: Review & Submit", href: "/faculty/appraisal?tab=F" },
+          { icon: CheckSquare, label: "Review & Submit", href: "/faculty/appraisal?tab=F" },
         ],
       },
     ],

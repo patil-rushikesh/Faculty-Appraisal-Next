@@ -74,16 +74,9 @@ const ROLE_CONFIG: Record<User["role"], RoleConfig> = {
       },
       {
         key: "verification-team",
-        label: "Verification Team",
-        icon: UserCheck,
-        collapsible: true,
         items: [
           { icon: UserCheck, label: "Verification Team", href: "/admin/verification-team" },
-          {
-            icon: UserCheck,
-            label: "Assign to Verification Team",
-            href: "/admin/assign-faculty-to-verification-team",
-          },
+
         ],
       },
       {

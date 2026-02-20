@@ -40,7 +40,8 @@ interface FormData {
   designation: string;
   status: string;
   password: string;
-  higherDean: string;
+  higherDean?: string;
+  higherDeanName?: string;
   date_added: string;
   year: string;
 }
@@ -89,6 +90,7 @@ export default function AddFacultyPage() {
       mobile: "",
       designation: "",
       higherDean: "",
+      higherDeanName: "",
       status: "active",
       password: "",
       date_added: formattedDate,
@@ -111,15 +113,23 @@ export default function AddFacultyPage() {
         headers,
         credentials: "include",
       });
-      const allFaculties = await response.json();
-      const data = allFaculties.filter((faculty: any) => faculty.role.toLowerCase() === "dean");
-
-      if (data.success && Array.isArray(data.data)) {
-        setDeanSuggestions(data.data);
-      } else {
-        console.error("Invalid dean suggestions format:", data);
-        setDeanSuggestions([]);
+      
+      if (!response.ok) {
+        throw new Error("Failed to fetch faculty data");
       }
+      
+      const allFaculties = await response.json();
+      
+      // Filter only deans from the response
+      const deans = Array.isArray(allFaculties) 
+        ? allFaculties.filter((faculty: any) => faculty.role?.toLowerCase() === "dean")
+        : [];
+      
+      setDeanSuggestions(deans.map((dean: any) => ({
+        _id: dean._id,
+        name: dean.name,
+        dept: dean.department
+      })));
     } catch (error) {
       console.error("Error fetching dean suggestions:", error);
       toast({
@@ -153,10 +163,10 @@ export default function AddFacultyPage() {
       ...(field === "userId" && { password: value }),
     }));
 
-    if (field === "higherDean" && value.length > 0) {
+    if (field === "higherDeanName" && value.length > 0) {
       setShowDeanSuggestions(true);
       fetchDeanSuggestions();
-    } else if (field === "higherDean" && value.length === 0) {
+    } else if (field === "higherDeanName" && value.length === 0) {
       setShowDeanSuggestions(false);
     }
   };
@@ -168,10 +178,11 @@ export default function AddFacultyPage() {
     }));
   };
 
-  const handleDeanSelect = (deanName: string) => {
+  const handleDeanSelect = (deanName: string, deanId: string) => {
     setFormData((prev) => ({
       ...prev,
-      higherDean: deanName,
+      higherDean: deanId,
+      higherDeanName: deanName,
     }));
     setShowDeanSuggestions(false);
   };
@@ -194,6 +205,16 @@ export default function AddFacultyPage() {
       toast({
         title: "Validation Error",
         description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Higher Dean required for Associate Dean role
+    if (formData.role === "associate_dean" && !formData.higherDean) {
+      toast({
+        title: "Validation Error",
+        description: "Higher Dean is required for Associate Dean role",
         variant: "destructive",
       });
       return;
@@ -284,6 +305,7 @@ export default function AddFacultyPage() {
       mobile: "",
       designation: "",
       higherDean: "",
+      higherDeanName: "",
       date_added: formattedDate,
       year: calculateAcademicYear(formattedDate),
       status: "active",
@@ -293,7 +315,7 @@ export default function AddFacultyPage() {
 
   const filteredDeanSuggestions = deanSuggestions.filter(
     (dean) =>
-      dean.name.toLowerCase().includes(formData.higherDean.toLowerCase()) &&
+      dean.name.toLowerCase().includes((formData.higherDeanName ?? "").toLowerCase()) &&
       dean.dept === formData.department
   );
 
@@ -493,46 +515,49 @@ export default function AddFacultyPage() {
                 />
               </div>
 
-              {/* Higher Dean */}
-              <div className="space-y-2 relative md:col-span-2">
-                <Label htmlFor="higherDean" className="text-sm font-semibold text-gray-800">
-                  Higher Dean <span className="text-sm font-normal text-gray-500">(Optional)</span>
-                </Label>
-                <Input
-                  id="higherDean"
-                  placeholder="Start typing dean name..."
-                  value={formData.higherDean}
-                  onChange={(e) => handleInputChange(e, "higherDean")}
-                  onFocus={() => {
-                    if (formData.higherDean) {
-                      setShowDeanSuggestions(true);
-                      fetchDeanSuggestions();
-                    }
-                  }}
-                  className="h-11 bg-white border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-base"
-                />
-                {showDeanSuggestions &&
-                  filteredDeanSuggestions.length > 0 && (
-                    <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                      {filteredDeanSuggestions.map((dean) => (
-                        <button
-                          key={dean._id}
-                          type="button"
-                          onClick={() => handleDeanSelect(dean.name)}
-                          className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-start gap-3 border-b border-gray-100 last:border-0"
-                        >
-                          <User className="w-4 h-4 text-gray-400 mt-1 flex-shrink-0" />
-                          <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-gray-900 truncate">
-                              {dean.name}
-                            </p>
-                            <p className="text-xs text-gray-500">{dean.dept}</p>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  )}
-              </div>
+              {/* Higher Dean - Only shown for Associate Dean role */}
+              {formData.role === "associate_dean" && (
+                <div className="space-y-2 relative md:col-span-2">
+                  <Label htmlFor="higherDean" className="text-sm font-semibold text-gray-800">
+                    Higher Dean <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="higherDean"
+                    placeholder="Start typing dean name..."
+                    value={formData.higherDeanName}
+                    onChange={(e) => handleInputChange(e, "higherDeanName")}
+                    onFocus={() => {
+                      if (formData.higherDeanName) {
+                        setShowDeanSuggestions(true);
+                        fetchDeanSuggestions();
+                      }
+                    }}
+                    className="h-11 bg-white border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 text-base"
+                    required
+                  />
+                  {showDeanSuggestions &&
+                    filteredDeanSuggestions.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                        {filteredDeanSuggestions.map((dean) => (
+                          <button
+                            key={dean._id}
+                            type="button"
+                            onClick={() => handleDeanSelect(dean.name, dean._id)}
+                            className="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-start gap-3 border-b border-gray-100 last:border-0"
+                          >
+                            <User className="w-4 h-4 text-gray-400 mt-1 flex-shrink-0" />
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium text-gray-900 truncate">
+                                {dean.name}
+                              </p>
+                              <p className="text-xs text-gray-500">{dean.dept}</p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                </div>
+              )}
             </div>
           </div>
 

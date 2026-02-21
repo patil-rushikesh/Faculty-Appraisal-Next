@@ -26,7 +26,7 @@ export default function SectionCard({
       )}
     >
       <div className="flex items-center justify-between mb-4 pb-3 border-b border-border">
-        <h2 className="text-base font-semibold text-indigo-700 tracking-tight">
+        <h2 className="text-lg font-bold text-indigo-700 tracking-tight">
           {title}
         </h2>
         {actions && <div>{actions}</div>}

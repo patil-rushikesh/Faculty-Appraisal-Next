@@ -10,6 +10,14 @@ import FormProgressBar from "../shared/FormProgressBar";
 import FormLockedModal from "../shared/FormLockedModal";
 import Loader from "@/components/loader";
 
+// --- CONSTANTS ---
+const FORMULAS = {
+    qualification: "Marks=20 (Completed/Awarded), 15 (Ongoing)",
+    attended: "Marks: 2-week=20, 1-week=10, 2-5 days=5, 1-day=2 (Max 40)",
+    organized: "Marks: 2-week=40, 1-week=20, 2-5 days=10, 1-day=2 (Max 80)",
+    phdGuided: "Marks: Awarded=50, Thesis Submitted=25, Guiding=10 (No limit)",
+};
+
 // --- TYPES ---
 interface SelfDevData {
     pdfCompleted: boolean;
@@ -38,6 +46,17 @@ interface PartCSelfDevelopmentProps {
 type QualStatus = "pdfCompleted" | "pdfOngoing" | "phdAwarded" | "none";
 
 // --- HELPERS ---
+const TransparencyGuideline = ({ formula }: { formula: string }) => (
+    <div className="p-2.5 rounded-lg bg-muted/20 border border-border/40 shadow-sm mb-4">
+        <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5 opacity-60">
+            Computation Guidelines
+        </p>
+        <p className="text-xs text-foreground/70 leading-relaxed italic font-medium">
+            {formula}
+        </p>
+    </div>
+);
+
 function NumericRow({
     label,
     hint,
@@ -56,9 +75,9 @@ function NumericRow({
     return (
         <div className="flex items-center justify-between gap-4 py-3 border-b border-border last:border-0 hover:bg-muted/5 transition-colors px-1">
             <div className="min-w-0">
-                <p className="text-sm font-medium text-foreground">{label}</p>
+                <p className="text-base font-bold text-slate-900 uppercase tracking-tight">{label}</p>
                 {hint && (
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-tight">
+                    <p className="text-xs text-muted-foreground uppercase font-bold tracking-tight opacity-70">
                         {hint}
                     </p>
                 )}
@@ -73,7 +92,7 @@ function NumericRow({
                 value={value === 0 ? "" : value}
                 onChange={onChange}
                 placeholder="0"
-                className="w-20 shrink-0 rounded-md border border-border bg-background px-3 py-1.5 text-sm text-right text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50"
+                className="w-20 shrink-0 rounded-md border border-slate-400 bg-background px-3 py-1.5 text-base text-right font-black text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50"
             />
         </div>
     );
@@ -111,6 +130,29 @@ function PartCSelfDevelopment({
     const [submitSuccess, setSubmitSuccess] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
 
+    // --- LOCAL STORAGE PERSISTENCE ---
+    const STORAGE_KEY = `partC_data_${userId}`;
+
+    // Load from local storage on mount
+    useEffect(() => {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                if (parsed) setFormData(parsed);
+            } catch (e) {
+                console.error("Failed to parse saved Part C data", e);
+            }
+        }
+    }, [STORAGE_KEY]);
+
+    // Save to local storage on change
+    useEffect(() => {
+        if (!isLoading) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
+        }
+    }, [formData, STORAGE_KEY, isLoading]);
+
     // Score Calculations
     const scores = {
         qual: formData.pdfCompleted || formData.phdAwarded ? 20 : formData.pdfOngoing ? 15 : 0,
@@ -129,11 +171,9 @@ function PartCSelfDevelopment({
             formData.organizedOneDayProgram * 2
         ),
         phd:
-            userDesignation === "Professor" || userDesignation === "Associate Professor"
-                ? formData.phdDegreeAwarded * 50 +
-                formData.phdThesisSubmitted * 25 +
-                formData.phdScholarsGuiding * 10
-                : 0,
+            formData.phdDegreeAwarded * 50 +
+            formData.phdThesisSubmitted * 25 +
+            formData.phdScholarsGuiding * 10,
     };
 
     const maxTotal = PART_C_ROLE_MAX[userDesignation] ?? 180;
@@ -179,8 +219,8 @@ function PartCSelfDevelopment({
                     const s = await sr.json();
                     setFormStatus(s.status);
                 }
-            } catch {
-                /* silent */
+            } catch (err) {
+                console.error("Fetch C failed", err);
             } finally {
                 setIsLoading(false);
             }
@@ -251,14 +291,15 @@ function PartCSelfDevelopment({
             <FormProgressBar progress={progressPercent} label="Part C Completion" />
 
             <SectionCard title="Qualification">
-                <div className="grid grid-cols-2 gap-2 mb-4">
+                <TransparencyGuideline formula={FORMULAS.qualification} />
+                <div className="grid grid-cols-1 gap-2 mb-4">
                     {(["pdfCompleted", "pdfOngoing", "phdAwarded", "none"] as QualStatus[]).map((v) => (
                         <label
                             key={v}
-                            className={`flex items-center gap-3 p-3 rounded-lg border cursor-pointer transition-all ${qualStatus === v
+                            className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${qualStatus === v
                                 ? "bg-indigo-600 text-white border-indigo-600 shadow-md"
-                                : "bg-card text-muted-foreground border-border hover:border-indigo-600/50 hover:text-indigo-600"
-                                }`}
+                                : "bg-card text-muted-foreground border-slate-300 hover:border-indigo-600/50 hover:text-indigo-600"
+                                } ${locked ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
                         >
                             <input
                                 type="radio"
@@ -269,7 +310,10 @@ function PartCSelfDevelopment({
                                 className="sr-only"
                             />
                             <span className="text-xs font-bold uppercase tracking-tight">
-                                {v.replace(/([A-Z])/g, " $1").replace("pdf", "Ph.D.")}
+                                {v === "pdfCompleted" ? "Ph.D. Completed" :
+                                    v === "pdfOngoing" ? "Ph.D. Ongoing" :
+                                        v === "phdAwarded" ? "Ph.D. Degree Awarded / Thesis Submitted" :
+                                            "None"}
                             </span>
                         </label>
                     ))}
@@ -278,8 +322,9 @@ function PartCSelfDevelopment({
             </SectionCard>
 
             <SectionCard title="Training Programs Attended">
+                <TransparencyGuideline formula={FORMULAS.attended} />
                 <NumericRow
-                    label="2-week Programs"
+                    label="2-week Programs Attended"
                     hint="20 pts each"
                     name="twoWeekProgram"
                     value={formData.twoWeekProgram}
@@ -287,7 +332,7 @@ function PartCSelfDevelopment({
                     disabled={locked}
                 />
                 <NumericRow
-                    label="1-week Programs"
+                    label="1-week Programs Attended"
                     hint="10 pts each"
                     name="oneWeekProgram"
                     value={formData.oneWeekProgram}
@@ -295,7 +340,7 @@ function PartCSelfDevelopment({
                     disabled={locked}
                 />
                 <NumericRow
-                    label="2–5 Day Programs"
+                    label="2–5 Day Programs Attended"
                     hint="5 pts each"
                     name="twoToFiveDayProgram"
                     value={formData.twoToFiveDayProgram}
@@ -303,7 +348,7 @@ function PartCSelfDevelopment({
                     disabled={locked}
                 />
                 <NumericRow
-                    label="1 Day Programs"
+                    label="1 Day Programs Attended"
                     hint="2 pts each"
                     name="oneDayProgram"
                     value={formData.oneDayProgram}
@@ -314,8 +359,9 @@ function PartCSelfDevelopment({
             </SectionCard>
 
             <SectionCard title="Training Programs Organized">
+                <TransparencyGuideline formula={FORMULAS.organized} />
                 <NumericRow
-                    label="2-week Programs"
+                    label="2-week Programs Organized"
                     hint="40 pts each"
                     name="organizedTwoWeekProgram"
                     value={formData.organizedTwoWeekProgram}
@@ -323,7 +369,7 @@ function PartCSelfDevelopment({
                     disabled={locked}
                 />
                 <NumericRow
-                    label="1-week Programs"
+                    label="1-week Programs Organized"
                     hint="20 pts each"
                     name="organizedOneWeekProgram"
                     value={formData.organizedOneWeekProgram}
@@ -331,7 +377,7 @@ function PartCSelfDevelopment({
                     disabled={locked}
                 />
                 <NumericRow
-                    label="2–5 Day Programs"
+                    label="2–5 Day Programs Organized"
                     hint="10 pts each"
                     name="organizedTwoToFiveDayProgram"
                     value={formData.organizedTwoToFiveDayProgram}
@@ -339,7 +385,7 @@ function PartCSelfDevelopment({
                     disabled={locked}
                 />
                 <NumericRow
-                    label="1 Day Programs"
+                    label="1 Day Programs Organized"
                     hint="2 pts each"
                     name="organizedOneDayProgram"
                     value={formData.organizedOneDayProgram}
@@ -349,35 +395,34 @@ function PartCSelfDevelopment({
                 <ScoreCard label="Organized Score" score={scores.organized} total={80} />
             </SectionCard>
 
-            {(userDesignation === "Professor" || userDesignation === "Associate Professor") && (
-                <SectionCard title="Ph.D. Guidance">
-                    <NumericRow
-                        label="Degrees Awarded"
-                        hint="50 pts each"
-                        name="phdDegreeAwarded"
-                        value={formData.phdDegreeAwarded}
-                        onChange={handleChange}
-                        disabled={locked}
-                    />
-                    <NumericRow
-                        label="Thesis Submitted"
-                        hint="25 pts each"
-                        name="phdThesisSubmitted"
-                        value={formData.phdThesisSubmitted}
-                        onChange={handleChange}
-                        disabled={locked}
-                    />
-                    <NumericRow
-                        label="Scholars Guiding"
-                        hint="10 pts each"
-                        name="phdScholarsGuiding"
-                        value={formData.phdScholarsGuiding}
-                        onChange={handleChange}
-                        disabled={locked}
-                    />
-                    <ScoreCard label="Guidance Score" score={scores.phd} total="No limit" />
-                </SectionCard>
-            )}
+            <SectionCard title="Ph.D. Guided (Extra)">
+                <TransparencyGuideline formula={FORMULAS.phdGuided} />
+                <NumericRow
+                    label="Ph.D. Degrees Awarded"
+                    hint="50 pts each"
+                    name="phdDegreeAwarded"
+                    value={formData.phdDegreeAwarded}
+                    onChange={handleChange}
+                    disabled={locked}
+                />
+                <NumericRow
+                    label="Ph.D. Thesis Submitted"
+                    hint="25 pts each"
+                    name="phdThesisSubmitted"
+                    value={formData.phdThesisSubmitted}
+                    onChange={handleChange}
+                    disabled={locked}
+                />
+                <NumericRow
+                    label="Ph.D. Scholars Currently Guiding"
+                    hint="10 pts each"
+                    name="phdScholarsGuiding"
+                    value={formData.phdScholarsGuiding}
+                    onChange={handleChange}
+                    disabled={locked}
+                />
+                <ScoreCard label="Ph.D. Guided Score" score={scores.phd} total="No limit" />
+            </SectionCard>
 
             <SectionCard title="Score Summary">
                 <div className="overflow-hidden rounded-lg border border-border">
@@ -388,16 +433,16 @@ function PartCSelfDevelopment({
                                     <td className="px-4 py-3 font-medium uppercase tracking-wider text-[10px] text-muted-foreground">
                                         Verified Score
                                     </td>
-                                    <td className="px-4 py-3 text-right font-bold tabular-nums">
+                                    <td className="px-4 py-3 text-right font-black tabular-nums text-slate-900">
                                         {verifiedScore}
                                     </td>
                                 </tr>
                             )}
                             <tr className="bg-muted/10 font-bold border-t-2 border-border">
-                                <td className="px-4 py-4 font-black uppercase tracking-widest text-foreground">
+                                <td className="px-4 py-4 font-black uppercase tracking-widest text-foreground text-slate-900 text-sm">
                                     Total Part C Score
                                 </td>
-                                <td className="px-4 py-4 text-right font-black tabular-nums text-lg text-foreground">
+                                <td className="px-4 py-4 text-right font-black tabular-nums text-xl text-indigo-700">
                                     {totalScore} / {maxTotal}
                                 </td>
                             </tr>
@@ -419,7 +464,7 @@ function PartCSelfDevelopment({
                 <Button
                     onClick={handleSubmit}
                     disabled={isSubmitting || locked}
-                    className="min-w-[200px] shadow-sm uppercase tracking-wider text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white"
+                    className="min-w-[200px] shadow-sm uppercase tracking-wider text-sm font-bold bg-indigo-600 hover:bg-indigo-700 text-white"
                 >
                     {isSubmitting ? "Saving…" : "Save Development Details"}
                 </Button>

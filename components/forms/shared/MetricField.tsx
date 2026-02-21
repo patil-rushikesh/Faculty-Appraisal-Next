@@ -42,10 +42,10 @@ export default function MetricField({
             <div className="flex flex-col md:flex-row md:items-center gap-4">
                 {/* Label and Hint */}
                 <div className="flex-1 min-w-0">
-                    <label className="text-sm font-medium text-foreground block">
+                    <label className="text-base font-semibold text-slate-900 block uppercase tracking-tight">
                         {label}
                     </label>
-                    {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+                    {hint && <p className="text-xs font-semibold text-muted-foreground uppercase opacity-70 tracking-tight">{hint}</p>}
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 md:w-2/3 lg:w-3/5">
@@ -61,7 +61,7 @@ export default function MetricField({
                             value={value === 0 ? "" : value}
                             onChange={onChange}
                             placeholder={placeholder}
-                            className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm text-right text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50"
+                            className="w-full rounded-md border border-slate-400 bg-background px-3 py-1.5 text-base text-right font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50"
                         />
                     </div>
 
@@ -73,13 +73,13 @@ export default function MetricField({
                             onChange={onProofChange}
                             disabled={disabled}
                             placeholder={proofPlaceholder}
-                            className="w-full rounded-md border border-border bg-background px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition disabled:opacity-50"
+                            className="w-full rounded-md border border-slate-400 bg-background px-3 py-1.5 text-base font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition disabled:opacity-50"
                         />
                     </div>
 
                     {/* Verified Score Display (if present) */}
                     {verifiedScore !== undefined && (
-                        <div className="w-16 shrink-0 bg-muted/40 rounded-md border border-border px-2 py-1.5 text-[11px] text-center font-bold text-muted-foreground" title="Verified Score">
+                        <div className="w-16 shrink-0 bg-muted/40 rounded-md border border-border px-2 py-1.5 text-sm text-center font-bold text-muted-foreground" title="Verified Score">
                             {verifiedScore}
                         </div>
                     )}

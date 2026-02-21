@@ -22,6 +22,20 @@ interface PartEExtraProps {
     userId: string;
 }
 
+// --- HELPERS ---
+const TransparencyGuideline = ({ formula }: { formula: string }) => (
+    <div className="p-2.5 rounded-lg bg-muted/20 border border-border/40 shadow-sm mb-4">
+        <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5 opacity-60">
+            Computation Guidelines
+        </p>
+        <p className="text-xs text-foreground/70 leading-relaxed italic font-medium">
+            {formula}
+        </p>
+    </div>
+);
+
+const PART_E_GUIDELINE = "Faculty may list extra-ordinary or other contributions (not listed in Parts A, B, or C) for the academic year in bulleted form. Maximum marks self-awarded: 50.";
+
 // --- COMPONENT ---
 function PartEExtra({ apiBase, department, userId }: PartEExtraProps) {
     const [formData, setFormData] = useState<ExtraFormData>({
@@ -36,6 +50,29 @@ function PartEExtra({ apiBase, department, userId }: PartEExtraProps) {
     const [isFirstTime, setIsFirstTime] = useState(true);
     const [submitSuccess, setSubmitSuccess] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
+
+    // --- LOCAL STORAGE PERSISTENCE ---
+    const STORAGE_KEY = `partE_data_${userId}`;
+
+    // Load from local storage on mount
+    useEffect(() => {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                if (parsed) setFormData(parsed);
+            } catch (e) {
+                console.error("Failed to parse saved Part E data", e);
+            }
+        }
+    }, [STORAGE_KEY]);
+
+    // Save to local storage on change
+    useEffect(() => {
+        if (!isLoading) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
+        }
+    }, [formData, STORAGE_KEY, isLoading]);
 
     // Progress Calculation
     let interactedCount = 0;
@@ -60,8 +97,8 @@ function PartEExtra({ apiBase, department, userId }: PartEExtraProps) {
                     const s = await sr.json();
                     setFormStatus(s.status);
                 }
-            } catch {
-                /* silent */
+            } catch (err) {
+                console.error("Fetch E failed", err);
             } finally {
                 setIsLoading(false);
             }
@@ -104,26 +141,28 @@ function PartEExtra({ apiBase, department, userId }: PartEExtraProps) {
             <FormProgressBar progress={progressPercent} label="Part E Completion" />
 
             <SectionCard title="Extraordinary Contributions">
+                <TransparencyGuideline formula={PART_E_GUIDELINE} />
                 <div className="space-y-4">
                     <div>
-                        <label className="block text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1.5 px-1">
-                            Contributions Description & Highlights
+                        <label className="block text-xs font-bold text-slate-900 uppercase tracking-widest mb-1.5 px-1 flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-600" />
+                            Contributions Description & Highlights (Required in Bulleted Form)
                         </label>
                         <Textarea
-                            placeholder={`Describe any contributions not covered in Parts A–D (Max ${PART_E_MAX} points)...`}
+                            placeholder={`• Point 1: Description of contribution\n• Point 2: Description of contribution\n...\n(Max ${PART_E_MAX} points total)`}
                             value={formData.contributions}
                             disabled={locked}
                             onChange={(e) => setFormData((p) => ({ ...p, contributions: e.target.value }))}
-                            rows={10}
-                            className="resize-none text-sm leading-relaxed placeholder:italic focus-visible:ring-indigo-600/20 focus-visible:border-indigo-600"
+                            rows={16}
+                            className="resize-none text-base leading-relaxed placeholder:italic focus-visible:ring-indigo-600/20 focus-visible:border-indigo-600 font-medium text-slate-900 border-slate-400 shadow-sm"
                         />
                     </div>
                     <div className="flex items-center justify-between py-2 border-t border-border pt-4">
                         <div>
-                            <p className="text-sm font-medium text-foreground uppercase tracking-tight">
+                            <p className="text-base font-bold text-slate-900 uppercase tracking-tight">
                                 Self-Awarded Marks
                             </p>
-                            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                            <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider font-bold">
                                 Maximum {PART_E_MAX} points
                             </p>
                         </div>
@@ -140,7 +179,7 @@ function PartEExtra({ apiBase, department, userId }: PartEExtraProps) {
                                     selfAwardedMarks: Math.min(PART_E_MAX, Math.max(0, Number(e.target.value))),
                                 }))
                             }
-                            className="w-24 rounded-md border border-border bg-background px-3 py-2 text-sm text-right font-bold tabular-nums focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                            className="w-28 rounded-md border border-slate-400 bg-background px-3 py-2 text-xl text-right font-black tabular-nums text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-sm"
                         />
                     </div>
                 </div>
@@ -167,7 +206,7 @@ function PartEExtra({ apiBase, department, userId }: PartEExtraProps) {
                 <Button
                     onClick={handleSubmit}
                     disabled={isSubmitting || locked}
-                    className="min-w-[220px] shadow-sm uppercase tracking-wider text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white"
+                    className="min-w-[200px] shadow-sm uppercase tracking-wider text-sm font-bold bg-indigo-600 hover:bg-indigo-700 text-white"
                 >
                     {isSubmitting ? "Saving…" : "Save Contributions"}
                 </Button>

@@ -126,8 +126,8 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
                 setFormStatus(d.status);
                 if (d.status !== "pending") setIsFormFrozen(true);
             }
-        } catch {
-            /* silent */
+        } catch (err) {
+            console.error("Fetch status failed", err);
         }
     }, [apiBase, department, userId]);
 
@@ -150,8 +150,8 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
                 generatePDF();
                 fetchSavedPdfs();
             }
-        } catch {
-            /* silent */
+        } catch (err) {
+            console.error("Save PDF failed", err);
         } finally {
             setSavingPdf(false);
         }
@@ -161,8 +161,8 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
         try {
             const res = await fetch(`${apiBase}/${department}/${userId}/view-saved-pdf/${id}`);
             if (res.ok) window.open(URL.createObjectURL(await res.blob()), "_blank");
-        } catch {
-            /* silent */
+        } catch (err) {
+            console.error("View PDF failed", err);
         }
     };
 
@@ -174,8 +174,8 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
             });
             setSelectedPdfForDelete(null);
             fetchSavedPdfs();
-        } catch {
-            /* silent */
+        } catch (err) {
+            console.error("Delete PDF failed", err);
         } finally {
             setDeletingPdf(false);
         }
@@ -205,7 +205,7 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
                         <h2 className="text-sm font-black text-indigo-700 uppercase tracking-widest">
                             Review and submit
                         </h2>
-                        <p className="text-[10px] text-muted-foreground uppercase opacity-70">
+                        <p className="text-xs text-muted-foreground uppercase opacity-70">
                             Generate, save and freeze your appraisal document
                         </p>
                     </div>
@@ -215,7 +215,7 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
                                 asChild
                                 variant="outline"
                                 size="sm"
-                                className="gap-2 h-8 px-3 text-[10px] font-bold uppercase tracking-wider"
+                                className="gap-2 h-8 px-3 text-xs font-bold uppercase tracking-wider"
                             >
                                 <a href={pdfUrl} download={`${userId}_appraisal.pdf`}>
                                     <Download size={14} /> Download
@@ -225,7 +225,7 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
                         <Button
                             size="sm"
                             variant="outline"
-                            className="gap-2 h-8 px-3 text-[10px] font-bold uppercase tracking-wider"
+                            className="gap-2 h-8 px-3 text-xs font-bold uppercase tracking-wider"
                             onClick={() => setShowSavedPdfsModal(true)}
                         >
                             <Archive size={14} /> Archives
@@ -233,17 +233,17 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
                         <Button
                             size="sm"
                             variant="outline"
-                            className="gap-2 h-8 px-3 text-[10px] font-bold uppercase tracking-wider"
+                            className="gap-2 h-8 px-3 text-xs font-bold uppercase tracking-wider"
                             onClick={() => generatePDF(true)}
                             disabled={loading}
                         >
                             <RefreshCw size={14} className={loading ? "animate-spin" : ""} />{" "}
-                            {pdfExists ? "Regenerate" : "Generate"}
+                            {pdfExists ? "Regenerate Draft" : "Generate Draft"}
                         </Button>
                         {pdfUrl && (
                             <Button
                                 size="sm"
-                                className="gap-2 h-8 px-3 text-[10px] font-bold uppercase tracking-wider shadow-sm bg-indigo-600 hover:bg-indigo-700 text-white"
+                                className="gap-2 h-8 px-3 text-xs font-bold uppercase tracking-wider shadow-sm bg-indigo-600 hover:bg-indigo-700 text-white"
                                 onClick={handleSavePdf}
                                 disabled={savingPdf}
                             >
@@ -268,10 +268,10 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
                             },
                         ].map(({ label, value }) => (
                             <div key={label}>
-                                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tight opacity-70">
+                                <p className="text-xs font-bold text-muted-foreground uppercase tracking-tight opacity-70">
                                     {label}
                                 </p>
-                                <p className="text-xs font-semibold text-foreground truncate uppercase">
+                                <p className="text-sm font-semibold text-foreground truncate uppercase">
                                     {String(value ?? "N/A")}
                                 </p>
                             </div>
@@ -287,17 +287,18 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
                                 style={{ width: `${loadingProgress}%` }}
                             />
                         </div>
-                        <p className="text-[10px] text-center font-bold text-muted-foreground uppercase animate-pulse">
+                        <p className="text-xs text-center font-bold text-muted-foreground uppercase animate-pulse">
                             Processing Appraisal Document... {loadingProgress}%
                         </p>
                     </div>
                 )}
 
                 {pdfUrl && pdfExists && !loading && (
-                    <div className="w-full h-[60vh] rounded-lg border border-border overflow-hidden bg-muted/5 shadow-inner">
+                    <div className="w-full h-[60vh] rounded-lg border border-border overflow-hidden bg-muted/5 shadow-inner mb-6">
                         <iframe src={pdfUrl} className="w-full h-full" title="Appraisal PDF" />
                     </div>
                 )}
+
 
                 {!pdfExists && !loading && (
                     <div className="py-20 text-center rounded-lg border border-dashed border-border bg-muted/5">
@@ -308,7 +309,7 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
                         <Button
                             variant="link"
                             size="sm"
-                            className="mt-2 text-[10px] uppercase font-bold"
+                            className="mt-2 text-xs uppercase font-bold"
                             onClick={() => generatePDF(true)}
                         >
                             Generate Now
@@ -318,7 +319,7 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
             </div>
 
             {submitError && (
-                <div className="mx-auto max-w-lg p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-[11px] font-bold uppercase text-center tracking-wider">
+                <div className="mx-auto max-w-lg p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs font-bold uppercase text-center tracking-wider">
                     {submitError}
                 </div>
             )}
@@ -340,10 +341,10 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
                             <div className="flex items-center gap-3">
                                 <ShieldAlert size={20} className="transition-transform group-hover:rotate-12" />
                                 <div className="text-left">
-                                    <p className="text-[10px] font-black uppercase tracking-widest leading-none">
+                                    <p className="text-xs font-black uppercase tracking-widest leading-none">
                                         Final Submission
                                     </p>
-                                    <p className="text-xs font-bold opacity-80 mt-1">Freeze & Submit Appraisal</p>
+                                    <p className="text-sm font-bold opacity-80 mt-1">Freeze & Submit Appraisal</p>
                                 </div>
                             </div>
                         </Button>
@@ -366,14 +367,14 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
                         <div className="flex gap-3">
                             <Button
                                 variant="outline"
-                                className="flex-1 text-[10px] font-bold uppercase"
+                                className="flex-1 text-xs font-bold uppercase"
                                 onClick={() => setShowFreezeModal(false)}
                             >
                                 Cancel
                             </Button>
                             <Button
                                 variant="destructive"
-                                className="flex-1 text-[10px] font-bold uppercase"
+                                className="flex-1 text-xs font-bold uppercase"
                                 onClick={handleFreeze}
                             >
                                 Lock &amp; Submit
@@ -403,7 +404,7 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
                                         <p className="text-xs font-bold text-foreground truncate uppercase">
                                             {pdf.filename || `Archive_${i + 1}`}
                                         </p>
-                                        <p className="text-[10px] text-muted-foreground uppercase opacity-70">
+                                        <p className="text-xs text-muted-foreground uppercase opacity-70">
                                             {pdf.appraisal_year} &bull;{" "}
                                             {pdf.upload_date ? new Date(pdf.upload_date).toLocaleDateString() : "N/A"}
                                         </p>
@@ -449,14 +450,14 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
                     <div className="flex gap-2">
                         <Button
                             variant="outline"
-                            className="flex-1 h-8 text-[10px] font-bold uppercase"
+                            className="flex-1 h-8 text-xs font-bold uppercase"
                             onClick={() => setSelectedPdfForDelete(null)}
                         >
                             No
                         </Button>
                         <Button
                             variant="destructive"
-                            className="flex-1 h-8 text-[10px] font-bold uppercase"
+                            className="flex-1 h-8 text-xs font-bold uppercase"
                             onClick={() => selectedPdfForDelete && handleDeleteSaved(selectedPdfForDelete)}
                             disabled={deletingPdf}
                         >

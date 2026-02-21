@@ -15,6 +15,8 @@ const openSans = Open_Sans({
   variable: "--font-sans",
 })
 
+import { CourseProvider } from "@/context/CourseContext"
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -38,7 +40,9 @@ export default async function RootLayout({
     <html lang="en">
       <body className={`${montserrat.variable} ${openSans.variable} font-sans antialiased`}>
         <AuthProvider preToken={token} initialUser={initialUser}>
-          <AppShell>{children}</AppShell>
+          <CourseProvider>
+            <AppShell>{children}</AppShell>
+          </CourseProvider>
         </AuthProvider>
       </body>
     </html>

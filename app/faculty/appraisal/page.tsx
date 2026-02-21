@@ -95,12 +95,17 @@ function AppraisalContent() {
                     </TabsList>
 
                     {/* Part A */}
-                    <TabsContent value="A" className="mt-0 focus-visible:outline-none">
-                        <PartAcademicInvolvement userDesignation={userDesignation} />
+                    <TabsContent value="A" forceMount className="mt-0 focus-visible:outline-none data-[state=inactive]:hidden">
+                        <PartAcademicInvolvement
+                            userDesignation={userDesignation}
+                            apiBase={API_BASE}
+                            department={department}
+                            userId={userId}
+                        />
                     </TabsContent>
 
                     {/* Part B */}
-                    <TabsContent value="B" className="mt-0 focus-visible:outline-none">
+                    <TabsContent value="B" forceMount className="mt-0 focus-visible:outline-none data-[state=inactive]:hidden">
                         <PartBResearch
                             apiBase={API_BASE}
                             department={department}
@@ -110,7 +115,7 @@ function AppraisalContent() {
                     </TabsContent>
 
                     {/* Part C */}
-                    <TabsContent value="C" className="mt-0 focus-visible:outline-none">
+                    <TabsContent value="C" forceMount className="mt-0 focus-visible:outline-none data-[state=inactive]:hidden">
                         <PartCSelfDevelopment
                             apiBase={API_BASE}
                             department={department}
@@ -120,7 +125,7 @@ function AppraisalContent() {
                     </TabsContent>
 
                     {/* Part D */}
-                    <TabsContent value="D" className="mt-0 focus-visible:outline-none">
+                    <TabsContent value="D" forceMount className="mt-0 focus-visible:outline-none data-[state=inactive]:hidden">
                         <PartDPortfolio
                             apiBase={API_BASE}
                             department={department}
@@ -131,12 +136,12 @@ function AppraisalContent() {
                     </TabsContent>
 
                     {/* Part E */}
-                    <TabsContent value="E" className="mt-0 focus-visible:outline-none">
+                    <TabsContent value="E" forceMount className="mt-0 focus-visible:outline-none data-[state=inactive]:hidden">
                         <PartEExtra apiBase={API_BASE} department={department} userId={userId} />
                     </TabsContent>
 
                     {/* Review and submit */}
-                    <TabsContent value="F" className="mt-0 focus-visible:outline-none">
+                    <TabsContent value="F" forceMount className="mt-0 focus-visible:outline-none data-[state=inactive]:hidden">
                         <PartFReview apiBase={API_BASE} department={department} userId={userId} />
                     </TabsContent>
                 </Tabs>

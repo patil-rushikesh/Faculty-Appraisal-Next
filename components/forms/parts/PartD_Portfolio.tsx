@@ -10,6 +10,9 @@ import FormProgressBar from "../shared/FormProgressBar";
 import FormLockedModal from "../shared/FormLockedModal";
 import Loader from "@/components/loader";
 
+// --- CONSTANTS ---
+const PORTFOLIO_TYPES = ["institute", "department", "both"] as const;
+
 // --- TYPES ---
 interface PortfolioFormData {
     portfolioType: "institute" | "department" | "both";
@@ -64,6 +67,29 @@ function PartDPortfolio({
     const [isFirstTime, setIsFirstTime] = useState(true);
     const [submitSuccess, setSubmitSuccess] = useState(false);
     const [submitError, setSubmitError] = useState<string | null>(null);
+
+    // --- LOCAL STORAGE PERSISTENCE ---
+    const STORAGE_KEY = `partD_data_${userId}`;
+
+    // Load from local storage on mount
+    useEffect(() => {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+            try {
+                const parsed = JSON.parse(saved);
+                if (parsed) setFormData(parsed);
+            } catch (e) {
+                console.error("Failed to parse saved Part D data", e);
+            }
+        }
+    }, [STORAGE_KEY]);
+
+    // Save to local storage on change
+    useEffect(() => {
+        if (!isLoading) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
+        }
+    }, [formData, STORAGE_KEY, isLoading]);
 
     // Score Calculations
     const scores = {
@@ -144,8 +170,8 @@ function PartDPortfolio({
                     const s = await sr.json();
                     setFormStatus(s.status);
                 }
-            } catch {
-                /* silent */
+            } catch (err) {
+                console.error("Fetch D failed", err);
             } finally {
                 setIsLoading(false);
             }
@@ -189,12 +215,12 @@ function PartDPortfolio({
             {!formData.isAdministrativeRole && (
                 <SectionCard title="Portfolio Selection">
                     <div className="flex gap-4 mb-4">
-                        {(["institute", "department", "both"] as const).map((t) => (
+                        {PORTFOLIO_TYPES.map((t) => (
                             <button
                                 key={t}
                                 disabled={locked}
                                 onClick={() => setFormData((p) => ({ ...p, portfolioType: t }))}
-                                className={`flex-1 py-3 px-4 rounded-lg border text-[11px] font-bold uppercase tracking-wider transition-all ${formData.portfolioType === t
+                                className={`flex-1 py-3 px-4 rounded-lg border text-xs font-bold uppercase tracking-wider transition-all ${formData.portfolioType === t
                                     ? "bg-indigo-600 text-white border-indigo-600 shadow-md"
                                     : "bg-card text-muted-foreground border-border hover:border-indigo-600/50 hover:text-indigo-600"
                                     }`}
@@ -238,7 +264,7 @@ function PartDPortfolio({
                         <p className="text-sm font-medium text-foreground uppercase tracking-tight">
                             Self-Awarded Marks
                         </p>
-                        <p className="text-[10px] text-muted-foreground uppercase">
+                        <p className="text-xs text-muted-foreground uppercase">
                             Maximum {PART_D_SELF_MAX} points
                         </p>
                     </div>
@@ -257,7 +283,7 @@ function PartDPortfolio({
                                     : { ...p, selfAwardedMarks: v }
                             );
                         }}
-                        className="w-24 rounded-md border border-border bg-background px-3 py-2 text-sm text-right font-bold tabular-nums focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-24 rounded-md border border-border bg-background px-3 py-2 text-base text-right font-bold tabular-nums focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                 </div>
             </SectionCard>
@@ -283,10 +309,10 @@ function PartDPortfolio({
                                 </td>
                             </tr>
                             <tr className="bg-muted/10 font-bold border-t-2 border-border">
-                                <td className="px-4 py-4 font-black uppercase tracking-widest text-foreground">
+                                <td className="px-4 py-4 font-black uppercase tracking-widest text-foreground text-sm">
                                     Total Portfolio Score
                                 </td>
-                                <td className="px-4 py-4 text-right font-black tabular-nums text-lg text-foreground">
+                                <td className="px-4 py-4 text-right font-black tabular-nums text-xl text-foreground">
                                     {totalScore} / {PART_D_MAX}
                                 </td>
                             </tr>
@@ -308,7 +334,7 @@ function PartDPortfolio({
                 <Button
                     onClick={handleSubmit}
                     disabled={isSubmitting || locked}
-                    className="min-w-[220px] shadow-sm uppercase tracking-wider text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white"
+                    className="min-w-[200px] shadow-sm uppercase tracking-wider text-sm font-bold bg-indigo-600 hover:bg-indigo-700 text-white"
                 >
                     {isSubmitting ? "Saving..." : "Save Portfolio Details"}
                 </Button>

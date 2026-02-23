@@ -70,23 +70,23 @@ interface PartBResearchProps {
 const emptyMetric = (): MetricData => ({ value: 0, proof: "", verified: undefined });
 
 const TransparencyGuideline = ({ formula }: { formula: string }) => (
-    <div className="p-2.5 rounded-lg bg-muted/20 border border-border/40 shadow-sm mb-4">
-        <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5 opacity-60">
+    <div className="p-4 rounded-xl bg-indigo-50 border-2 border-indigo-100 shadow-sm mb-5">
+        <p className="text-base font-extrabold text-indigo-700 uppercase tracking-widest mb-2 opacity-90">
             Computation Guidelines
         </p>
-        <p className="text-xs text-foreground/70 leading-relaxed italic font-medium">
+        <p className="text-lg text-indigo-900 leading-relaxed italic font-semibold">
             {formula}
         </p>
     </div>
 );
 
 const DriveLinkNote = () => (
-    <div className="p-2.5 mb-4 rounded-lg bg-indigo-50/80 border border-indigo-100 shadow-sm flex items-start gap-3">
-        <div className="bg-indigo-100 p-1.5 rounded text-indigo-700 mt-0.5">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></svg>
+    <div className="p-4 mb-5 rounded-xl bg-indigo-50 border-2 border-indigo-100 shadow-md flex items-start gap-4">
+        <div className="bg-indigo-200 p-2.5 rounded-lg text-indigo-800 mt-1 flex-shrink-0">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></svg>
         </div>
-        <p className="text-[10px] text-indigo-900 leading-relaxed font-medium">
-            <span className="font-bold uppercase tracking-tight text-indigo-700 block mb-0.5">Drive Link Instructions</span>
+        <p className="text-base text-indigo-900 leading-relaxed font-medium">
+            <span className="font-extrabold uppercase tracking-wider text-indigo-800 block mb-1">Drive Link Instructions</span>
             If you have multiple documents (e.g. 4 entries), please upload them all to a <span className="underline decoration-indigo-300 font-bold">single Google Drive folder</span> and paste that folder link in the proof fields below. Ensure link access is set to <span className="italic">"Anyone with the link"</span>.
         </p>
     </div>
@@ -348,7 +348,7 @@ function PartBResearch({ apiBase, department, userId, userDesignation }: PartBRe
     const locked = formStatus !== "pending";
 
     return (
-        <div className="max-w-4xl mx-auto py-6 space-y-4 font-sans text-slate-900">
+        <div className="max-w-4xl mx-auto py-8 space-y-6 font-sans text-slate-900 text-[1.15rem]" style={{lineHeight: 1.7}}>
             <FormProgressBar progress={progressPercent} label="Part B Completion" />
 
             <SectionCard title="1. Papers Published in Quality Journal (Being among First Two Authors)">
@@ -914,32 +914,32 @@ function PartBResearch({ apiBase, department, userId, userDesignation }: PartBRe
             </SectionCard>
 
             <SectionCard title="Score Summary">
-                <div className="overflow-hidden rounded-lg border border-border">
-                    <table className="w-full text-xs">
-                        <tbody className="divide-y divide-border">
+                <div className="overflow-hidden rounded-xl border-2 border-indigo-200">
+                    <table className="w-full text-base">
+                        <tbody className="divide-y divide-indigo-100">
                             {verifiedTotalScore !== undefined && (
-                                <tr className="bg-muted/10">
-                                    <td className="px-4 py-3 font-medium uppercase tracking-wider text-[10px] text-muted-foreground">
+                                <tr className="bg-indigo-50">
+                                    <td className="px-6 py-4 font-semibold uppercase tracking-widest text-base text-indigo-700">
                                         Total Marks After Verification
                                     </td>
-                                    <td className="px-4 py-3 text-right font-bold tabular-nums">
+                                    <td className="px-6 py-4 text-right font-extrabold tabular-nums text-indigo-900">
                                         {verifiedTotalScore}
                                     </td>
                                 </tr>
                             )}
-                            <tr className="bg-muted/10">
-                                <td className="px-4 py-3 font-medium uppercase tracking-wider text-[10px] text-muted-foreground">
+                            <tr className="bg-indigo-50">
+                                <td className="px-6 py-4 font-semibold uppercase tracking-widest text-base text-indigo-700">
                                     Score before cadre limit
                                 </td>
-                                <td className="px-4 py-3 text-right font-bold tabular-nums">
+                                <td className="px-6 py-4 text-right font-extrabold tabular-nums text-indigo-900">
                                     {Object.values(scores).reduce((a, b) => a + b, 0)}
                                 </td>
                             </tr>
-                            <tr className="bg-muted/10 font-bold border-t-2 border-border font-black text-slate-900">
-                                <td className="px-4 py-4 uppercase tracking-widest text-sm">
+                            <tr className="bg-indigo-100 font-extrabold border-t-2 border-indigo-200 text-indigo-900">
+                                <td className="px-6 py-5 uppercase tracking-widest text-lg font-black">
                                     Final Score (after cadre limit)
                                 </td>
-                                <td className="px-4 py-4 text-right tabular-nums text-xl text-indigo-700 font-black">
+                                <td className="px-6 py-5 text-right tabular-nums text-2xl text-indigo-800 font-black">
                                     {totalScore} / {maxTotal}
                                 </td>
                             </tr>
@@ -949,19 +949,20 @@ function PartBResearch({ apiBase, department, userId, userDesignation }: PartBRe
             </SectionCard>
 
             {submitSuccess && (
-                <p className="text-xs text-center text-muted-foreground font-medium italic">
+                <p className="text-base text-center text-indigo-700 font-semibold italic">
                     Changes saved successfully.
                 </p>
             )}
             {submitError && (
-                <p className="text-xs text-center text-destructive font-bold">{submitError}</p>
+                <p className="text-base text-center text-destructive font-extrabold">{submitError}</p>
             )}
 
-            <div className="flex justify-end pt-2">
+            <div className="flex justify-end pt-3">
                 <Button
                     onClick={handleSubmit}
                     disabled={isSubmitting}
-                    className="min-w-[200px] shadow-sm uppercase tracking-wider text-sm font-bold bg-indigo-600 hover:bg-indigo-700 text-white"
+                    aria-label="Save Research Data"
+                    className="min-w-[260px] shadow-lg shadow-indigo-200 uppercase tracking-widest text-base font-black bg-indigo-700 hover:bg-indigo-800 text-white transition-all transform hover:-translate-y-1 active:translate-y-0 focused:outline-none focus:ring-2 focus:ring-indigo-400 disabled:opacity-50 disabled:transform-none"
                 >
                     {isSubmitting ? "Saving…" : "Save Research Data"}
                 </Button>

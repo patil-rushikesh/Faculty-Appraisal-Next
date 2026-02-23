@@ -47,11 +47,11 @@ type QualStatus = "pdfCompleted" | "pdfOngoing" | "phdAwarded" | "none";
 
 // --- HELPERS ---
 const TransparencyGuideline = ({ formula }: { formula: string }) => (
-    <div className="p-2.5 rounded-lg bg-muted/20 border border-border/40 shadow-sm mb-4">
-        <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5 opacity-60">
+    <div className="p-4 rounded-xl bg-indigo-50 border-2 border-indigo-100 shadow-sm mb-5">
+        <p className="text-base font-extrabold text-indigo-700 uppercase tracking-widest mb-2 opacity-90">
             Computation Guidelines
         </p>
-        <p className="text-xs text-foreground/70 leading-relaxed italic font-medium">
+        <p className="text-lg text-indigo-900 leading-relaxed italic font-semibold">
             {formula}
         </p>
     </div>
@@ -73,11 +73,11 @@ function NumericRow({
     disabled?: boolean;
 }) {
     return (
-        <div className="flex items-center justify-between gap-4 py-3 border-b border-border last:border-0 hover:bg-muted/5 transition-colors px-1">
+        <div className="flex items-center justify-between gap-4 py-4 border-b border-indigo-100 last:border-0 hover:bg-indigo-50/50 transition-colors px-2">
             <div className="min-w-0">
-                <p className="text-base font-bold text-slate-900 uppercase tracking-tight">{label}</p>
+                <p className="text-lg font-extrabold text-indigo-900 uppercase tracking-tight">{label}</p>
                 {hint && (
-                    <p className="text-xs text-muted-foreground uppercase font-bold tracking-tight opacity-70">
+                    <p className="text-base text-indigo-700 uppercase font-semibold tracking-tight opacity-85">
                         {hint}
                     </p>
                 )}
@@ -87,12 +87,13 @@ function NumericRow({
                 name={name}
                 min={0}
                 disabled={disabled}
+                aria-label={label}
                 onKeyDown={(e) => e.key === "-" && e.preventDefault()}
                 onWheel={(e) => e.currentTarget.blur()}
                 value={value === 0 ? "" : value}
                 onChange={onChange}
                 placeholder="0"
-                className="w-20 shrink-0 rounded-md border border-slate-400 bg-background px-3 py-1.5 text-base text-right font-black text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50"
+                className="w-24 shrink-0 rounded-lg border-2 border-indigo-300 bg-white px-4 py-2 text-lg text-right font-black text-indigo-900 focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-700 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 shadow-sm"
             />
         </div>
     );
@@ -287,19 +288,19 @@ function PartCSelfDevelopment({
     const locked = formStatus !== "pending";
 
     return (
-        <div className="max-w-4xl mx-auto py-6 space-y-4">
+        <div className="max-w-4xl mx-auto py-8 space-y-6 text-[1.15rem]" style={{lineHeight: 1.7}}>
             <FormProgressBar progress={progressPercent} label="Part C Completion" />
 
             <SectionCard title="Qualification">
                 <TransparencyGuideline formula={FORMULAS.qualification} />
-                <div className="grid grid-cols-1 gap-2 mb-4">
+                <div className="grid grid-cols-1 gap-3 mb-5">
                     {(["pdfCompleted", "pdfOngoing", "phdAwarded", "none"] as QualStatus[]).map((v) => (
                         <label
                             key={v}
-                            className={`flex items-center gap-3 p-3 rounded-lg border transition-all ${qualStatus === v
-                                ? "bg-indigo-600 text-white border-indigo-600 shadow-md"
-                                : "bg-card text-muted-foreground border-slate-300 hover:border-indigo-600/50 hover:text-indigo-600"
-                                } ${locked ? "cursor-not-allowed opacity-70" : "cursor-pointer"}`}
+                            className={`flex items-center gap-4 p-4 rounded-xl border-2 transition-all ${qualStatus === v
+                                ? "bg-indigo-700 text-white border-indigo-700 shadow-md"
+                                : "bg-white text-indigo-800 border-indigo-300 hover:border-indigo-700 hover:text-indigo-900"
+                                } ${locked ? "cursor-not-allowed opacity-70" : "cursor-pointer"} focus-within:ring-2 focus-within:ring-indigo-400`}
                         >
                             <input
                                 type="radio"
@@ -308,8 +309,12 @@ function PartCSelfDevelopment({
                                 checked={qualStatus === v}
                                 onChange={() => setQual(v)}
                                 className="sr-only"
+                                aria-label={v === "pdfCompleted" ? "Ph.D. Completed" :
+                                    v === "pdfOngoing" ? "Ph.D. Ongoing" :
+                                        v === "phdAwarded" ? "Ph.D. Degree Awarded / Thesis Submitted" :
+                                            "None"}
                             />
-                            <span className="text-xs font-bold uppercase tracking-tight">
+                            <span className="text-base font-extrabold uppercase tracking-tight">
                                 {v === "pdfCompleted" ? "Ph.D. Completed" :
                                     v === "pdfOngoing" ? "Ph.D. Ongoing" :
                                         v === "phdAwarded" ? "Ph.D. Degree Awarded / Thesis Submitted" :
@@ -425,24 +430,24 @@ function PartCSelfDevelopment({
             </SectionCard>
 
             <SectionCard title="Score Summary">
-                <div className="overflow-hidden rounded-lg border border-border">
-                    <table className="w-full text-xs">
-                        <tbody className="divide-y divide-border">
+                <div className="overflow-hidden rounded-xl border-2 border-indigo-200">
+                    <table className="w-full text-base">
+                        <tbody className="divide-y divide-indigo-100">
                             {verifiedScore !== undefined && (
-                                <tr className="bg-muted/10">
-                                    <td className="px-4 py-3 font-medium uppercase tracking-wider text-[10px] text-muted-foreground">
+                                <tr className="bg-indigo-50">
+                                    <td className="px-6 py-4 font-semibold uppercase tracking-widest text-base text-indigo-700">
                                         Verified Score
                                     </td>
-                                    <td className="px-4 py-3 text-right font-black tabular-nums text-slate-900">
+                                    <td className="px-6 py-4 text-right font-extrabold tabular-nums text-indigo-900">
                                         {verifiedScore}
                                     </td>
                                 </tr>
                             )}
-                            <tr className="bg-muted/10 font-bold border-t-2 border-border">
-                                <td className="px-4 py-4 font-black uppercase tracking-widest text-foreground text-slate-900 text-sm">
+                            <tr className="bg-indigo-100 font-extrabold border-t-2 border-indigo-200">
+                                <td className="px-6 py-5 font-black uppercase tracking-widest text-indigo-800 text-lg">
                                     Total Part C Score
                                 </td>
-                                <td className="px-4 py-4 text-right font-black tabular-nums text-xl text-indigo-700">
+                                <td className="px-6 py-5 text-right font-black tabular-nums text-2xl text-indigo-800">
                                     {totalScore} / {maxTotal}
                                 </td>
                             </tr>
@@ -452,19 +457,20 @@ function PartCSelfDevelopment({
             </SectionCard>
 
             {submitSuccess && (
-                <p className="text-xs text-center text-muted-foreground font-medium italic">
+                <p className="text-base text-center text-indigo-700 font-semibold italic">
                     Changes saved successfully.
                 </p>
             )}
             {submitError && (
-                <p className="text-xs text-center text-destructive font-bold">{submitError}</p>
+                <p className="text-base text-center text-destructive font-extrabold">{submitError}</p>
             )}
 
-            <div className="flex justify-end pt-2">
+            <div className="flex justify-end pt-3">
                 <Button
                     onClick={handleSubmit}
                     disabled={isSubmitting || locked}
-                    className="min-w-[200px] shadow-sm uppercase tracking-wider text-sm font-bold bg-indigo-600 hover:bg-indigo-700 text-white"
+                    aria-label="Save Development Details"
+                    className="min-w-[260px] shadow-lg shadow-indigo-200 uppercase tracking-widest text-base font-black bg-indigo-700 hover:bg-indigo-800 text-white transition-all transform hover:-translate-y-1 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:opacity-50 disabled:transform-none"
                 >
                     {isSubmitting ? "Saving…" : "Save Development Details"}
                 </Button>

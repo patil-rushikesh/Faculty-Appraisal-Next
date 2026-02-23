@@ -198,56 +198,56 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
     };
 
     return (
-        <div className="max-w-4xl mx-auto py-6 space-y-4">
-            <div className="rounded-xl border border-border bg-card p-5">
-                <div className="flex flex-wrap justify-between items-center gap-3 mb-6">
+        <div className="max-w-4xl mx-auto py-8 space-y-6 text-[1.15rem]" style={{lineHeight: 1.7}}>
+            <div className="rounded-2xl border-2 border-indigo-200 bg-card p-6 shadow-md">
+                <div className="flex flex-wrap justify-between items-center gap-4 mb-7">
                     <div>
-                        <h2 className="text-sm font-black text-indigo-700 uppercase tracking-widest">
+                        <h2 className="text-xl font-black text-indigo-800 uppercase tracking-widest">
                             Review and submit
                         </h2>
-                        <p className="text-xs text-muted-foreground uppercase opacity-70">
+                        <p className="text-base text-indigo-700 uppercase opacity-85 font-semibold mt-1">
                             Generate, save and freeze your appraisal document
                         </p>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-3">
                         {pdfUrl && pdfExists && (
                             <Button
                                 asChild
                                 variant="outline"
                                 size="sm"
-                                className="gap-2 h-8 px-3 text-xs font-bold uppercase tracking-wider"
+                                className="gap-2 py-2 px-4 text-base font-bold uppercase tracking-wider border-2 border-indigo-300 hover:bg-indigo-50"
                             >
                                 <a href={pdfUrl} download={`${userId}_appraisal.pdf`}>
-                                    <Download size={14} /> Download
+                                    <Download size={18} /> Download
                                 </a>
                             </Button>
                         )}
                         <Button
                             size="sm"
                             variant="outline"
-                            className="gap-2 h-8 px-3 text-xs font-bold uppercase tracking-wider"
+                            className="gap-2 py-2 px-4 text-base font-bold uppercase tracking-wider border-2 border-indigo-300 hover:bg-indigo-50"
                             onClick={() => setShowSavedPdfsModal(true)}
                         >
-                            <Archive size={14} /> Archives
+                            <Archive size={18} /> Archives
                         </Button>
                         <Button
                             size="sm"
                             variant="outline"
-                            className="gap-2 h-8 px-3 text-xs font-bold uppercase tracking-wider"
+                            className="gap-2 py-2 px-4 text-base font-bold uppercase tracking-wider border-2 border-indigo-300 hover:bg-indigo-50"
                             onClick={() => generatePDF(true)}
                             disabled={loading}
                         >
-                            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />{" "}
+                            <RefreshCw size={18} className={loading ? "animate-spin" : ""} />{" "}
                             {pdfExists ? "Regenerate Draft" : "Generate Draft"}
                         </Button>
                         {pdfUrl && (
                             <Button
                                 size="sm"
-                                className="gap-2 h-8 px-3 text-xs font-bold uppercase tracking-wider shadow-sm bg-indigo-600 hover:bg-indigo-700 text-white"
+                                className="gap-2 py-2 px-4 text-base font-bold uppercase tracking-wider shadow-md bg-indigo-700 hover:bg-indigo-800 text-white"
                                 onClick={handleSavePdf}
                                 disabled={savingPdf}
                             >
-                                <Save size={14} className={savingPdf ? "animate-pulse" : ""} />{" "}
+                                <Save size={18} className={savingPdf ? "animate-pulse" : ""} />{" "}
                                 {savingPdf ? "Saving…" : "Save to Profile"}
                             </Button>
                         )}
@@ -255,7 +255,7 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
                 </div>
 
                 {pdfMetadata && pdfExists && (
-                    <div className="mb-6 grid grid-cols-2 md:grid-cols-4 gap-4 rounded-lg border border-border bg-muted/20 p-4">
+                    <div className="mb-7 grid grid-cols-2 md:grid-cols-4 gap-4 rounded-xl border-2 border-indigo-100 bg-indigo-50 p-5">
                         {[
                             { label: "Faculty", value: pdfMetadata.faculty_name },
                             { label: "Year", value: pdfMetadata.appraisal_year },
@@ -268,10 +268,10 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
                             },
                         ].map(({ label, value }) => (
                             <div key={label}>
-                                <p className="text-xs font-bold text-muted-foreground uppercase tracking-tight opacity-70">
+                                <p className="text-base font-bold text-indigo-700 uppercase tracking-tight opacity-85">
                                     {label}
                                 </p>
-                                <p className="text-sm font-semibold text-foreground truncate uppercase">
+                                <p className="text-lg font-extrabold text-indigo-900 truncate uppercase">
                                     {String(value ?? "N/A")}
                                 </p>
                             </div>
@@ -280,14 +280,14 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
                 )}
 
                 {loading && (
-                    <div className="mb-6 space-y-2">
-                        <div className="w-full rounded-full bg-muted h-1 overflow-hidden">
+                    <div className="mb-7 space-y-3">
+                        <div className="w-full rounded-full bg-muted h-2 overflow-hidden">
                             <div
                                 className="bg-indigo-600 h-full transition-all duration-300"
                                 style={{ width: `${loadingProgress}%` }}
                             />
                         </div>
-                        <p className="text-xs text-center font-bold text-muted-foreground uppercase animate-pulse">
+                        <p className="text-base text-center font-bold text-indigo-700 uppercase animate-pulse">
                             Processing Appraisal Document... {loadingProgress}%
                         </p>
                     </div>
@@ -301,15 +301,15 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
 
 
                 {!pdfExists && !loading && (
-                    <div className="py-20 text-center rounded-lg border border-dashed border-border bg-muted/5">
-                        <FileText size={48} className="mx-auto mb-4 opacity-20" />
-                        <p className="text-xs font-bold text-muted-foreground uppercase">
+                    <div className="py-24 text-center rounded-xl border-2 border-dashed border-indigo-200 bg-indigo-50">
+                        <FileText size={56} className="mx-auto mb-4 opacity-30 text-indigo-700" />
+                        <p className="text-lg font-bold text-indigo-700 uppercase">
                             No PDF generated for this session
                         </p>
                         <Button
                             variant="link"
                             size="sm"
-                            className="mt-2 text-xs uppercase font-bold"
+                            className="mt-3 text-base uppercase font-black text-indigo-700 hover:text-indigo-900"
                             onClick={() => generatePDF(true)}
                         >
                             Generate Now
@@ -319,32 +319,32 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
             </div>
 
             {submitError && (
-                <div className="mx-auto max-w-lg p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-xs font-bold uppercase text-center tracking-wider">
+                <div className="mx-auto max-w-lg p-4 rounded-lg bg-destructive/15 border-2 border-destructive/30 text-destructive text-base font-bold uppercase text-center tracking-wider">
                     {submitError}
                 </div>
             )}
 
             {isFormFrozen ? (
-                <div className="flex items-center justify-center gap-3 rounded-xl border border-border bg-muted/20 px-6 py-4">
-                    <ShieldAlert size={18} className="text-muted-foreground" />
-                    <p className="text-sm font-bold text-foreground uppercase tracking-wider">
+                <div className="flex items-center justify-center gap-4 rounded-2xl border-2 border-indigo-200 bg-indigo-50 px-7 py-5 shadow-md">
+                    <ShieldAlert size={24} className="text-indigo-700 flex-shrink-0" />
+                    <p className="text-lg font-black text-indigo-800 uppercase tracking-wider">
                         Document Frozen &bull; Status: {formStatus}
                     </p>
                 </div>
             ) : (
                 formStatus === "pending" && (
-                    <div className="flex justify-center pt-2">
+                    <div className="flex justify-center pt-3">
                         <Button
                             onClick={() => setShowFreezeModal(true)}
-                            className="group relative h-14 px-10 overflow-hidden rounded-xl bg-indigo-600 text-white transition-all hover:bg-indigo-700 hover:scale-[1.02] active:scale-95 shadow-lg"
+                            className="group relative h-16 px-12 overflow-hidden rounded-2xl bg-indigo-700 text-white transition-all hover:bg-indigo-800 hover:scale-[1.02] active:scale-95 shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
                         >
-                            <div className="flex items-center gap-3">
-                                <ShieldAlert size={20} className="transition-transform group-hover:rotate-12" />
+                            <div className="flex items-center gap-4">
+                                <ShieldAlert size={24} className="transition-transform group-hover:rotate-12 flex-shrink-0" />
                                 <div className="text-left">
-                                    <p className="text-xs font-black uppercase tracking-widest leading-none">
+                                    <p className="text-base font-black uppercase tracking-widest leading-none">
                                         Final Submission
                                     </p>
-                                    <p className="text-sm font-bold opacity-80 mt-1">Freeze & Submit Appraisal</p>
+                                    <p className="text-lg font-bold opacity-90 mt-1">Freeze & Submit Appraisal</p>
                                 </div>
                             </div>
                         </Button>
@@ -353,28 +353,28 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
             )}
 
             <Dialog open={showFreezeModal} onOpenChange={setShowFreezeModal}>
-                <DialogContent className="max-w-md bg-card border-border">
+                <DialogContent className="max-w-md bg-card border-2 border-indigo-200">
                     <DialogHeader>
-                        <DialogTitle className="text-sm font-black uppercase tracking-widest text-destructive">
+                        <DialogTitle className="text-lg font-black uppercase tracking-widest text-destructive">
                             Critical: Confirm Freeze
                         </DialogTitle>
                     </DialogHeader>
-                    <div className="space-y-4 pt-2">
-                        <p className="text-xs text-muted-foreground leading-relaxed uppercase tracking-tight">
+                    <div className="space-y-5 pt-3">
+                        <p className="text-base text-indigo-900 leading-relaxed uppercase tracking-tight font-semibold">
                             Freezing will lock all 6 parts of your appraisal form. You will not be able to make
                             further changes until the evaluation cycle is reset by the admin.
                         </p>
                         <div className="flex gap-3">
                             <Button
                                 variant="outline"
-                                className="flex-1 text-xs font-bold uppercase"
+                                className="flex-1 text-base font-bold uppercase border-2"
                                 onClick={() => setShowFreezeModal(false)}
                             >
                                 Cancel
                             </Button>
                             <Button
                                 variant="destructive"
-                                className="flex-1 text-xs font-bold uppercase"
+                                className="flex-1 text-base font-bold uppercase"
                                 onClick={handleFreeze}
                             >
                                 Lock &amp; Submit
@@ -385,55 +385,55 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
             </Dialog>
 
             <Dialog open={showSavedPdfsModal} onOpenChange={setShowSavedPdfsModal}>
-                <DialogContent className="max-w-2xl bg-card border-border">
+                <DialogContent className="max-w-2xl bg-card border-2 border-indigo-200">
                     <DialogHeader>
-                        <DialogTitle className="text-sm font-black uppercase tracking-widest">
+                        <DialogTitle className="text-lg font-black uppercase tracking-widest">
                             Saved Appraisal Archives
                         </DialogTitle>
                     </DialogHeader>
                     {loadingSavedPdfs ? (
                         <Loader message="Loading Archives..." />
                     ) : savedPdfs.length > 0 ? (
-                        <div className="space-y-2 mt-4 max-h-[50vh] overflow-y-auto pr-2">
+                        <div className="space-y-3 mt-5 max-h-[50vh] overflow-y-auto pr-2">
                             {savedPdfs.map((pdf, i) => (
                                 <div
                                     key={pdf._id ?? i}
-                                    className="flex items-center justify-between gap-4 p-3 rounded-lg border border-border bg-muted/10 hover:bg-muted/20 transition-colors"
+                                    className="flex items-center justify-between gap-4 p-4 rounded-xl border-2 border-indigo-100 bg-indigo-50 hover:bg-indigo-100 transition-colors"
                                 >
                                     <div className="min-w-0">
-                                        <p className="text-xs font-bold text-foreground truncate uppercase">
+                                        <p className="text-base font-bold text-indigo-900 truncate uppercase">
                                             {pdf.filename || `Archive_${i + 1}`}
                                         </p>
-                                        <p className="text-xs text-muted-foreground uppercase opacity-70">
+                                        <p className="text-sm text-indigo-700 uppercase opacity-80 font-semibold">
                                             {pdf.appraisal_year} &bull;{" "}
                                             {pdf.upload_date ? new Date(pdf.upload_date).toLocaleDateString() : "N/A"}
                                         </p>
                                     </div>
-                                    <div className="flex gap-2">
+                                    <div className="flex gap-2 flex-shrink-0">
                                         <Button
                                             size="sm"
                                             variant="ghost"
-                                            className="h-8 w-8 p-0"
+                                            className="h-10 w-10 p-0 hover:bg-indigo-200"
                                             onClick={() => handleViewSaved(pdf._id)}
                                         >
-                                            <Eye size={14} />
+                                            <Eye size={18} />
                                         </Button>
                                         <Button
                                             size="sm"
                                             variant="ghost"
-                                            className="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                            className="h-10 w-10 p-0 text-destructive hover:text-destructive hover:bg-destructive/15"
                                             onClick={() => setSelectedPdfForDelete(pdf._id)}
                                         >
-                                            <Trash2 size={14} />
+                                            <Trash2 size={18} />
                                         </Button>
                                     </div>
                                 </div>
                             ))}
                         </div>
                     ) : (
-                        <div className="py-20 text-center opacity-40">
-                            <Archive size={40} className="mx-auto mb-2" />
-                            <p className="text-[10px] font-bold uppercase">No records found</p>
+                        <div className="py-24 text-center opacity-50">
+                            <Archive size={48} className="mx-auto mb-3 text-muted-foreground" />
+                            <p className="text-base font-bold uppercase">No records found</p>
                         </div>
                     )}
                 </DialogContent>
@@ -443,21 +443,21 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
                 open={!!selectedPdfForDelete}
                 onOpenChange={(open) => !open && setSelectedPdfForDelete(null)}
             >
-                <DialogContent className="max-w-xs bg-card border-border">
-                    <p className="text-xs font-bold text-center uppercase py-4">
+                <DialogContent className="max-w-xs bg-card border-2 border-indigo-200">
+                    <p className="text-base font-bold text-center uppercase py-6">
                         Permanently delete this record?
                     </p>
-                    <div className="flex gap-2">
+                    <div className="flex gap-3">
                         <Button
                             variant="outline"
-                            className="flex-1 h-8 text-xs font-bold uppercase"
+                            className="flex-1 h-10 text-base font-bold uppercase border-2"
                             onClick={() => setSelectedPdfForDelete(null)}
                         >
                             No
                         </Button>
                         <Button
                             variant="destructive"
-                            className="flex-1 h-8 text-xs font-bold uppercase"
+                            className="flex-1 h-10 text-base font-bold uppercase"
                             onClick={() => selectedPdfForDelete && handleDeleteSaved(selectedPdfForDelete)}
                             disabled={deletingPdf}
                         >

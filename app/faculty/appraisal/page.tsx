@@ -14,7 +14,7 @@ import { GraduationCap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DesignationValue } from "@/lib/constants";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "";
+const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? "";
 
 const tabs = [
     { id: "A", label: "Part A", description: "Academic Involvement" },

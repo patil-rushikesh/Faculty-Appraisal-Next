@@ -24,11 +24,11 @@ interface PartEExtraProps {
 
 // --- HELPERS ---
 const TransparencyGuideline = ({ formula }: { formula: string }) => (
-    <div className="p-2.5 rounded-lg bg-muted/20 border border-border/40 shadow-sm mb-4">
-        <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5 opacity-60">
+    <div className="p-4 rounded-xl bg-indigo-50 border-2 border-indigo-100 shadow-sm mb-5">
+        <p className="text-base font-extrabold text-indigo-700 uppercase tracking-widest mb-2 opacity-90">
             Computation Guidelines
         </p>
-        <p className="text-xs text-foreground/70 leading-relaxed italic font-medium">
+        <p className="text-lg text-indigo-900 leading-relaxed italic font-semibold">
             {formula}
         </p>
     </div>
@@ -137,15 +137,15 @@ function PartEExtra({ apiBase, department, userId }: PartEExtraProps) {
     const locked = formStatus !== "pending";
 
     return (
-        <div className="max-w-4xl mx-auto py-6 space-y-4">
+        <div className="max-w-4xl mx-auto py-8 space-y-6 text-[1.15rem]" style={{lineHeight: 1.7}}>
             <FormProgressBar progress={progressPercent} label="Part E Completion" />
 
             <SectionCard title="Extraordinary Contributions">
                 <TransparencyGuideline formula={PART_E_GUIDELINE} />
-                <div className="space-y-4">
+                <div className="space-y-5">
                     <div>
-                        <label className="block text-xs font-bold text-slate-900 uppercase tracking-widest mb-1.5 px-1 flex items-center gap-2">
-                            <span className="w-1.5 h-1.5 rounded-full bg-indigo-600" />
+                        <label className="block text-base font-extrabold text-indigo-900 uppercase tracking-widest mb-2 px-1 flex items-center gap-2">
+                            <span className="w-2 h-2 rounded-full bg-indigo-700" />
                             Contributions Description & Highlights (Required in Bulleted Form)
                         </label>
                         <Textarea
@@ -154,15 +154,15 @@ function PartEExtra({ apiBase, department, userId }: PartEExtraProps) {
                             disabled={locked}
                             onChange={(e) => setFormData((p) => ({ ...p, contributions: e.target.value }))}
                             rows={16}
-                            className="resize-none text-base leading-relaxed placeholder:italic focus-visible:ring-indigo-600/20 focus-visible:border-indigo-600 font-medium text-slate-900 border-slate-400 shadow-sm"
+                            className="resize-none text-lg leading-relaxed placeholder:italic placeholder:text-muted-foreground focus-visible:ring-indigo-300 focus-visible:border-indigo-600 focus-visible:ring-4 font-medium text-slate-900 border-2 border-indigo-200 shadow-sm"
                         />
                     </div>
-                    <div className="flex items-center justify-between py-2 border-t border-border pt-4">
+                    <div className="flex items-center justify-between py-3 border-t border-indigo-100 pt-5">
                         <div>
-                            <p className="text-base font-bold text-slate-900 uppercase tracking-tight">
+                            <p className="text-lg font-extrabold text-indigo-900 uppercase tracking-tight">
                                 Self-Awarded Marks
                             </p>
-                            <p className="text-sm font-bold text-muted-foreground uppercase tracking-wider font-bold">
+                            <p className="text-base font-semibold text-indigo-700 uppercase tracking-wider mt-1">
                                 Maximum {PART_E_MAX} points
                             </p>
                         </div>
@@ -171,6 +171,7 @@ function PartEExtra({ apiBase, department, userId }: PartEExtraProps) {
                             min={0}
                             max={PART_E_MAX}
                             disabled={locked}
+                            aria-label="Self-Awarded Marks for Extra Contributions"
                             onWheel={(e) => e.currentTarget.blur()}
                             value={formData.selfAwardedMarks === 0 ? "" : formData.selfAwardedMarks}
                             onChange={(e) =>
@@ -179,7 +180,7 @@ function PartEExtra({ apiBase, department, userId }: PartEExtraProps) {
                                     selfAwardedMarks: Math.min(PART_E_MAX, Math.max(0, Number(e.target.value))),
                                 }))
                             }
-                            className="w-28 rounded-md border border-slate-400 bg-background px-3 py-2 text-xl text-right font-black tabular-nums text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-sm"
+                            className="w-32 rounded-lg border-2 border-indigo-300 bg-white px-4 py-2 text-xl text-right font-black tabular-nums text-indigo-900 focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-700 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-sm"
                         />
                     </div>
                 </div>
@@ -194,19 +195,20 @@ function PartEExtra({ apiBase, department, userId }: PartEExtraProps) {
             </SectionCard>
 
             {submitSuccess && (
-                <p className="text-xs text-center text-muted-foreground font-medium italic mt-2">
+                <p className="text-base text-center text-indigo-700 font-semibold italic">
                     Contributions saved successfully.
                 </p>
             )}
             {submitError && (
-                <p className="text-xs text-center text-destructive font-bold mt-2">{submitError}</p>
+                <p className="text-base text-center text-destructive font-extrabold">{submitError}</p>
             )}
 
-            <div className="flex justify-end pt-2">
+            <div className="flex justify-end pt-3">
                 <Button
                     onClick={handleSubmit}
                     disabled={isSubmitting || locked}
-                    className="min-w-[200px] shadow-sm uppercase tracking-wider text-sm font-bold bg-indigo-600 hover:bg-indigo-700 text-white"
+                    aria-label="Save Contributions"
+                    className="min-w-[260px] shadow-lg shadow-indigo-200 uppercase tracking-widest text-base font-black bg-indigo-700 hover:bg-indigo-800 text-white transition-all transform hover:-translate-y-1 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:opacity-50 disabled:transform-none"
                 >
                     {isSubmitting ? "Saving…" : "Save Contributions"}
                 </Button>

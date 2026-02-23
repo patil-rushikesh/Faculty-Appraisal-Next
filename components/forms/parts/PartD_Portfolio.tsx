@@ -209,21 +209,21 @@ function PartDPortfolio({
     if (isLoading) return <Loader message="Loading portfolio data…" />;
 
     return (
-        <div className="max-w-4xl mx-auto py-6 space-y-4">
+        <div className="max-w-4xl mx-auto py-8 space-y-6 text-[1.15rem]" style={{lineHeight: 1.7}}>
             <FormProgressBar progress={progressPercent} label="Part D Completion" />
 
             {!formData.isAdministrativeRole && (
                 <SectionCard title="Portfolio Selection">
-                    <div className="flex gap-4 mb-4">
+                    <div className="flex gap-4 mb-5">
                         {PORTFOLIO_TYPES.map((t) => (
                             <button
                                 key={t}
                                 disabled={locked}
                                 onClick={() => setFormData((p) => ({ ...p, portfolioType: t }))}
-                                className={`flex-1 py-3 px-4 rounded-lg border text-xs font-bold uppercase tracking-wider transition-all ${formData.portfolioType === t
-                                    ? "bg-indigo-600 text-white border-indigo-600 shadow-md"
-                                    : "bg-card text-muted-foreground border-border hover:border-indigo-600/50 hover:text-indigo-600"
-                                    }`}
+                                className={`flex-1 py-4 px-4 rounded-xl border-2 text-base font-extrabold uppercase tracking-wider transition-all ${formData.portfolioType === t
+                                    ? "bg-indigo-700 text-white border-indigo-700 shadow-md"
+                                    : "bg-white text-indigo-800 border-indigo-300 hover:border-indigo-700 hover:text-indigo-900"
+                                    } focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:opacity-50`}
                             >
                                 {t} Level
                             </button>
@@ -239,8 +239,8 @@ function PartDPortfolio({
                         value={instituteLevelPortfolio}
                         disabled={locked}
                         onChange={(e) => setInstituteLevelPortfolio(e.target.value)}
-                        rows={5}
-                        className="resize-none text-sm placeholder:italic"
+                        rows={6}
+                        className="resize-none text-lg placeholder:italic placeholder:text-muted-foreground font-medium text-slate-900 border-2 border-indigo-200 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-300 shadow-sm"
                     />
                 </SectionCard>
             )}
@@ -252,19 +252,19 @@ function PartDPortfolio({
                         value={departmentLevelPortfolio}
                         disabled={locked}
                         onChange={(e) => setDepartmentLevelPortfolio(e.target.value)}
-                        rows={5}
-                        className="resize-none text-sm placeholder:italic"
+                        rows={6}
+                        className="resize-none text-lg placeholder:italic placeholder:text-muted-foreground font-medium text-slate-900 border-2 border-indigo-200 focus:border-indigo-600 focus:ring-4 focus:ring-indigo-300 shadow-sm"
                     />
                 </SectionCard>
             )}
 
             <SectionCard title="Self Assessment">
-                <div className="flex items-center justify-between py-2">
+                <div className="flex items-center justify-between py-4 px-2">
                     <div>
-                        <p className="text-sm font-medium text-foreground uppercase tracking-tight">
+                        <p className="text-lg font-extrabold text-indigo-900 uppercase tracking-tight">
                             Self-Awarded Marks
                         </p>
-                        <p className="text-xs text-muted-foreground uppercase">
+                        <p className="text-base text-indigo-700 uppercase font-semibold mt-1">
                             Maximum {PART_D_SELF_MAX} points
                         </p>
                     </div>
@@ -273,6 +273,7 @@ function PartDPortfolio({
                         min={0}
                         max={PART_D_SELF_MAX}
                         disabled={locked}
+                        aria-label="Self-Awarded Marks"
                         onWheel={(e) => e.currentTarget.blur()}
                         value={selfMarksValue === 0 ? "" : selfMarksValue}
                         onChange={(e) => {
@@ -283,36 +284,36 @@ function PartDPortfolio({
                                     : { ...p, selfAwardedMarks: v }
                             );
                         }}
-                        className="w-24 rounded-md border border-border bg-background px-3 py-2 text-base text-right font-bold tabular-nums focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        className="w-28 rounded-lg border-2 border-indigo-300 bg-white px-4 py-2 text-lg text-right font-black tabular-nums text-indigo-900 focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-700 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-sm"
                     />
                 </div>
             </SectionCard>
 
             <SectionCard title="Score Summary">
-                <div className="overflow-hidden rounded-lg border border-border">
-                    <table className="w-full text-xs">
-                        <tbody className="divide-y divide-border">
-                            <tr className="bg-muted/10">
-                                <td className="px-4 py-3 font-medium uppercase tracking-wider text-[10px] text-muted-foreground">
+                <div className="overflow-hidden rounded-xl border-2 border-indigo-200">
+                    <table className="w-full text-base">
+                        <tbody className="divide-y divide-indigo-100">
+                            <tr className="bg-indigo-50">
+                                <td className="px-6 py-4 font-semibold uppercase tracking-widest text-base text-indigo-700">
                                     Self Evaluation
                                 </td>
-                                <td className="px-4 py-3 text-right font-bold tabular-nums">
+                                <td className="px-6 py-4 text-right font-extrabold tabular-nums text-indigo-900">
                                     {scores.self} / {PART_D_SELF_MAX}
                                 </td>
                             </tr>
-                            <tr className="bg-muted/10">
-                                <td className="px-4 py-3 font-medium uppercase tracking-wider text-[10px] text-muted-foreground">
+                            <tr className="bg-indigo-50">
+                                <td className="px-6 py-4 font-semibold uppercase tracking-widest text-base text-indigo-700">
                                     Superior Evaluation
                                 </td>
-                                <td className="px-4 py-3 text-right font-bold tabular-nums">
+                                <td className="px-6 py-4 text-right font-extrabold tabular-nums text-indigo-900">
                                     {scores.superior} / {PART_D_SELF_MAX}
                                 </td>
                             </tr>
-                            <tr className="bg-muted/10 font-bold border-t-2 border-border">
-                                <td className="px-4 py-4 font-black uppercase tracking-widest text-foreground text-sm">
+                            <tr className="bg-indigo-100 font-extrabold border-t-2 border-indigo-200">
+                                <td className="px-6 py-5 font-black uppercase tracking-widest text-indigo-800 text-lg">
                                     Total Portfolio Score
                                 </td>
-                                <td className="px-4 py-4 text-right font-black tabular-nums text-xl text-foreground">
+                                <td className="px-6 py-5 text-right font-black tabular-nums text-2xl text-indigo-800">
                                     {totalScore} / {PART_D_MAX}
                                 </td>
                             </tr>
@@ -322,19 +323,20 @@ function PartDPortfolio({
             </SectionCard>
 
             {submitSuccess && (
-                <p className="text-xs text-center text-muted-foreground font-medium italic mt-2">
+                <p className="text-base text-center text-indigo-700 font-semibold italic">
                     Portfolio details saved.
                 </p>
             )}
             {submitError && (
-                <p className="text-xs text-center text-destructive font-bold mt-2">{submitError}</p>
+                <p className="text-base text-center text-destructive font-extrabold">{submitError}</p>
             )}
 
-            <div className="flex justify-end pt-2">
+            <div className="flex justify-end pt-3">
                 <Button
                     onClick={handleSubmit}
                     disabled={isSubmitting || locked}
-                    className="min-w-[200px] shadow-sm uppercase tracking-wider text-sm font-bold bg-indigo-600 hover:bg-indigo-700 text-white"
+                    aria-label="Save Portfolio Details"
+                    className="min-w-[260px] shadow-lg shadow-indigo-200 uppercase tracking-widest text-base font-black bg-indigo-700 hover:bg-indigo-800 text-white transition-all transform hover:-translate-y-1 active:translate-y-0 focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:opacity-50 disabled:transform-none"
                 >
                     {isSubmitting ? "Saving..." : "Save Portfolio Details"}
                 </Button>

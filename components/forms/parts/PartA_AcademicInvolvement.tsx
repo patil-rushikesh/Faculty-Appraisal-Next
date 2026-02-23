@@ -92,18 +92,19 @@ interface PartAAcademicInvolvementProps {
 
 // --- HELPERS ---
 const MetricInputField = ({ label, value, onChange, className = "" }: { label: string; value: string | undefined; onChange: (v: string) => void; className?: string }) => (
-  <div className={`space-y-1.5 ${className}`}>
-    <label className="text-xs uppercase font-bold text-muted-foreground tracking-wider block px-0.5">
+  <div className={`space-y-2 ${className}`}>
+    <label className="text-base uppercase font-extrabold text-indigo-900 tracking-wider block px-0.5" style={{letterSpacing: '0.08em'}}>
       {label}
     </label>
     <input
       type="number"
       min={0}
+      aria-label={label}
       onWheel={(e) => e.currentTarget.blur()}
       onKeyDown={(e) => e.key === "-" && e.preventDefault()}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full rounded-md border border-slate-300 bg-background px-3 py-1.5 text-sm font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+      className="w-full rounded-lg border-2 border-indigo-200 bg-white px-4 py-2 text-lg font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-sm"
     />
   </div>
 );
@@ -492,22 +493,22 @@ function PartAAcademicInvolvement({
   if (isLoading) return <Loader message="Loading Academic Performance..." />;
 
   return (
-    <div className="max-w-4xl mx-auto py-6 space-y-4">
+    <div className="max-w-4xl mx-auto py-8 space-y-6 text-[1.15rem]" style={{lineHeight: 1.7}}>
       <CourseManagementHeader />
       <FormProgressBar progress={progressPercent} label="Part A Completion" />
 
-      <div className="flex items-center justify-between rounded-xl border border-border bg-card px-5 py-3 shadow-sm">
-        <span className="text-sm font-semibold text-indigo-700 tracking-tight uppercase">
+      <div className="flex items-center justify-between rounded-2xl border-2 border-indigo-200 bg-card px-7 py-5 shadow-md">
+        <span className="text-lg font-extrabold text-indigo-800 tracking-tight uppercase">
           Part A: Academic Involvement
         </span>
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-muted-foreground uppercase font-bold tracking-widest bg-muted/30 px-2 py-1 rounded">
+        <div className="flex items-center gap-3">
+          <span className="text-base text-indigo-900 uppercase font-extrabold tracking-widest bg-indigo-50 px-3 py-1.5 rounded-lg">
             Designation: {userDesignation}
           </span>
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-6">
         {ACADEMIC_SECTIONS.map(({ title, field, formula }) => (
           <SectionCard
             key={field}
@@ -515,38 +516,40 @@ function PartAAcademicInvolvement({
             actions={
               <button
                 type="button"
+                aria-pressed={manualSections[field]}
+                aria-label={manualSections[field] ? `Manual entry enabled for ${title}` : `Enable manual entry for ${title}`}
                 onClick={() => toggleManual(field)}
-                className={`px-3 py-1.5 rounded-md text-[10px] uppercase tracking-wider font-bold border transition-all ${manualSections[field]
-                  ? "bg-indigo-600 text-white border-indigo-600 shadow-sm"
-                  : "bg-transparent text-muted-foreground border-slate-300 hover:border-indigo-600 hover:text-indigo-600"
+                className={`px-4 py-2 rounded-lg text-xs uppercase tracking-wider font-extrabold border-2 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-700 ${manualSections[field]
+                  ? "bg-indigo-700 text-white border-indigo-700 shadow-md"
+                  : "bg-white text-indigo-700 border-indigo-300 hover:border-indigo-700 hover:text-indigo-900"
                   }`}
               >
                 {manualSections[field] ? "Manual Entry On" : "Enable Manual Entry"}
               </button>
             }
           >
-            <div className="space-y-4">
-              <div className="p-2.5 rounded-lg bg-muted/20 border border-border/40 shadow-sm">
-                <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-widest mb-0.5 opacity-60">
+            <div className="space-y-5">
+              <div className="p-4 rounded-xl bg-indigo-50 border-2 border-indigo-100 shadow-sm">
+                <p className="text-xs font-extrabold text-indigo-700 uppercase tracking-widest mb-1 opacity-80">
                   Computation Guidelines
                 </p>
-                <p className="text-[10px] text-foreground/70 leading-relaxed italic font-medium">
+                <p className="text-base text-indigo-900 leading-relaxed italic font-semibold">
                   {formula}
                 </p>
               </div>
 
               {/* Data Entry Fields */}
               {!manualSections[field] && (
-                <div className="space-y-4">
+                <div className="space-y-5">
                   {/* Result Analysis Per Subject */}
                   {field === "resultAnalysis" && courses.map(c => (
-                    <div key={c.id} className="p-4 rounded-lg border border-border/60 bg-muted/5 space-y-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-[10px] font-black text-indigo-700 uppercase tracking-widest bg-indigo-50 px-2 py-1 rounded border border-indigo-100">
+                    <div key={c.id} className="p-5 rounded-xl border-2 border-indigo-100 bg-indigo-50 space-y-5">
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="text-xs font-black text-indigo-800 uppercase tracking-widest bg-indigo-100 px-3 py-1 rounded border border-indigo-200">
                           Subject: {c.code || "Unnamed"}
                         </span>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-5">
                         <MetricInputField label="Students > 60%" value={courseMetrics[c.id]?.studentsAbove60} onChange={(v) => handleCourseMetricChange(c.id, "studentsAbove60", v)} />
                         <MetricInputField label="Students 50-59%" value={courseMetrics[c.id]?.students50to59} onChange={(v) => handleCourseMetricChange(c.id, "students50to59", v)} />
                         <MetricInputField label="Students 40-49%" value={courseMetrics[c.id]?.students40to49} onChange={(v) => handleCourseMetricChange(c.id, "students40to49", v)} />
@@ -557,19 +560,19 @@ function PartAAcademicInvolvement({
 
                   {/* Course Outcome Analysis Per Subject */}
                   {field === "courseOutcome" && courses.map(c => (
-                    <div key={c.id} className="p-4 rounded-lg border border-border/60 bg-muted/5 space-y-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-black text-indigo-700 uppercase tracking-widest bg-indigo-50 px-2 py-1 rounded border border-indigo-100">
+                    <div key={c.id} className="p-5 rounded-xl border-2 border-indigo-100 bg-indigo-50 space-y-5">
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="text-base font-black text-indigo-800 uppercase tracking-widest bg-indigo-100 px-3 py-1 rounded border border-indigo-200">
                           Subject: {c.code || "Unnamed"} ({c.semester})
                         </span>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-5">
                         <MetricInputField label="Avg CO Attainment (%)" value={courseMetrics[c.id]?.coAttainment} onChange={(v) => handleCourseMetricChange(c.id, "coAttainment", v)} />
                         <div className="flex flex-col gap-2 justify-center">
-                          <label className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Timely Submission</label>
-                          <label className="flex items-center gap-2 cursor-pointer group">
-                            <input type="checkbox" checked={courseMetrics[c.id]?.timelySubmissionCO} onChange={(e) => handleCourseMetricChange(c.id, "timelySubmissionCO", e.target.checked)} className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-600/20" />
-                            <span className="text-xs font-medium text-slate-700 group-hover:text-indigo-600 transition-colors">Submitted on time</span>
+                          <label className="text-base uppercase font-extrabold text-indigo-900 tracking-wider">Timely Submission</label>
+                          <label className="flex items-center gap-3 cursor-pointer group">
+                            <input type="checkbox" checked={courseMetrics[c.id]?.timelySubmissionCO} onChange={(e) => handleCourseMetricChange(c.id, "timelySubmissionCO", e.target.checked)} className="w-5 h-5 rounded border-indigo-300 text-indigo-700 focus:ring-indigo-400" aria-label="Timely Submission" />
+                            <span className="text-base font-semibold text-indigo-800 group-hover:text-indigo-900 transition-colors">Submitted on time</span>
                           </label>
                         </div>
                       </div>
@@ -583,13 +586,13 @@ function PartAAcademicInvolvement({
 
                   {/* Academic Engagement Per Subject */}
                   {field === "academicEngagement" && courses.map(c => (
-                    <div key={c.id} className="p-4 rounded-lg border border-border/60 bg-muted/5 space-y-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-black text-indigo-700 uppercase tracking-widest bg-indigo-50 px-2 py-1 rounded border border-indigo-100">
+                    <div key={c.id} className="p-5 rounded-xl border-2 border-indigo-100 bg-indigo-50 space-y-5">
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="text-base font-black text-indigo-800 uppercase tracking-widest bg-indigo-100 px-3 py-1 rounded border border-indigo-200">
                           Subject: {c.code || "Unnamed"}
                         </span>
                       </div>
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-2 gap-5">
                         <MetricInputField label="Students Present" value={courseMetrics[c.id]?.studentsPresent} onChange={(v) => handleCourseMetricChange(c.id, "studentsPresent", v)} />
                         <MetricInputField label="Total Enrolled Students" value={courseMetrics[c.id]?.totalEnrolledStudents} onChange={(v) => handleCourseMetricChange(c.id, "totalEnrolledStudents", v)} />
                       </div>
@@ -598,16 +601,16 @@ function PartAAcademicInvolvement({
 
                   {/* Teaching Load Global */}
                   {field === "teachingLoad" && (
-                    <div className="space-y-4 max-w-lg">
-                      <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-5 max-w-lg">
+                      <div className="grid grid-cols-2 gap-5">
                         <MetricInputField label="Weekly Load Sem I" value={globalMetrics.weeklyLoadSem1} onChange={(v) => setGlobalMetrics(p => ({ ...p, weeklyLoadSem1: v }))} />
                         <MetricInputField label="Weekly Load Sem II" value={globalMetrics.weeklyLoadSem2} onChange={(v) => setGlobalMetrics(p => ({ ...p, weeklyLoadSem2: v }))} />
                       </div>
-                      <label className="flex items-center gap-3 p-3 rounded-lg border border-indigo-100 bg-indigo-50/30 cursor-pointer group">
-                        <input type="checkbox" checked={globalMetrics.adminResponsibility} onChange={(e) => setGlobalMetrics(p => ({ ...p, adminResponsibility: e.target.checked }))} className="w-5 h-5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-600/20" />
+                      <label className="flex items-center gap-4 p-4 rounded-xl border-2 border-indigo-100 bg-indigo-50 cursor-pointer group">
+                        <input type="checkbox" checked={globalMetrics.adminResponsibility} onChange={(e) => setGlobalMetrics(p => ({ ...p, adminResponsibility: e.target.checked }))} className="w-6 h-6 rounded border-indigo-300 text-indigo-700 focus:ring-indigo-400" aria-label="Admin Responsibility" />
                         <div>
-                          <p className="text-xs font-bold text-slate-900 group-hover:text-indigo-700 transition-colors uppercase tracking-tight">Admin Responsibility</p>
-                          <p className="text-[10px] text-muted-foreground opacity-80">(Held Dean/HOD/HOD and HOD roles)</p>
+                          <p className="text-base font-extrabold text-indigo-900 group-hover:text-indigo-700 transition-colors uppercase tracking-tight">Admin Responsibility</p>
+                          <p className="text-xs text-indigo-700 opacity-90">(Held Dean/HOD/HOD and HOD roles)</p>
                         </div>
                       </label>
                     </div>
@@ -620,11 +623,11 @@ function PartAAcademicInvolvement({
 
                   {/* Student Feedback Per Subject */}
                   {field === "studentFeedback" && courses.map(c => (
-                    <div key={c.id} className="p-4 rounded-lg border border-border/60 bg-muted/5 flex items-center justify-between">
-                      <span className="text-[10px] font-black text-indigo-700 uppercase tracking-widest bg-indigo-50 px-2 py-1 rounded border border-indigo-100">
+                    <div key={c.id} className="p-5 rounded-xl border-2 border-indigo-100 bg-indigo-50 flex items-center justify-between">
+                      <span className="text-base font-black text-indigo-800 uppercase tracking-widest bg-indigo-100 px-3 py-1 rounded border border-indigo-200">
                         Subject: {c.code || "Unnamed"}
                       </span>
-                      <MetricInputField label="Feedback (%)" value={courseMetrics[c.id]?.feedbackPercentage} onChange={(v) => handleCourseMetricChange(c.id, "feedbackPercentage", v)} className="w-32" />
+                      <MetricInputField label="Feedback (%)" value={courseMetrics[c.id]?.feedbackPercentage} onChange={(v) => handleCourseMetricChange(c.id, "feedbackPercentage", v)} className="w-40" />
                     </div>
                   ))}
 
@@ -636,31 +639,32 @@ function PartAAcademicInvolvement({
               )}
 
               {/* Parameters & Marks Summary */}
-              <div className="flex items-center justify-between px-1 pt-2 border-t border-border/40">
-                <span className="text-foreground text-sm font-black uppercase tracking-widest opacity-80">
+              <div className="flex items-center justify-between px-2 pt-3 border-t-2 border-indigo-100">
+                <span className="text-indigo-900 text-lg font-black uppercase tracking-widest opacity-90">
                   Calculated Mark (Section Total)
                 </span>
                 {manualSections[field] ? (
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-3 shrink-0">
                     <input
                       type="number"
                       min={0}
                       max={PART_A_MAXES[field]}
+                      aria-label={`Manual score for ${title}`}
                       onWheel={(e) => e.currentTarget.blur()}
                       onKeyDown={(e) => e.key === "-" && e.preventDefault()}
                       value={scores[field] === 0 ? "" : scores[field]}
                       onChange={(e) => setScore(field, Number(e.target.value))}
                       placeholder="0"
-                      className="w-20 rounded-md border border-slate-400 bg-background px-3 py-2 text-sm text-right font-black text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-sm"
+                      className="w-24 rounded-lg border-2 border-indigo-300 bg-white px-4 py-2 text-lg text-right font-black text-indigo-900 focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-700 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-sm"
                     />
-                    <span className="text-xs font-bold text-muted-foreground tabular-nums uppercase">
+                    <span className="text-base font-bold text-indigo-700 tabular-nums uppercase">
                       / {PART_A_MAXES[field]}
                     </span>
                   </div>
                 ) : (
-                  <span className="font-black text-slate-900 text-sm tabular-nums">
+                  <span className="font-black text-indigo-900 text-lg tabular-nums">
                     {scores[field].toFixed(1)}
-                    <span className="font-bold text-muted-foreground text-sm uppercase ml-1.5 tracking-tighter opacity-70">
+                    <span className="font-bold text-indigo-700 text-lg uppercase ml-2 tracking-tighter opacity-80">
                       / {PART_A_MAXES[field]}
                     </span>
                   </span>
@@ -672,53 +676,53 @@ function PartAAcademicInvolvement({
       </div>
 
       <SectionCard title="Final Score Calculation">
-        <div className="overflow-hidden rounded-lg border border-border">
-          <table className="min-w-full divide-y divide-border text-xs">
-            <thead className="bg-muted/30">
+        <div className="overflow-hidden rounded-xl border-2 border-indigo-200">
+          <table className="min-w-full divide-y divide-indigo-200 text-base">
+            <thead className="bg-indigo-50">
               <tr>
-                <th className="px-4 py-2 text-left font-bold text-muted-foreground uppercase tracking-widest text-[10px]">
+                <th className="px-6 py-3 text-left font-extrabold text-indigo-700 uppercase tracking-widest text-base">
                   Component
                 </th>
-                <th className="px-4 py-2 text-right font-bold text-muted-foreground uppercase tracking-widest text-[10px]">
+                <th className="px-6 py-3 text-right font-extrabold text-indigo-700 uppercase tracking-widest text-base">
                   Score
                 </th>
-                <th className="px-4 py-2 text-right font-bold text-muted-foreground uppercase tracking-widest text-[10px]">
+                <th className="px-6 py-3 text-right font-extrabold text-indigo-700 uppercase tracking-widest text-base">
                   Maximum
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border bg-card">
+            <tbody className="divide-y divide-indigo-100 bg-white">
               <tr>
-                <td className="px-4 py-3 text-foreground font-medium uppercase text-xs tracking-tight">
+                <td className="px-6 py-4 text-indigo-900 font-bold uppercase text-base tracking-tight">
                   Raw Sum of All Sections
                 </td>
-                <td className="px-4 py-3 text-right text-foreground tabular-nums font-bold">
+                <td className="px-6 py-4 text-right text-indigo-900 tabular-nums font-extrabold">
                   {rawSum.toFixed(1)}
                 </td>
-                <td className="px-4 py-3 text-right text-muted-foreground tabular-nums">
+                <td className="px-6 py-4 text-right text-indigo-700 tabular-nums font-bold">
                   440.0
                 </td>
               </tr>
               <tr>
-                <td className="px-4 py-3 text-foreground italic flex items-center gap-2 text-xs uppercase tracking-tight">
-                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-indigo-400" />
+                <td className="px-6 py-4 text-indigo-800 italic flex items-center gap-3 text-base uppercase tracking-tight">
+                  <span className="inline-block w-2 h-2 rounded-full bg-indigo-400" />
                   Role Factor ({userDesignation})
                 </td>
-                <td className="px-4 py-3 text-right text-foreground tabular-nums font-bold">
+                <td className="px-6 py-4 text-right text-indigo-900 tabular-nums font-extrabold">
                   × {factor.toFixed(3)}
                 </td>
-                <td className="px-4 py-3 text-right text-muted-foreground tabular-nums">
+                <td className="px-6 py-4 text-right text-indigo-700 tabular-nums font-bold">
                   —
                 </td>
               </tr>
-              <tr className="bg-indigo-50/50 font-bold border-t-2 border-border/60">
-                <td className="px-4 py-4 text-indigo-700 uppercase tracking-widest font-black">
+              <tr className="bg-indigo-100 font-extrabold border-t-2 border-indigo-200">
+                <td className="px-6 py-5 text-indigo-800 uppercase tracking-widest font-black">
                   Final Adjusted Score
                 </td>
-                <td className="px-4 py-4 text-right text-indigo-600 tabular-nums text-lg font-black underline decoration-2 decoration-indigo-200 underline-offset-4">
+                <td className="px-6 py-5 text-right text-indigo-700 tabular-nums text-2xl font-black underline decoration-2 decoration-indigo-300 underline-offset-4">
                   {finalScore}
                 </td>
-                <td className="px-4 py-4 text-right text-indigo-600 tabular-nums text-lg font-black">
+                <td className="px-6 py-5 text-right text-indigo-700 tabular-nums text-2xl font-black">
                   {maxScore}
                 </td>
               </tr>
@@ -727,16 +731,17 @@ function PartAAcademicInvolvement({
         </div>
       </SectionCard>
 
-      <div className="flex flex-col items-end gap-2 pt-2">
-        {submitError && <p className="text-[10px] font-bold text-destructive uppercase tracking-tight">Error: {submitError}</p>}
+      <div className="flex flex-col items-end gap-3 pt-3">
+        {submitError && <p className="text-base font-extrabold text-destructive uppercase tracking-tight">Error: {submitError}</p>}
         <Button
           onClick={handleSubmit}
           disabled={isSubmitting}
-          className="min-w-[220px] shadow-lg shadow-indigo-200 uppercase tracking-widest text-xs font-black bg-indigo-600 hover:bg-indigo-700 text-white transition-all transform hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:transform-none"
+          aria-label="Save Performance Data"
+          className="min-w-[260px] shadow-lg shadow-indigo-200 uppercase tracking-widest text-base font-black bg-indigo-700 hover:bg-indigo-800 text-white transition-all transform hover:-translate-y-1 active:translate-y-0 disabled:opacity-50 disabled:transform-none focus:outline-none focus:ring-2 focus:ring-indigo-400"
         >
           {isSubmitting ? (
-            <div className="flex items-center gap-2">
-              <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
+            <div className="flex items-center gap-3">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
               Saving...
             </div>
           ) : "Save Performance"}

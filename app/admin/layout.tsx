@@ -18,7 +18,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           title: "Add Faculty",
           description: "Add new faculty members to the system",
         };
-      case "/admin/faculty":
+      case "/admin/view-faculty":
         return {
           title: "Faculty Management",
           description: "View and manage all faculty members",

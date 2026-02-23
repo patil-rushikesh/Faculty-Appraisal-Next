@@ -21,6 +21,7 @@ import {
   GraduationCap,
   Award,
   CheckSquare,
+  ClipboardList,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { useAuth } from "@/app/AuthProvider"
@@ -171,7 +172,7 @@ const ROLE_CONFIG: Record<User["role"], RoleConfig> = {
     ],
   },
   dean: {
-    title: "Dean",
+    title: "Dean Panel",
     sections: [
       {
         key: "dean-dashboard",
@@ -179,12 +180,35 @@ const ROLE_CONFIG: Record<User["role"], RoleConfig> = {
       },
       {
         key: "dean-appraisal",
-        label: "Faculty Appraisal",
+        label: "Appraisal Form",
         icon: FileText,
         collapsible: true,
         items: [
-          { icon: Users, label: "Department Faculty", href: "/dean/faculty" },
-          { icon: FileText, label: "Review Submissions", href: "/dean/review" },
+          { icon: BookOpen, label: "Part A: Academic Involvement", href: "/dean/appraisal?tab=A" },
+          { icon: FileText, label: "Part B: Research & Development", href: "/dean/appraisal?tab=B" },
+          { icon: Building2, label: "Part C: Self Development", href: "/dean/appraisal?tab=C" },
+          { icon: GraduationCap, label: "Part D: Portfolio", href: "/dean/appraisal?tab=D" },
+          { icon: Award, label: "Part E: Extraordinary Contribution", href: "/dean/appraisal?tab=E" },
+          { icon: CheckSquare, label: "Review & Submit", href: "/dean/appraisal?tab=F" },
+        ],
+      },
+      {
+        key: "dean-privileges",
+        label: "Dean Privileges",
+        icon: Award,
+        collapsible: true,
+        items: [
+          { icon: Users, label: "Associate Deans", href: "/dean/associate-deans" },
+          { icon: ClipboardList, label: "Portfolio Evaluation", href: "/dean/evaluation-form" },
+        ],
+      },
+      {
+        key: "dean-interactions",
+        label: "Interactions",
+        icon: UserPlus,
+        collapsible: true,
+        items: [
+          { icon: FileText, label: "Interaction Marks", href: "/dean/interaction-marks" },
         ],
       },
     ],

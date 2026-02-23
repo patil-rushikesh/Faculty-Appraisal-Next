@@ -18,6 +18,8 @@ export interface AuthUser {
   email: string;
   name: string;
   role: User["role"];
+  department?: string;
+  designation?: string;
 }
 
 interface AuthContextValue {
@@ -25,10 +27,10 @@ interface AuthContextValue {
   token: string | null;
   isLoading: boolean;
   isAuthenticated: boolean;
-  login: (payload: { 
+  login: (payload: {
     userId?: string;
-    email?: string; 
-    password: string 
+    email?: string;
+    password: string
   }) => Promise<{
     ok: boolean;
     error?: string;
@@ -62,7 +64,7 @@ export default function AuthProvider({
     }
   }, [token]);
 
-  
+
   const normalizeRolePath = useCallback((r?: string | null) => {
     if (!r) return undefined;
     const s = String(r).toLowerCase();
@@ -81,7 +83,7 @@ export default function AuthProvider({
       setIsLoading(true);
       try {
         // Backend expects userId, but support email as fallback
-        const loginPayload = userId 
+        const loginPayload = userId
           ? { userId, password }
           : { userId: email, password };
 
@@ -137,19 +139,19 @@ export default function AuthProvider({
         },
         credentials: "include",
       });
-      
+
       // Clear token from memory
       setUser(null);
       setToken(null);
       tokenManager.clearToken();
-      
+
       window.location.href = "/";
     } finally {
       setIsLoading(false);
     }
   }, [token]);
 
-  
+
 
   const value = useMemo(
     () => ({

@@ -113,18 +113,18 @@ export default function AddFacultyPage() {
         headers,
         credentials: "include",
       });
-      
+
       if (!response.ok) {
         throw new Error("Failed to fetch faculty data");
       }
-      
+
       const allFaculties = await response.json();
-      
+
       // Filter only deans from the response
-      const deans = Array.isArray(allFaculties) 
+      const deans = Array.isArray(allFaculties)
         ? allFaculties.filter((faculty: any) => faculty.role?.toLowerCase() === "dean")
         : [];
-      
+
       setDeanSuggestions(deans.map((dean: any) => ({
         _id: dean._id,
         name: dean.name,

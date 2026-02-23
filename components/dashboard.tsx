@@ -1,16 +1,8 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-
-// Example icon import: import { User, BookOpen } from "lucide-react";
-// Pass Lucide icons as props for flexibility
-
-interface Quote {
-  text: string;
-  author: string;
-}
 
 interface QuickLink {
   href: string;
@@ -23,35 +15,17 @@ interface DashboardProps {
   userName?: string;
   logoSrc?: string;
   quickLinks: QuickLink[];
-  quotes?: Quote[];
   showWelcomeInfo?: boolean;
   className?: string;
 }
-
-const defaultQuotes: Quote[] = [
-  { text: "Education is not the filling of a pail, but the lighting of a fire.", author: "W.B. Yeats" },
-  { text: "The art of teaching is the art of assisting discovery.", author: "Mark Van Doren" },
-  { text: "Education is the most powerful weapon which you can use to change the world.", author: "Nelson Mandela" },
-];
 
 export default function Dashboard({
   userName = "Faculty",
   logoSrc = "/image.png",
   quickLinks,
-  quotes = defaultQuotes,
   showWelcomeInfo = true,
   className = "",
 }: DashboardProps) {
-  const [currentQuote, setCurrentQuote] = useState(0);
-
-  useEffect(() => {
-    if (!quotes.length) return;
-    const interval = setInterval(() => {
-      setCurrentQuote((prev) => (prev + 1) % quotes.length);
-    }, 6000);
-    return () => clearInterval(interval);
-  }, [quotes]);
-
   return (
     <div className={cn("flex-1 p-6 md:p-10 bg-background min-h-screen", className)}>
       <div className="max-w-6xl mx-auto">
@@ -85,29 +59,6 @@ export default function Dashboard({
             </div>
           </div>
         </div>
-
-        {/* Quote Section (optional) */}
-        {!!quotes.length && (
-          <div className="relative overflow-hidden rounded-xl bg-gradient-to-br from-primary to-indigo-700 text-white shadow-xl mb-10">
-            <div className="absolute top-6 right-6 opacity-20">
-              {/* Decorative icon slot */}
-            </div>
-            <div className="p-4 md:p-10">
-              <div className="max-w-3xl mx-auto text-center">
-                <div className="min-h-[6rem] md:min-h-[8rem] flex items-center justify-center">
-                  <div key={currentQuote} className="w-full px-4 space-y-4 animate-fade-in">
-                    <p className="text-lg md:text-2xl font-serif italic leading-relaxed">
-                      "{quotes[currentQuote].text}"
-                    </p>
-                    <p className="text-base md:text-lg text-indigo-200">
-                      — {quotes[currentQuote].author}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Quick Access Section */}
         <div className="mt-8">
@@ -145,7 +96,7 @@ export default function Dashboard({
                 <div className="p-8 pt-10">
                   <div className="text-center max-w-4xl mx-auto">
                     <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-6 bg-clip-text text-transparent bg-gradient-to-r from-primary to-indigo-500">
-                      Welcome to the Faculty Appraisal System
+                      Welcome to the Faculty Performance Evaluation System
                     </h2>
                     <div className="space-y-4">
                       <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
@@ -174,12 +125,10 @@ export default function Dashboard({
         )}
       </div>
       <style jsx>{`
-        .animate-fade-in { animation: fade-in 0.5s ease-out; }
-        .animate-slide-up { animation: slide-up 0.5s ease-out forwards; opacity: 0; }
         .animate-fade-in-up { animation: fade-in-up 0.6s ease-out forwards; opacity: 0; }
-        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
-        @keyframes slide-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
         @keyframes fade-in-up { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
+        .animate-slide-up { animation: slide-up 0.5s ease-out forwards; opacity: 0; }
+        @keyframes slide-up { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
       `}</style>
     </div>
   );

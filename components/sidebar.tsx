@@ -2,7 +2,7 @@
 
 import { Fragment, useEffect, useMemo, useState } from "react"
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import { usePathname, useSearchParams } from "next/navigation"
 import {
   LayoutDashboard,
   Users,
@@ -15,6 +15,12 @@ import {
   ChevronDown,
   ChevronRight,
   ChevronLeft,
+  BookOpen,
+  FileText,
+  Building2,
+  GraduationCap,
+  Award,
+  CheckSquare,
 } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
 import { useAuth } from "@/app/AuthProvider"
@@ -63,13 +69,14 @@ const ROLE_CONFIG: Record<User["role"], RoleConfig> = {
         collapsible: true,
         items: [
           { icon: UserPlus, label: "Add Faculty", href: "/admin/add-faculty" },
-          { icon: Users, label: "Faculty List", href: "/admin/view-faculty" },
+          { icon: Users, label: "Faculty List", href: "/admin/faculty" },
         ],
       },
       {
         key: "verification-team",
         items: [
           { icon: UserCheck, label: "Verification Team", href: "/admin/verification-team" },
+
         ],
       },
       {
@@ -87,6 +94,15 @@ const ROLE_CONFIG: Record<User["role"], RoleConfig> = {
         key: "associate-dean-dashboard",
         items: [{ icon: LayoutDashboard, label: "Dashboard", href: "/associate-dean/dashboard" }],
       },
+      {
+        key: "associate-dean-appraisal",
+        label: "Faculty Appraisal",
+        icon: FileText,
+        collapsible: true,
+        items: [
+          { icon: FileText, label: "Review Submissions", href: "/associate-dean/review" },
+        ],
+      },
     ],
   },
   director: {
@@ -96,14 +112,61 @@ const ROLE_CONFIG: Record<User["role"], RoleConfig> = {
         key: "director-dashboard",
         items: [{ icon: LayoutDashboard, label: "Dashboard", href: "/director/dashboard" }],
       },
+      {
+        key: "director-appraisal",
+        label: "Faculty Appraisal",
+        icon: FileText,
+        collapsible: true,
+        items: [
+          { icon: FileText, label: "Review Submissions", href: "/director/review" },
+        ],
+      },
     ],
   },
   hod: {
-    title: "HOD",
+    title: "HOD Panel",
     sections: [
       {
         key: "hod-dashboard",
         items: [{ icon: LayoutDashboard, label: "Dashboard", href: "/hod/dashboard" }],
+      },
+      {
+        key: "hod-appraisal",
+        label: "Appraisal Form",
+        icon: FileText,
+        collapsible: true,
+        items: [
+          { icon: BookOpen, label: "Part A: Academic Involvement", href: "/hod/appraisal?tab=A" },
+          { icon: FileText, label: "Part B: Research & Development", href: "/hod/appraisal?tab=B" },
+          { icon: Building2, label: "Part C: Self Development", href: "/hod/appraisal?tab=C" },
+          { icon: GraduationCap, label: "Part D: Portfolio", href: "/hod/appraisal?tab=D" },
+          { icon: Award, label: "Part E: Extraordinary Contribution", href: "/hod/appraisal?tab=E" },
+          { icon: CheckSquare, label: "Review & Submit", href: "/hod/appraisal?tab=F" },
+        ],
+      },
+      {
+        key: "hod-privileges",
+        label: "HOD Privileges",
+        icon: Award,
+        collapsible: true,
+        items: [
+          { icon: Users, label: "Department Faculty Forms", href: "/hod/faculty" },
+          { icon: GraduationCap, label: "Final Marks", href: "/hod/final-marks" },
+        ],
+      },
+      {
+        key: "hod-interactions",
+        label: "Interactions",
+        icon: UserPlus,
+        collapsible: true,
+        items: [
+          { icon: UserPlus, label: "Add External Faculty", href: "/hod/add-external-faculty" },
+          { icon: UserCheck, label: "Assign External Faculty", href: "/hod/assign-faculty-external" },
+        ],
+      },
+      {
+        key: "hod-final-review",
+        items: [{ icon: CheckSquare, label: "Final Review", href: "/hod/final-review" }],
       },
     ],
   },
@@ -114,18 +177,45 @@ const ROLE_CONFIG: Record<User["role"], RoleConfig> = {
         key: "dean-dashboard",
         items: [{ icon: LayoutDashboard, label: "Dashboard", href: "/dean/dashboard" }],
       },
+      {
+        key: "dean-appraisal",
+        label: "Faculty Appraisal",
+        icon: FileText,
+        collapsible: true,
+        items: [
+          { icon: Users, label: "Department Faculty", href: "/dean/faculty" },
+          { icon: FileText, label: "Review Submissions", href: "/dean/review" },
+        ],
+      },
     ],
   },
   faculty: {
-    title: "Faculty Portal",
+    title: "Faculty Appraisal",
     sections: [
       {
         key: "faculty-dashboard",
-        items: [{ icon: LayoutDashboard, label: "Dashboard", href: "/faculty/dashboard" }],
+        items: [
+          { icon: LayoutDashboard, label: "Dashboard", href: "/faculty/dashboard" },
+        ],
+      },
+      {
+        key: "faculty-appraisal-form",
+        label: "Appraisal Form",
+        icon: FileText,
+        collapsible: true,
+        items: [
+          { icon: BookOpen, label: "Part A: Academic Involvement", href: "/faculty/appraisal?tab=A" },
+          { icon: FileText, label: "Part B: Research & Development", href: "/faculty/appraisal?tab=B" },
+          { icon: Building2, label: "Part C: Self Development", href: "/faculty/appraisal?tab=C" },
+          { icon: GraduationCap, label: "Part D: Portfolio", href: "/faculty/appraisal?tab=D" },
+          { icon: Award, label: "Part E: Extraordinary Contribution", href: "/faculty/appraisal?tab=E" },
+          { icon: CheckSquare, label: "Review & Submit", href: "/faculty/appraisal?tab=F" },
+        ],
       },
     ],
   },
 }
+
 
 export function Sidebar({
   userRole,
@@ -155,13 +245,19 @@ export function Sidebar({
 
   const panelTitle = config.title
 
+  const searchParams = useSearchParams()
+  const fullPath = pathname + (searchParams.toString() ? `?${searchParams.toString()}` : "")
+
   useEffect(() => {
     setOpenSections((prev) => {
       const next = { ...prev }
       config.sections
         .filter((section) => section.collapsible)
         .forEach((section) => {
-          if (section.items.some((item) => item.href === pathname)) {
+          if (section.items.some((item) => {
+            const [itemPath] = item.href.split("?")
+            return itemPath === pathname
+          })) {
             next[section.key] = true
           }
         })
@@ -169,7 +265,7 @@ export function Sidebar({
     })
   }, [pathname, config])
 
-  const isActive = (href: string) => pathname === href
+  const isActive = (href: string) => fullPath === href || pathname === href
 
   interface NavLinkProps {
     item: NavItem
@@ -190,9 +286,8 @@ export function Sidebar({
           flex items-start ${expanded ? "space-x-3" : "justify-center"} p-3 rounded-lg
           transition-all duration-200 ease-in-out
           hover:scale-[1.02] transform relative group
-          ${
-            isDropdownItem && expanded
-              ? `
+          ${isDropdownItem && expanded
+            ? `
                 ml-3 border-l-2 border-indigo-500 pl-4
                 before:content-[""]
                 before:absolute
@@ -202,7 +297,7 @@ export function Sidebar({
                 before:h-[2px]
                 before:bg-indigo-500
               `
-              : ""
+            : ""
           }
           ${isActive(item.href) ? "bg-indigo-700 text-white shadow-md" : "text-indigo-100 hover:bg-indigo-700/70"}
         `}
@@ -247,6 +342,7 @@ export function Sidebar({
           fixed top-0 left-0 h-screen bg-indigo-800 text-white z-40
           transform transition-all duration-300 ease-in-out
           ${expanded ? "w-72" : "w-20"} overflow-y-auto flex flex-col
+          [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-indigo-500/50 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-indigo-400/70
           ${open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
         `}
       >
@@ -270,7 +366,7 @@ export function Sidebar({
           </div>
         </div>
 
-        <div className={`${expanded ? "px-4" : "px-2"} py-4 flex-grow overflow-y-auto`}>
+        <div className={`${expanded ? "px-4" : "px-2"} py-4 flex-grow overflow-y-auto [&::-webkit-scrollbar]:w-1 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-indigo-500/50 [&::-webkit-scrollbar-thumb]:rounded-full hover:[&::-webkit-scrollbar-thumb]:bg-indigo-400/70`}>
           <nav className="space-y-1">
             {config.sections.map((section) => {
               if (!section.collapsible) {

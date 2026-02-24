@@ -92,8 +92,8 @@ function NumericRow({
                 onWheel={(e) => e.currentTarget.blur()}
                 value={value === 0 ? "" : value}
                 onChange={onChange}
-                placeholder="0"
-                className="w-24 shrink-0 rounded-lg border-2 border-indigo-300 bg-white px-4 py-2 text-lg text-right font-black text-indigo-900 focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-700 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 shadow-sm"
+                placeholder="Enter count"
+                className="w-24 shrink-0 rounded-lg border-2 border-indigo-300 bg-white px-4 py-2 text-lg text-right font-black text-indigo-900 focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-700 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 shadow-sm placeholder:text-xs placeholder:font-normal placeholder:text-indigo-400"
             />
         </div>
     );

@@ -91,7 +91,7 @@ interface PartAAcademicInvolvementProps {
 }
 
 // --- HELPERS ---
-const MetricInputField = ({ label, value, onChange, className = "" }: { label: string; value: string | undefined; onChange: (v: string) => void; className?: string }) => (
+const MetricInputField = ({ label, value, onChange, className = "", placeholder = "Enter value" }: { label: string; value: string | undefined; onChange: (v: string) => void; className?: string; placeholder?: string }) => (
   <div className={`space-y-2 ${className}`}>
     <label className="text-base uppercase font-extrabold text-indigo-900 tracking-wider block px-0.5" style={{letterSpacing: '0.08em'}}>
       {label}
@@ -104,7 +104,8 @@ const MetricInputField = ({ label, value, onChange, className = "" }: { label: s
       onKeyDown={(e) => e.key === "-" && e.preventDefault()}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full rounded-lg border-2 border-indigo-200 bg-white px-4 py-2 text-lg font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-sm"
+      placeholder={placeholder}
+      className="w-full rounded-lg border-2 border-indigo-200 bg-white px-4 py-2 text-lg font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-sm placeholder:text-xs placeholder:font-normal placeholder:text-slate-400"
     />
   </div>
 );
@@ -550,10 +551,10 @@ function PartAAcademicInvolvement({
                         </span>
                       </div>
                       <div className="grid grid-cols-2 gap-5">
-                        <MetricInputField label="Students > 60%" value={courseMetrics[c.id]?.studentsAbove60} onChange={(v) => handleCourseMetricChange(c.id, "studentsAbove60", v)} />
-                        <MetricInputField label="Students 50-59%" value={courseMetrics[c.id]?.students50to59} onChange={(v) => handleCourseMetricChange(c.id, "students50to59", v)} />
-                        <MetricInputField label="Students 40-49%" value={courseMetrics[c.id]?.students40to49} onChange={(v) => handleCourseMetricChange(c.id, "students40to49", v)} />
-                        <MetricInputField label="Total Students" value={courseMetrics[c.id]?.totalStudents} onChange={(v) => handleCourseMetricChange(c.id, "totalStudents", v)} />
+                        <MetricInputField label="Students > 60%" value={courseMetrics[c.id]?.studentsAbove60} onChange={(v) => handleCourseMetricChange(c.id, "studentsAbove60", v)} placeholder="Enter number of students" />
+                        <MetricInputField label="Students 50-59%" value={courseMetrics[c.id]?.students50to59} onChange={(v) => handleCourseMetricChange(c.id, "students50to59", v)} placeholder="Enter number of students" />
+                        <MetricInputField label="Students 40-49%" value={courseMetrics[c.id]?.students40to49} onChange={(v) => handleCourseMetricChange(c.id, "students40to49", v)} placeholder="Enter number of students" />
+                        <MetricInputField label="Total Students" value={courseMetrics[c.id]?.totalStudents} onChange={(v) => handleCourseMetricChange(c.id, "totalStudents", v)} placeholder="Enter total number of students" />
                       </div>
                     </div>
                   ))}
@@ -567,7 +568,7 @@ function PartAAcademicInvolvement({
                         </span>
                       </div>
                       <div className="grid grid-cols-2 gap-5">
-                        <MetricInputField label="Avg CO Attainment (%)" value={courseMetrics[c.id]?.coAttainment} onChange={(v) => handleCourseMetricChange(c.id, "coAttainment", v)} />
+                        <MetricInputField label="Avg CO Attainment (%)" value={courseMetrics[c.id]?.coAttainment} onChange={(v) => handleCourseMetricChange(c.id, "coAttainment", v)} placeholder="Enter CO attainment percentage" />
                         <div className="flex flex-col gap-2 justify-center">
                           <label className="text-base uppercase font-extrabold text-indigo-900 tracking-wider">Timely Submission</label>
                           <label className="flex items-center gap-3 cursor-pointer group">
@@ -581,7 +582,7 @@ function PartAAcademicInvolvement({
 
                   {/* E-Learning Global */}
                   {field === "eLearning" && (
-                    <MetricInputField label="Number of E-Learning Content Instances" value={globalMetrics.eLearningInstances} onChange={(v) => setGlobalMetrics(p => ({ ...p, eLearningInstances: v }))} className="max-w-xs" />
+                    <MetricInputField label="Number of E-Learning Content Instances" value={globalMetrics.eLearningInstances} onChange={(v) => setGlobalMetrics(p => ({ ...p, eLearningInstances: v }))} className="max-w-xs" placeholder="Enter number of instances" />
                   )}
 
                   {/* Academic Engagement Per Subject */}
@@ -593,8 +594,8 @@ function PartAAcademicInvolvement({
                         </span>
                       </div>
                       <div className="grid grid-cols-2 gap-5">
-                        <MetricInputField label="Students Present" value={courseMetrics[c.id]?.studentsPresent} onChange={(v) => handleCourseMetricChange(c.id, "studentsPresent", v)} />
-                        <MetricInputField label="Total Enrolled Students" value={courseMetrics[c.id]?.totalEnrolledStudents} onChange={(v) => handleCourseMetricChange(c.id, "totalEnrolledStudents", v)} />
+                        <MetricInputField label="Students Present" value={courseMetrics[c.id]?.studentsPresent} onChange={(v) => handleCourseMetricChange(c.id, "studentsPresent", v)} placeholder="Enter number of students present" />
+                        <MetricInputField label="Total Enrolled Students" value={courseMetrics[c.id]?.totalEnrolledStudents} onChange={(v) => handleCourseMetricChange(c.id, "totalEnrolledStudents", v)} placeholder="Enter total enrolled students" />
                       </div>
                     </div>
                   ))}
@@ -603,8 +604,8 @@ function PartAAcademicInvolvement({
                   {field === "teachingLoad" && (
                     <div className="space-y-5 max-w-lg">
                       <div className="grid grid-cols-2 gap-5">
-                        <MetricInputField label="Weekly Load Sem I" value={globalMetrics.weeklyLoadSem1} onChange={(v) => setGlobalMetrics(p => ({ ...p, weeklyLoadSem1: v }))} />
-                        <MetricInputField label="Weekly Load Sem II" value={globalMetrics.weeklyLoadSem2} onChange={(v) => setGlobalMetrics(p => ({ ...p, weeklyLoadSem2: v }))} />
+                        <MetricInputField label="Weekly Load Sem I" value={globalMetrics.weeklyLoadSem1} onChange={(v) => setGlobalMetrics(p => ({ ...p, weeklyLoadSem1: v }))} placeholder="e.g. 18 hours/week" />
+                        <MetricInputField label="Weekly Load Sem II" value={globalMetrics.weeklyLoadSem2} onChange={(v) => setGlobalMetrics(p => ({ ...p, weeklyLoadSem2: v }))} placeholder="e.g. 16 hours/week" />
                       </div>
                       <label className="flex items-center gap-4 p-4 rounded-xl border-2 border-indigo-100 bg-indigo-50 cursor-pointer group">
                         <input type="checkbox" checked={globalMetrics.adminResponsibility} onChange={(e) => setGlobalMetrics(p => ({ ...p, adminResponsibility: e.target.checked }))} className="w-6 h-6 rounded border-indigo-300 text-indigo-700 focus:ring-indigo-400" aria-label="Admin Responsibility" />
@@ -618,7 +619,7 @@ function PartAAcademicInvolvement({
 
                   {/* Projects Guided Global */}
                   {field === "projectsGuided" && (
-                    <MetricInputField label="Number of Projects/Dissertations Guided" value={globalMetrics.projectsGuided} onChange={(v) => setGlobalMetrics(p => ({ ...p, projectsGuided: v }))} className="max-w-xs" />
+                    <MetricInputField label="Number of Projects/Dissertations Guided" value={globalMetrics.projectsGuided} onChange={(v) => setGlobalMetrics(p => ({ ...p, projectsGuided: v }))} className="max-w-xs" placeholder="Enter count" />
                   )}
 
                   {/* Student Feedback Per Subject */}
@@ -627,13 +628,13 @@ function PartAAcademicInvolvement({
                       <span className="text-base font-black text-indigo-800 uppercase tracking-widest bg-indigo-100 px-3 py-1 rounded border border-indigo-200">
                         Subject: {c.code || "Unnamed"}
                       </span>
-                      <MetricInputField label="Feedback (%)" value={courseMetrics[c.id]?.feedbackPercentage} onChange={(v) => handleCourseMetricChange(c.id, "feedbackPercentage", v)} className="w-40" />
+                      <MetricInputField label="Feedback (%)" value={courseMetrics[c.id]?.feedbackPercentage} onChange={(v) => handleCourseMetricChange(c.id, "feedbackPercentage", v)} className="w-40" placeholder="Enter feedback %" />
                     </div>
                   ))}
 
                   {/* PTG Meetings Global */}
                   {field === "ptgMeetings" && (
-                    <MetricInputField label="Number of PTG Meetings Conducted" value={globalMetrics.ptgMeetings} onChange={(v) => setGlobalMetrics(p => ({ ...p, ptgMeetings: v }))} className="max-w-xs" />
+                    <MetricInputField label="Number of PTG Meetings Conducted" value={globalMetrics.ptgMeetings} onChange={(v) => setGlobalMetrics(p => ({ ...p, ptgMeetings: v }))} className="max-w-xs" placeholder="Enter number of meetings" />
                   )}
                 </div>
               )}

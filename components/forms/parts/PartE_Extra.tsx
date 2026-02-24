@@ -171,6 +171,7 @@ function PartEExtra({ apiBase, department, userId }: PartEExtraProps) {
                             min={0}
                             max={PART_E_MAX}
                             disabled={locked}
+                            placeholder="Enter marks"
                             aria-label="Self-Awarded Marks for Extra Contributions"
                             onWheel={(e) => e.currentTarget.blur()}
                             value={formData.selfAwardedMarks === 0 ? "" : formData.selfAwardedMarks}
@@ -180,7 +181,7 @@ function PartEExtra({ apiBase, department, userId }: PartEExtraProps) {
                                     selfAwardedMarks: Math.min(PART_E_MAX, Math.max(0, Number(e.target.value))),
                                 }))
                             }
-                            className="w-32 rounded-lg border-2 border-indigo-300 bg-white px-4 py-2 text-xl text-right font-black tabular-nums text-indigo-900 focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-700 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-sm"
+                            className="w-32 rounded-lg border-2 border-indigo-300 bg-white px-4 py-2 text-xl text-right font-black tabular-nums text-indigo-900 focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-700 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-sm placeholder:text-xs placeholder:font-normal placeholder:text-indigo-400"
                         />
                     </div>
                 </div>

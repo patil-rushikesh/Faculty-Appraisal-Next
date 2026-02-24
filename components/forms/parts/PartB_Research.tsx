@@ -506,6 +506,7 @@ function PartBResearch({ apiBase, department, userId, userDesignation }: PartBRe
                     proofValue={formData.citations.wos.proof}
                     onProofChange={(e) => updateField("citations", "wos", { proof: e.target.value })}
                     verifiedScore={formData.citations.wos.verified}
+                    placeholder="Enter total citations"
                     disabled={locked}
                 />
                 <MetricField
@@ -516,6 +517,7 @@ function PartBResearch({ apiBase, department, userId, userDesignation }: PartBRe
                     proofValue={formData.citations.scopus.proof}
                     onProofChange={(e) => updateField("citations", "scopus", { proof: e.target.value })}
                     verifiedScore={formData.citations.scopus.verified}
+                    placeholder="Enter total citations"
                     disabled={locked}
                 />
                 <MetricField
@@ -526,6 +528,7 @@ function PartBResearch({ apiBase, department, userId, userDesignation }: PartBRe
                     proofValue={formData.citations.scholar.proof}
                     onProofChange={(e) => updateField("citations", "scholar", { proof: e.target.value })}
                     verifiedScore={formData.citations.scholar.verified}
+                    placeholder="Enter total citations"
                     disabled={locked}
                 />
                 <ScoreCard label="Citations Score" score={scores.citations} total={50} />
@@ -686,6 +689,7 @@ function PartBResearch({ apiBase, department, userId, userDesignation }: PartBRe
                     proofValue={formData.grantResearch.amount.proof}
                     onProofChange={(e) => updateField("grantResearch", "amount", { proof: e.target.value })}
                     verifiedScore={formData.grantResearch.amount.verified}
+                    placeholder="Enter amount in Rupees"
                     disabled={locked}
                 />
                 <ScoreCard label="Research Grants Score" score={scores.grantResearch} total="No limit" />
@@ -697,6 +701,7 @@ function PartBResearch({ apiBase, department, userId, userDesignation }: PartBRe
                 <MetricField
                     label="Training Programs Revenue (5 marks per 10,000 Rupees)"
                     name="revenueTraining.amount"
+                    placeholder="Enter amount in Rupees"
                     value={formData.revenueTraining.amount.value}
                     onChange={(e) => updateField("revenueTraining", "amount", { value: Number(e.target.value) })}
                     proofValue={formData.revenueTraining.amount.proof}
@@ -718,6 +723,7 @@ function PartBResearch({ apiBase, department, userId, userDesignation }: PartBRe
                     proofValue={formData.grantNonResearch.amount.proof}
                     onProofChange={(e) => updateField("grantNonResearch", "amount", { proof: e.target.value })}
                     verifiedScore={formData.grantNonResearch.amount.verified}
+                    placeholder="Enter amount in Rupees"
                     disabled={locked}
                 />
                 <ScoreCard label="Non-Research Grants Score" score={scores.grantNonResearch} total={40} />

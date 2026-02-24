@@ -33,12 +33,13 @@ export default function MetricField({
     proofValue,
     onProofChange,
     verifiedScore,
-    placeholder = "0",
-    proofPlaceholder = "Proof link (e.g. Google Drive)",
+    placeholder = "Enter count",
+    proofPlaceholder = "Proof Document Link (Google Drive)",
     disabled = false,
 }: MetricFieldProps) {
     return (
         <div className="py-4 border-b border-border last:border-0">
+            {/* Column headers (shown once per row for clarity) */}
             <div className="flex flex-col md:flex-row md:items-center gap-4">
                 {/* Label and Hint */}
                 <div className="flex-1 min-w-0">
@@ -50,7 +51,8 @@ export default function MetricField({
 
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 md:w-2/3 lg:w-3/5">
                     {/* Numeric Value Input */}
-                    <div className="w-full sm:w-24 shrink-0">
+                    <div className="w-full sm:w-28 shrink-0">
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 hidden sm:block">Count / Value</p>
                         <input
                             type="number"
                             name={name}
@@ -61,28 +63,36 @@ export default function MetricField({
                             value={value === 0 ? "" : value}
                             onChange={onChange}
                             placeholder={placeholder}
-                            className="w-full rounded-md border border-slate-400 bg-background px-3 py-1.5 text-base text-right font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50"
+                            className="w-full rounded-md border border-slate-400 bg-blue-50 px-3 py-1.5 text-base text-right font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none disabled:opacity-50 placeholder:text-xs placeholder:font-normal placeholder:text-slate-400"
                         />
                     </div>
 
                     {/* Proof Document Link Input */}
                     <div className="flex-1 w-full">
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 hidden sm:block">Proof Document</p>
                         <input
                             type="url"
                             value={proofValue}
                             onChange={onProofChange}
                             disabled={disabled}
                             placeholder={proofPlaceholder}
-                            className="w-full rounded-md border border-slate-400 bg-background px-3 py-1.5 text-base font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition disabled:opacity-50"
+                            className="w-full rounded-md border border-slate-400 bg-background px-3 py-1.5 text-base font-medium text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-600/20 focus:border-indigo-600 transition disabled:opacity-50 placeholder:text-xs placeholder:font-normal placeholder:text-slate-400"
                         />
                     </div>
 
-                    {/* Verified Score Display (if present) */}
-                    {verifiedScore !== undefined && (
-                        <div className="w-16 shrink-0 bg-muted/40 rounded-md border border-border px-2 py-1.5 text-sm text-center font-bold text-muted-foreground" title="Verified Score">
-                            {verifiedScore}
-                        </div>
-                    )}
+                    {/* Verified Score (always shown, green, disabled — enabled by verification team later) */}
+                    <div className="w-24 shrink-0">
+                        <p className="text-[10px] font-bold text-green-700 uppercase tracking-widest mb-1 hidden sm:block">Verified Score</p>
+                        <input
+                            type="text"
+                            readOnly
+                            disabled
+                            value={verifiedScore !== undefined && verifiedScore !== 0 ? String(verifiedScore) : ""}
+                            placeholder="Pending"
+                            title="Score after verification (set by verification team)"
+                            className="w-full rounded-md border border-green-200 bg-green-50 px-2 py-1.5 text-sm text-center font-bold text-green-700 cursor-not-allowed opacity-80 placeholder:text-green-400"
+                        />
+                    </div>
                 </div>
             </div>
         </div>

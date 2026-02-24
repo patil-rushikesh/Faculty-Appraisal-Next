@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import axios from "axios"
 
 export async function GET(req: Request, context: { params: Promise<{ department: string }> }) {
   try {
@@ -18,15 +19,14 @@ export async function GET(req: Request, context: { params: Promise<{ department:
       )
     }
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/admin/verification-committee/${department}`, {
-      method: "GET",
+    const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/admin/verification-committee/${department}`, {
       headers: {
         "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json",
       },
+      validateStatus: () => true,
     })
-    const data = await res.json()
-    return NextResponse.json(data, { status: res.status })
+    return NextResponse.json(res.data, { status: res.status })
   } catch (error) {
     console.error("Get Verification Committee API Error:", error)
     return NextResponse.json(

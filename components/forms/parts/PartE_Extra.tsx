@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { PART_E_MAX } from "@/lib/forms/constants";
@@ -35,6 +36,14 @@ const TransparencyGuideline = ({ formula }: { formula: string }) => (
 );
 
 const PART_E_GUIDELINE = "Faculty may list extra-ordinary or other contributions (not listed in Parts A, B, or C) for the academic year in bulleted form. Maximum marks self-awarded: 50.";
+
+// --- SECTION MANDATORY CONFIG ---
+// Defines which sections of Part E are mandatory for form submission.
+// Both fields are optional since Part E covers extra-ordinary contributions only.
+const SECTION_CONFIG = [
+    { name: "Contributions Description", key: "contributions" as const, mandatory: false },
+    { name: "Self-Awarded Marks", key: "selfAwardedMarks" as const, mandatory: false },
+];
 
 // --- COMPONENT ---
 function PartEExtra({ apiBase, department, userId }: PartEExtraProps) {
@@ -83,18 +92,18 @@ function PartEExtra({ apiBase, department, userId }: PartEExtraProps) {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const res = await fetch(`${apiBase}/${department}/${userId}/E`);
-                if (res.ok) {
-                    const data = await res.json();
+                const res = await axios.get(`${apiBase}/${department}/${userId}/E`, { validateStatus: () => true });
+                if (res.status >= 200 && res.status < 300) {
+                    const data = res.data;
                     setFormData({
                         contributions: data.bullet_points ?? "",
                         selfAwardedMarks: data.total_marks ?? 0,
                     });
                     setIsFirstTime(false);
                 }
-                const sr = await fetch(`${apiBase}/${department}/${userId}/get-status`);
-                if (sr.ok) {
-                    const s = await sr.json();
+                const sr = await axios.get(`${apiBase}/${department}/${userId}/get-status`, { validateStatus: () => true });
+                if (sr.status >= 200 && sr.status < 300) {
+                    const s = sr.data;
                     setFormStatus(s.status);
                 }
             } catch (err) {
@@ -118,12 +127,11 @@ function PartEExtra({ apiBase, department, userId }: PartEExtraProps) {
                 E: { total_marks: formData.selfAwardedMarks, bullet_points: formData.contributions },
                 isFirstTime,
             };
-            const res = await fetch(`${apiBase}/${department}/${userId}/E`, {
-                method: "POST",
+            const res = await axios.post(`${apiBase}/${department}/${userId}/E`, payload, {
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
+                validateStatus: () => true,
             });
-            if (!res.ok) throw new Error("Save Failed");
+            if (res.status < 200 || res.status >= 300) throw new Error("Save Failed");
             setIsFirstTime(false);
             setSubmitSuccess(true);
         } catch (err) {

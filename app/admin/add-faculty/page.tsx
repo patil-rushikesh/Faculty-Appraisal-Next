@@ -29,6 +29,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/app/AuthProvider";
 import { tokenManager } from "@/lib/api-client";
+import axios from "axios";
 
 interface FormData {
   userId: string;
@@ -109,16 +110,17 @@ export default function AddFacultyPage() {
         headers["Authorization"] = `Bearer ${token}`;
       }
 
-      const response = await fetch("/api/admin/faculty", {
+      const response = await axios.get("/api/admin/faculty", {
         headers,
-        credentials: "include",
+        withCredentials: true,
+        validateStatus: () => true,
       });
 
-      if (!response.ok) {
+      if (response.status < 200 || response.status >= 300) {
         throw new Error("Failed to fetch faculty data");
       }
 
-      const allFaculties = await response.json();
+      const allFaculties = response.data;
 
       // Filter only deans from the response
       const deans = Array.isArray(allFaculties)
@@ -254,17 +256,16 @@ export default function AddFacultyPage() {
         headers["Authorization"] = `Bearer ${token}`;
       }
 
-      const response = await fetch("/api/admin/create-user", {
-        method: "POST",
+      const response = await axios.post("/api/admin/create-user", formData, {
         headers,
-        credentials: "include",
-        body: JSON.stringify(formData),
+        withCredentials: true,
+        validateStatus: () => true,
       });
 
-      const data = await response.json();
+      const data = response.data;
 
       // Check if response is successful (2xx status codes)
-      if (response.ok || response.status === 201) {
+      if (response.status >= 200 && response.status < 300) {
         setSuccessMessage(
           `Faculty ${formData.name} has been added successfully!`
         );

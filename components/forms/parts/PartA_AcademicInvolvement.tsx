@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { ROLE_FACTOR, ROLE_MAX, PART_A_MAXES, PartAScoreKey } from "@/lib/forms/constants";
 import { DesignationValue } from "@/lib/constants";
@@ -57,6 +58,21 @@ const ACADEMIC_SECTIONS: {
       formula: "Marks = (Meetings * 50) / 6 [Max 50]"
     },
   ];
+
+// --- SECTION MANDATORY CONFIG ---
+// Defines which sections of Part A are mandatory for form submission.
+// If a mandatory section has zero score (indicating no data was entered),
+// the form will not be submitted until it is filled.
+const SECTION_CONFIG: { name: string; field: PartAScoreKey; mandatory: boolean }[] = [
+  { name: "Result Analysis", field: "resultAnalysis", mandatory: true },
+  { name: "Course Outcome Analysis", field: "courseOutcome", mandatory: true },
+  { name: "E-Learning Content Development", field: "eLearning", mandatory: false },
+  { name: "Academic Engagement", field: "academicEngagement", mandatory: true },
+  { name: "Teaching Load", field: "teachingLoad", mandatory: true },
+  { name: "UG Projects / PG Dissertations Guided", field: "projectsGuided", mandatory: false },
+  { name: "Feedback of Faculty by Student", field: "studentFeedback", mandatory: true },
+  { name: "Guardian / PTG Meetings", field: "ptgMeetings", mandatory: false },
+];
 
 
 // --- TYPES ---
@@ -193,9 +209,9 @@ function PartAAcademicInvolvement({
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch(`${apiBase}/${department}/${userId}/A`);
-        if (res.ok) {
-          const data = await res.json();
+        const res = await axios.get(`${apiBase}/${department}/${userId}/A`, { validateStatus: () => true });
+        if (res.status >= 200 && res.status < 300) {
+          const data = res.data;
 
           // Check if we have local data already. If we do, we might want to be careful.
           // For now, let's merge or only load if local is empty.
@@ -313,6 +329,16 @@ function PartAAcademicInvolvement({
   };
 
   const handleSubmit = async () => {
+    // Validate mandatory sections before submission
+    const unfilledMandatory = SECTION_CONFIG.filter(
+      (s) => s.mandatory && scores[s.field] === 0
+    );
+    if (unfilledMandatory.length > 0) {
+      setSubmitError(
+        `Please fill the following mandatory sections before saving: ${unfilledMandatory.map((s) => s.name).join(", ")}`
+      );
+      return;
+    }
     setIsSubmitting(true);
     setSubmitError(null);
     try {
@@ -377,12 +403,11 @@ function PartAAcademicInvolvement({
         total_marks: finalScore
       };
 
-      const res = await fetch(`${apiBase}/${department}/${userId}/A`, {
-        method: "POST",
+      const res = await axios.post(`${apiBase}/${department}/${userId}/A`, payload, {
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        validateStatus: () => true,
       });
-      if (!res.ok) throw new Error("Save Failed");
+      if (res.status < 200 || res.status >= 300) throw new Error("Save Failed");
       alert("Performance data saved successfully!");
     } catch (e) {
       setSubmitError((e as Error).message);

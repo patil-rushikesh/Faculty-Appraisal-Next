@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { useAuth } from "@/app/AuthProvider"
+import axios from "axios"
 import { api } from "@/lib/api-client"
 import Loader from "@/components/loader"
 
@@ -65,22 +66,16 @@ export function ChangePasswordDialogContent({ onClose }: ChangePasswordDialogCon
       setIsLoading(true)
       
       // Make direct API call with token from context
-      const response = await fetch(`/api/auth/change-password`, {
-        method: 'POST',
+      const { data, status } = await axios.post(`/api/auth/change-password`, { currentPassword, newPassword }, {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          currentPassword,
-          newPassword,
-        }),
-        credentials: 'include',
+        withCredentials: true,
+        validateStatus: () => true,
       })
       
-      const data = await response.json()
-      
-      if (response.ok && data.success) {
+      if ((status >= 200 && status < 300) && data.success) {
         toast({
           title: "Success",
           description: data.message || "Password changed successfully",

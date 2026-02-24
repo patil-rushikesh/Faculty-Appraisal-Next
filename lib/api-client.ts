@@ -1,3 +1,4 @@
+import axios, { AxiosRequestConfig } from "axios"
 import type { ApiResponse, LoginResponse, HealthResponse, DashboardStats, CreateUserRequest, User } from "./types"
 
 // Token management - stored in memory, not localStorage
@@ -13,95 +14,51 @@ export const tokenManager = {
   },
 }
 
+// Helper to build auth headers
+const buildHeaders = (requireAuth: boolean): Record<string, string> => {
+  const headers: Record<string, string> = { "Content-Type": "application/json" }
+  if (requireAuth && authToken) {
+    headers["Authorization"] = `Bearer ${authToken}`
+  }
+  return headers
+}
+
 // Base API client with auth support (uses both cookies and Authorization header)
 export const apiClient = {
   async get<T>(endpoint: string, requireAuth = true): Promise<T> {
-    const headers: HeadersInit = { "Content-Type": "application/json" }
-    
-    // Add Authorization header if token is available
-    if (requireAuth && authToken) {
-      headers["Authorization"] = `Bearer ${authToken}`
+    const config: AxiosRequestConfig = {
+      headers: buildHeaders(requireAuth),
+      withCredentials: true,
     }
-
-    // Use credentials: "include" to send cookies
-    const response = await fetch(`/api${endpoint}`, { 
-      headers,
-      credentials: "include",
-    })
-    
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: response.statusText }))
-      throw new Error(error.message || `API error: ${response.statusText}`)
-    }
-    return response.json()
+    const response = await axios.get<T>(`/api${endpoint}`, config)
+    return response.data
   },
 
   async post<T>(endpoint: string, data?: any, requireAuth = true): Promise<T> {
-    const headers: HeadersInit = { "Content-Type": "application/json" }
-    
-    // Add Authorization header if token is available
-    if (requireAuth && authToken) {
-      headers["Authorization"] = `Bearer ${authToken}`
+    const config: AxiosRequestConfig = {
+      headers: buildHeaders(requireAuth),
+      withCredentials: true,
     }
-
-    // Use credentials: "include" to send cookies
-    const response = await fetch(`/api${endpoint}`, {
-      method: "POST",
-      headers,
-      credentials: "include",
-      body: data ? JSON.stringify(data) : undefined,
-    })
-    
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: response.statusText }))
-      throw new Error(error.message || `API error: ${response.statusText}`)
-    }
-    return response.json()
+    const response = await axios.post<T>(`/api${endpoint}`, data, config)
+    return response.data
   },
 
   async put<T>(endpoint: string, data: any, requireAuth = true): Promise<T> {
-    const headers: HeadersInit = { "Content-Type": "application/json" }
-    
-    // Add Authorization header if token is available
-    if (requireAuth && authToken) {
-      headers["Authorization"] = `Bearer ${authToken}`
+    const config: AxiosRequestConfig = {
+      headers: buildHeaders(requireAuth),
+      withCredentials: true,
     }
-
-    // Use credentials: "include" to send cookies
-    const response = await fetch(`/api${endpoint}`, {
-      method: "PUT",
-      headers,
-      credentials: "include",
-      body: JSON.stringify(data),
-    })
-    
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: response.statusText }))
-      throw new Error(error.message || `API error: ${response.statusText}`)
-    }
-    return response.json()
+    const response = await axios.put<T>(`/api${endpoint}`, data, config)
+    return response.data
   },
 
   async delete<T>(endpoint: string, requireAuth = true): Promise<T> {
-    const headers: HeadersInit = { "Content-Type": "application/json" }
-    
-    // Add Authorization header if token is available
-    if (requireAuth && authToken) {
-      headers["Authorization"] = `Bearer ${authToken}`
+    const config: AxiosRequestConfig = {
+      headers: buildHeaders(requireAuth),
+      withCredentials: true,
     }
-
-    // Use credentials: "include" to send cookies
-    const response = await fetch(`/api${endpoint}`, { 
-      method: "DELETE", 
-      headers,
-      credentials: "include",
-    })
-    
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: response.statusText }))
-      throw new Error(error.message || `API error: ${response.statusText}`)
-    }
-    return response.json()
+    const response = await axios.delete<T>(`/api${endpoint}`, config)
+    return response.data
   },
 }
 

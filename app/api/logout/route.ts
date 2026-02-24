@@ -1,24 +1,18 @@
 import { NextResponse } from "next/server";
-
-
+import axios from "axios";
 
 export async function POST(req: Request) {
-
     const token = req.headers.get("authorization")?.split(" ")[1] || null;
-    if(!token){
+    if (!token) {
         return NextResponse.json({ ok: false, message: "No token provided" }, { status: 400 });
     }
-        const res=await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/logout`, {
+    const res = await axios.post(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/logout`, {}, {
+        headers: { "Authorization": `Bearer ${token}` },
+        validateStatus: () => true,
+    });
 
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${token}`,
-            },
-            credentials: "include",
-        });
-
-    const data=await res.json();
-    if(!res.ok){
+    const data = res.data;
+    if (res.status < 200 || res.status >= 300) {
         return NextResponse.json({ ok: false, message: data.message || "Logout failed" }, { status: res.status });
     }
 

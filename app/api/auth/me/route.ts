@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import axios from "axios"
 
 export async function GET(req: Request) {
   try {
@@ -11,17 +12,15 @@ export async function GET(req: Request) {
       )
     }
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/me`, {
-      method: "GET",
+    const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/auth/me`, {
       headers: {
         "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      credentials: "include",
+      validateStatus: () => true,
     })
 
-    const data = await res.json()
-    return NextResponse.json(data, { status: res.status })
+    return NextResponse.json(res.data, { status: res.status })
   } catch (error) {
     console.error("Auth me API Error:", error)
     return NextResponse.json(

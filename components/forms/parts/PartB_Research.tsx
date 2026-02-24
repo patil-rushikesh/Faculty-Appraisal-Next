@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { PART_B_ROLE_MAX, PART_B_SECTION_MAXES, PART_B_WEIGHTS } from "@/lib/forms/constants";
 import { DesignationValue } from "@/lib/constants";
@@ -31,6 +32,29 @@ const FORMULAS = {
     interaction: "Marks: MoU=10, Collab=20 (No limit)",
     placement: "Marks: Offer=10 (No limit)",
 };
+
+// --- SECTION MANDATORY CONFIG ---
+// Defines which sections of Part B are mandatory for form submission.
+// Research contributions are optional – faculty fill what is applicable.
+const SECTION_CONFIG: { name: string; key: keyof ResearchFormData; mandatory: boolean }[] = [
+    { name: "Papers Published in Quality Journal", key: "journal", mandatory: false },
+    { name: "Papers Published in Conference Proceedings", key: "conference", mandatory: false },
+    { name: "Book Chapters Published", key: "bookChapter", mandatory: false },
+    { name: "Books Authored / Edited", key: "books", mandatory: false },
+    { name: "Citations", key: "citations", mandatory: false },
+    { name: "Copyrights (Individual)", key: "copyrightIndiv", mandatory: false },
+    { name: "Copyrights (Institution)", key: "copyrightInst", mandatory: false },
+    { name: "Patents (Individual)", key: "patentIndiv", mandatory: false },
+    { name: "Patents (Institution)", key: "patentInst", mandatory: false },
+    { name: "Research / Sponsored Grants", key: "grantResearch", mandatory: false },
+    { name: "Revenue from Training / Consultancy", key: "revenueTraining", mandatory: false },
+    { name: "Non-Research Grants", key: "grantNonResearch", mandatory: false },
+    { name: "Products / Technology Developed", key: "product", mandatory: false },
+    { name: "Startup", key: "startup", mandatory: false },
+    { name: "Awards & Fellowships", key: "award", mandatory: false },
+    { name: "Industry-Academia Interaction", key: "interaction", mandatory: false },
+    { name: "Placement Activity", key: "placement", mandatory: false },
+];
 
 // --- TYPES ---
 interface MetricData {
@@ -236,9 +260,9 @@ function PartBResearch({ apiBase, department, userId, userDesignation }: PartBRe
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const res = await fetch(`${apiBase}/${department}/${userId}/B`);
-                if (res.ok) {
-                    const d = await res.json();
+                const res = await axios.get(`${apiBase}/${department}/${userId}/B`, { validateStatus: () => true });
+                if (res.status >= 200 && res.status < 300) {
+                    const d = res.data;
                     if (d) {
                         const m = (sec: number, field: string): MetricData => ({
                             value: d[sec]?.[field]?.value ?? 0,
@@ -267,9 +291,9 @@ function PartBResearch({ apiBase, department, userId, userDesignation }: PartBRe
                         setVerifiedTotalScore(d?.verified_total_marks);
                     }
                 }
-                const sr = await fetch(`${apiBase}/${department}/${userId}/get-status`);
-                if (sr.ok) {
-                    const s = await sr.json();
+                const sr = await axios.get(`${apiBase}/${department}/${userId}/get-status`, { validateStatus: () => true });
+                if (sr.status >= 200 && sr.status < 300) {
+                    const s = sr.data;
                     setFormStatus(s.status);
                 }
             } catch (err) {
@@ -323,12 +347,11 @@ function PartBResearch({ apiBase, department, userId, userDesignation }: PartBRe
                 17: { ...formData.placement, marks: scores.placement },
                 total_marks: totalScore,
             };
-            const res = await fetch(`${apiBase}/${department}/${userId}/B`, {
-                method: "POST",
+            const res = await axios.post(`${apiBase}/${department}/${userId}/B`, payload, {
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
+                validateStatus: () => true,
             });
-            if (!res.ok) throw new Error("Save Failed");
+            if (res.status < 200 || res.status >= 300) throw new Error("Save Failed");
             setSubmitSuccess(true);
         } catch (err) {
             setSubmitError((err as Error).message);

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { PART_C_ROLE_MAX, PART_C_SECTION_MAXES } from "@/lib/forms/constants";
 import { DesignationValue } from "@/lib/constants";
@@ -17,6 +18,16 @@ const FORMULAS = {
     organized: "Marks: 2-week=40, 1-week=20, 2-5 days=10, 1-day=2 (Max 80)",
     phdGuided: "Marks: Awarded=50, Thesis Submitted=25, Guiding=10 (No limit)",
 };
+
+// --- SECTION MANDATORY CONFIG ---
+// Defines which sections of Part C are mandatory for form submission.
+// Qualification status must be declared; training/PhD sections are optional.
+const SECTION_CONFIG = [
+    { name: "Qualification (PhD Status)", key: "qualification" as const, mandatory: true },
+    { name: "Training Programs Attended", key: "trainingAttended" as const, mandatory: false },
+    { name: "Training Programs Organized", key: "trainingOrganized" as const, mandatory: false },
+    { name: "PhD Guided", key: "phdGuided" as const, mandatory: false },
+];
 
 // --- TYPES ---
 interface SelfDevData {
@@ -192,9 +203,9 @@ function PartCSelfDevelopment({
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const res = await fetch(`${apiBase}/${department}/${userId}/C`);
-                if (res.ok) {
-                    const d = await res.json();
+                const res = await axios.get(`${apiBase}/${department}/${userId}/C`, { validateStatus: () => true });
+                if (res.status >= 200 && res.status < 300) {
+                    const d = res.data;
                     if (d) {
                         setFormData({
                             pdfCompleted: d[1]?.qualification?.pdfCompleted ?? false,
@@ -215,9 +226,9 @@ function PartCSelfDevelopment({
                         setVerifiedScore(d?.verified_total_marks);
                     }
                 }
-                const sr = await fetch(`${apiBase}/${department}/${userId}/get-status`);
-                if (sr.ok) {
-                    const s = await sr.json();
+                const sr = await axios.get(`${apiBase}/${department}/${userId}/get-status`, { validateStatus: () => true });
+                if (sr.status >= 200 && sr.status < 300) {
+                    const s = sr.data;
                     setFormStatus(s.status);
                 }
             } catch (err) {
@@ -253,6 +264,12 @@ function PartCSelfDevelopment({
             setShowStatusModal(true);
             return;
         }
+        // Validate mandatory sections before submission
+        const mandatoryQualification = SECTION_CONFIG.find((s) => s.key === "qualification" && s.mandatory);
+        if (mandatoryQualification && !formData.pdfCompleted && !formData.pdfOngoing && !formData.phdAwarded) {
+            setSubmitError("Please select your Qualification status (Ongoing or PhD Awarded) before saving.");
+            return;
+        }
         setIsSubmitting(true);
         setSubmitError(null);
         try {
@@ -270,12 +287,11 @@ function PartCSelfDevelopment({
                 },
                 total_marks: totalScore,
             };
-            const res = await fetch(`${apiBase}/${department}/${userId}/C`, {
-                method: "POST",
+            const res = await axios.post(`${apiBase}/${department}/${userId}/C`, payload, {
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
+                validateStatus: () => true,
             });
-            if (!res.ok) throw new Error("Save Failed");
+            if (res.status < 200 || res.status >= 300) throw new Error("Save Failed");
             setSubmitSuccess(true);
         } catch (err) {
             setSubmitError((err as Error).message);

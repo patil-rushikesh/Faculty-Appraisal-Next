@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { PART_D_MAX, PART_D_SELF_MAX } from "@/lib/forms/constants";
@@ -12,6 +13,14 @@ import Loader from "@/components/loader";
 
 // --- CONSTANTS ---
 const PORTFOLIO_TYPES = ["institute", "department", "both"] as const;
+
+// --- SECTION MANDATORY CONFIG ---
+// Defines which sections of Part D are mandatory for form submission.
+// Faculty must declare a portfolio type and provide self-awarded marks.
+const SECTION_CONFIG = [
+    { name: "Portfolio Type Selection", key: "portfolioType" as const, mandatory: true },
+    { name: "Self-Awarded Marks", key: "selfAwardedMarks" as const, mandatory: true },
+];
 
 // --- TYPES ---
 interface PortfolioFormData {
@@ -143,9 +152,9 @@ function PartDPortfolio({
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const res = await fetch(`${apiBase}/${department}/${userId}/D`);
-                if (res.ok) {
-                    const data = await res.json();
+                const res = await axios.get(`${apiBase}/${department}/${userId}/D`, { validateStatus: () => true });
+                if (res.status >= 200 && res.status < 300) {
+                    const data = res.data;
                     if (data) {
                         setFormData({
                             portfolioType: data.portfolioType ?? "both",
@@ -165,9 +174,9 @@ function PartDPortfolio({
                         setIsFirstTime(false);
                     }
                 }
-                const sr = await fetch(`${apiBase}/${department}/${userId}/get-status`);
-                if (sr.ok) {
-                    const s = await sr.json();
+                const sr = await axios.get(`${apiBase}/${department}/${userId}/get-status`, { validateStatus: () => true });
+                if (sr.status >= 200 && sr.status < 300) {
+                    const s = sr.data;
                     setFormStatus(s.status);
                 }
             } catch (err) {
@@ -184,6 +193,12 @@ function PartDPortfolio({
             setShowStatusModal(true);
             return;
         }
+        // Validate mandatory sections before submission
+        const selfMarks = formData.isAdministrativeRole ? formData.adminSelfAwardedMarks : formData.selfAwardedMarks;
+        if (SECTION_CONFIG.find((s) => s.key === "selfAwardedMarks" && s.mandatory) && selfMarks <= 0) {
+            setSubmitError("Please provide your Self-Awarded Marks before saving.");
+            return;
+        }
         setIsSubmitting(true);
         setSubmitError(null);
         try {
@@ -191,12 +206,11 @@ function PartDPortfolio({
                 D: { ...formData, instituteLevelPortfolio, departmentLevelPortfolio, marks: totalScore },
                 isFirstTime,
             };
-            const res = await fetch(`${apiBase}/${department}/${userId}/D`, {
-                method: "POST",
+            const res = await axios.post(`${apiBase}/${department}/${userId}/D`, payload, {
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload),
+                validateStatus: () => true,
             });
-            if (!res.ok) throw new Error("Save Failed");
+            if (res.status < 200 || res.status >= 300) throw new Error("Save Failed");
             setIsFirstTime(false);
             setSubmitSuccess(true);
         } catch (err) {

@@ -9,8 +9,9 @@ import ScoreCard from "../shared/ScoreCard";
 import FormProgressBar from "../shared/FormProgressBar";
 import FormLockedModal from "../shared/FormLockedModal";
 import Loader from "@/components/loader";
-import { appraisalApi } from "@/lib/appraisalApi";
-import { AxiosError } from "axios";
+import axios, { AxiosError } from "axios";
+
+const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000").replace(/\/$/, "");
 
 // --- TYPES ---
 interface ExtraFormData {
@@ -81,6 +82,18 @@ function PartEExtra({ userId }: PartEExtraProps) {
   if (formData.selfAwardedMarks > 0) interactedCount++;
   const progressPercent = (interactedCount / 2) * 100;
 
+  // ── Always fetch the latest status from backend (independent of data cache) ──
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        const resp = await axios.get(`${BACKEND}/appraisal/${userId}`, { withCredentials: true });
+        const appraisal = resp.data?.data;
+        setFormStatus(appraisal?.status ?? "DRAFT");
+      } catch { /* silently ignore */ }
+    };
+    fetchStatus();
+  }, [userId]);
+
   // Load from backend — GET /appraisal/:userId → read partE
   useEffect(() => {
     const fetchData = async () => {
@@ -101,7 +114,7 @@ function PartEExtra({ userId }: PartEExtraProps) {
           } catch { /* ignore, proceed to fetch */ }
         }
 
-        const resp = await appraisalApi.getAppraisal(userId);
+        const resp = await axios.get(`${BACKEND}/appraisal/${userId}`, { withCredentials: true });
         // Backend wraps: { success, data: IFacultyAppraisal, message }
         const appraisal = resp.data?.data;
         const d = appraisal?.partE;
@@ -137,7 +150,7 @@ function PartEExtra({ userId }: PartEExtraProps) {
         total_marks: formData.selfAwardedMarks,
         bullet_points: formData.contributions,
       };
-      await appraisalApi.updatePartE(userId, payload);
+      await axios.put(`${BACKEND}/appraisal/${userId}/part-e`, payload, { withCredentials: true });
       setSubmitSuccess(true);
     } catch (err) {
       const axErr = err as AxiosError<{ message?: string }>;

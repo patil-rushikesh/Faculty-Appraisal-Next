@@ -10,8 +10,9 @@ import MetricField from "../shared/MetricField";
 import FormProgressBar from "../shared/FormProgressBar";
 import FormLockedModal from "../shared/FormLockedModal";
 import Loader from "@/components/loader";
-import { appraisalApi } from "@/lib/appraisalApi";
-import { AxiosError } from "axios";
+import axios, { AxiosError } from "axios";
+
+const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000").replace(/\/$/, "");
 
 // --- CONSTANTS ---
 const FORMULAS = {
@@ -251,6 +252,18 @@ function PartBResearch({ userId, userDesignation }: PartBResearchProps) {
   const totalScore = Math.min(maxTotal, Object.values(scores).reduce((a, b) => a + b, 0));
 
 
+  // ── Always fetch the latest status from backend (independent of data cache) ──
+  useEffect(() => {
+    const fetchStatus = async () => {
+      try {
+        const resp = await axios.get(`${BACKEND}/appraisal/${userId}`, { withCredentials: true });
+        const appraisal = resp.data?.data;
+        setFormStatus(appraisal?.status ?? "DRAFT");
+      } catch { /* silently ignore */ }
+    };
+    fetchStatus();
+  }, [userId]);
+
   // Load from backend — GET /appraisal/:userId → read partB field
   useEffect(() => {
     const fetchData = async () => {
@@ -271,7 +284,7 @@ function PartBResearch({ userId, userDesignation }: PartBResearchProps) {
           } catch { /* ignore parse errors, proceed to fetch */ }
         }
 
-        const resp = await appraisalApi.getAppraisal(userId);
+        const resp = await axios.get(`${BACKEND}/appraisal/${userId}`, { withCredentials: true });
         // Backend wraps: { success, data: IFacultyAppraisal, message }
         const appraisal = resp.data?.data;
         const d = appraisal?.partB;
@@ -464,7 +477,7 @@ function PartBResearch({ userId, userDesignation }: PartBResearchProps) {
         placement: toMark(formData.placement.offer),
         totalClaimed: totalScore,
       };
-      await appraisalApi.updatePartB(userId, payload);
+      await axios.put(`${BACKEND}/appraisal/${userId}/part-b`, payload, { withCredentials: true });
       setSubmitSuccess(true);
     } catch (err) {
       const axErr = err as AxiosError<{ message?: string }>;

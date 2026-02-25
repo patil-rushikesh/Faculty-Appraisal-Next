@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import axios, { AxiosError } from "axios";
 import {
   Download,
   RefreshCw,
@@ -14,8 +15,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import Loader from "@/components/loader";
-import { appraisalApi, pdfApi } from "@/lib/appraisalApi";
-import { AxiosError } from "axios";
+
+const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000").replace(/\/$/, "");
 
 // --- TYPES ---
 interface PdfMetadata {
@@ -40,13 +41,6 @@ interface PartFReviewProps {
   userId: string;
 }
 
-// --- SECTION MANDATORY CONFIG ---
-const SECTION_CONFIG = [
-  { name: "Generate PDF", key: "pdfGenerated" as const, mandatory: true },
-  { name: "Form Status Check", key: "statusChecked" as const, mandatory: true },
-  { name: "Save PDF Snapshot", key: "savedPdf" as const, mandatory: false },
-];
-
 // --- COMPONENT ---
 function PartFReview({ department, userId }: PartFReviewProps) {
   const [pdfUrl, setPdfUrl] = useState("");
@@ -63,16 +57,17 @@ function PartFReview({ department, userId }: PartFReviewProps) {
   const [loadingSavedPdfs, setLoadingSavedPdfs] = useState(false);
   const [selectedPdfForDelete, setSelectedPdfForDelete] = useState<string | null>(null);
   const [deletingPdf, setDeletingPdf] = useState(false);
+  const [declarationAgreed, setDeclarationAgreed] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   // -----------------------------------------------------------------------
-  // Status — read from GET /appraisal/:userId
+  // Status — GET /appraisal/:userId
   // -----------------------------------------------------------------------
   const fetchFormStatus = useCallback(async () => {
     try {
-      const { data } = await appraisalApi.getAppraisal(userId);
+      const { data } = await axios.get(`${BACKEND}/appraisal/${userId}`, { withCredentials: true });
       // Backend wraps: { success, data: IFacultyAppraisal, message }
-      const appraisal = (data as any)?.data ?? data;
+      const appraisal = data?.data ?? data;
       setFormStatus(appraisal?.status ?? "DRAFT");
       if (appraisal?.status && appraisal.status !== "DRAFT") setIsFormFrozen(true);
     } catch (err) {
@@ -81,11 +76,11 @@ function PartFReview({ department, userId }: PartFReviewProps) {
   }, [userId]);
 
   // -----------------------------------------------------------------------
-  // PDF helpers — use pdfApi (raw axios internally, backed by legacy PDF routes)
+  // PDF helpers — direct axios calls to legacy PDF endpoints
   // -----------------------------------------------------------------------
   const fetchPdfMetadata = useCallback(async () => {
     try {
-      const res = await pdfApi.getMetadata(department, userId);
+      const res = await axios.get(`${BACKEND}/${department}/${userId}/pdf-metadata`, { withCredentials: true });
       setPdfMetadata(res.data);
       setPdfExists(true);
     } catch {
@@ -97,7 +92,7 @@ function PartFReview({ department, userId }: PartFReviewProps) {
   const fetchSavedPdfs = useCallback(async () => {
     setLoadingSavedPdfs(true);
     try {
-      const res = await pdfApi.getSavedPdfs(department, userId);
+      const res = await axios.get(`${BACKEND}/${department}/${userId}/saved-pdfs`, { withCredentials: true });
       setSavedPdfs(res.data?.pdfs ?? []);
     } catch {
       setSavedPdfs([]);
@@ -123,13 +118,13 @@ function PartFReview({ department, userId }: PartFReviewProps) {
 
         try {
           const res = force
-            ? await pdfApi.generateDoc(department, userId)
-            : await pdfApi.getFacultyPdf(department, userId);
+            ? await axios.get(`${BACKEND}/${department}/${userId}/generate-doc`, { withCredentials: true, responseType: "blob" })
+            : await axios.get(`${BACKEND}/${department}/${userId}/faculty-pdf`, { withCredentials: true, responseType: "blob" });
           await process(res.data);
         } catch {
           if (!force) {
             // Fallback: generate fresh
-            const gen = await pdfApi.generateDoc(department, userId);
+            const gen = await axios.get(`${BACKEND}/${department}/${userId}/generate-doc`, { withCredentials: true, responseType: "blob" });
             await process(gen.data);
           } else {
             setPdfExists(false);
@@ -156,7 +151,7 @@ function PartFReview({ department, userId }: PartFReviewProps) {
   const handleSavePdf = async () => {
     setSavingPdf(true);
     try {
-      await pdfApi.savePdf(department, userId);
+      await axios.post(`${BACKEND}/${department}/${userId}/save-pdf`, {}, { withCredentials: true });
       fetchPdfMetadata();
       generatePDF();
       fetchSavedPdfs();
@@ -169,7 +164,7 @@ function PartFReview({ department, userId }: PartFReviewProps) {
 
   const handleViewSaved = async (id: string) => {
     try {
-      const res = await pdfApi.viewSavedPdf(department, userId, id);
+      const res = await axios.get(`${BACKEND}/${department}/${userId}/view-saved-pdf/${id}`, { withCredentials: true, responseType: "blob" });
       window.open(URL.createObjectURL(res.data), "_blank");
     } catch (err) {
       console.error("View PDF failed", err);
@@ -179,7 +174,7 @@ function PartFReview({ department, userId }: PartFReviewProps) {
   const handleDeleteSaved = async (id: string) => {
     setDeletingPdf(true);
     try {
-      await pdfApi.deleteSavedPdf(department, userId, id);
+      await axios.delete(`${BACKEND}/${department}/${userId}/delete-saved-pdf/${id}`, { withCredentials: true });
       setSelectedPdfForDelete(null);
       fetchSavedPdfs();
     } catch (err) {
@@ -189,11 +184,18 @@ function PartFReview({ department, userId }: PartFReviewProps) {
     }
   };
 
-  // PATCH /appraisal/:userId/submit  (DRAFT → SUBMITTED)
+  // PATCH /appraisal/:userId/declaration  then  PATCH /appraisal/:userId/submit
   const handleFreeze = async () => {
     setSubmitError(null);
     try {
-      await appraisalApi.submitAppraisal(userId);
+      // Step 1: record declaration agreement
+      await axios.patch(
+        `${BACKEND}/appraisal/${userId}/declaration`,
+        { isAgreed: true },
+        { withCredentials: true }
+      );
+      // Step 2: transition DRAFT → SUBMITTED
+      await axios.patch(`${BACKEND}/appraisal/${userId}/submit`, {}, { withCredentials: true });
       setIsFormFrozen(true);
       setShowFreezeModal(false);
       fetchFormStatus();
@@ -278,12 +280,8 @@ function PartFReview({ department, userId }: PartFReviewProps) {
               },
             ].map(({ label, value }) => (
               <div key={label}>
-                <p className="text-base font-bold text-indigo-700 uppercase tracking-tight opacity-85">
-                  {label}
-                </p>
-                <p className="text-lg font-extrabold text-indigo-900 truncate uppercase">
-                  {String(value ?? "N/A")}
-                </p>
+                <p className="text-base font-bold text-indigo-700 uppercase tracking-tight opacity-85">{label}</p>
+                <p className="text-lg font-extrabold text-indigo-900 truncate uppercase">{String(value ?? "N/A")}</p>
               </div>
             ))}
           </div>
@@ -293,10 +291,7 @@ function PartFReview({ department, userId }: PartFReviewProps) {
         {loading && (
           <div className="mb-7 space-y-3">
             <div className="w-full rounded-full bg-muted h-2 overflow-hidden">
-              <div
-                className="bg-indigo-600 h-full transition-all duration-300"
-                style={{ width: `${loadingProgress}%` }}
-              />
+              <div className="bg-indigo-600 h-full transition-all duration-300" style={{ width: `${loadingProgress}%` }} />
             </div>
             <p className="text-base text-center font-bold text-indigo-700 uppercase animate-pulse">
               Processing Appraisal Document... {loadingProgress}%
@@ -314,9 +309,7 @@ function PartFReview({ department, userId }: PartFReviewProps) {
         {!pdfExists && !loading && (
           <div className="py-24 text-center rounded-xl border-2 border-dashed border-indigo-200 bg-indigo-50">
             <FileText size={56} className="mx-auto mb-4 opacity-30 text-indigo-700" />
-            <p className="text-lg font-bold text-indigo-700 uppercase">
-              No PDF generated for this session
-            </p>
+            <p className="text-lg font-bold text-indigo-700 uppercase">No PDF generated for this session</p>
             <Button
               variant="link"
               size="sm"
@@ -328,6 +321,22 @@ function PartFReview({ department, userId }: PartFReviewProps) {
           </div>
         )}
       </div>
+
+      {formStatus === "DRAFT" && (
+        <div className="flex items-start gap-3 rounded-xl border-2 border-indigo-200 bg-indigo-50 px-6 py-4">
+          <input
+            id="declaration-agree"
+            type="checkbox"
+            checked={declarationAgreed}
+            onChange={(e) => setDeclarationAgreed(e.target.checked)}
+            className="mt-1 w-5 h-5 rounded border-indigo-400 text-indigo-700 focus:ring-indigo-400 cursor-pointer"
+          />
+          <label htmlFor="declaration-agree" className="text-base font-bold text-indigo-900 leading-relaxed cursor-pointer select-none">
+            I hereby declare that the information furnished above is true, complete, and correct to the best of my knowledge and belief.
+            I understand that submitting this form is <span className="text-destructive font-black">irreversible</span> and will lock all parts of my appraisal.
+          </label>
+        </div>
+      )}
 
       {submitError && (
         <div className="mx-auto max-w-lg p-4 rounded-lg bg-destructive/15 border-2 border-destructive/30 text-destructive text-base font-bold uppercase text-center tracking-wider">
@@ -348,20 +357,14 @@ function PartFReview({ department, userId }: PartFReviewProps) {
           <div className="flex justify-center pt-3">
             <Button
               onClick={() => setShowFreezeModal(true)}
-              className="group relative h-16 px-12 overflow-hidden rounded-2xl bg-indigo-700 text-white transition-all hover:bg-indigo-800 hover:scale-[1.02] active:scale-95 shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-400"
+              disabled={!declarationAgreed}
+              className="group relative h-16 px-12 overflow-hidden rounded-2xl bg-indigo-700 text-white transition-all hover:bg-indigo-800 hover:scale-[1.02] active:scale-95 shadow-lg focus:outline-none focus:ring-2 focus:ring-indigo-400 disabled:opacity-40 disabled:scale-100 disabled:cursor-not-allowed"
             >
               <div className="flex items-center gap-4">
-                <ShieldAlert
-                  size={24}
-                  className="transition-transform group-hover:rotate-12 flex-shrink-0"
-                />
+                <ShieldAlert size={24} className="transition-transform group-hover:rotate-12 flex-shrink-0" />
                 <div className="text-left">
-                  <p className="text-base font-black uppercase tracking-widest leading-none">
-                    Final Submission
-                  </p>
-                  <p className="text-lg font-bold opacity-90 mt-1">
-                    Freeze &amp; Submit Appraisal
-                  </p>
+                  <p className="text-base font-black uppercase tracking-widest leading-none">Final Submission</p>
+                  <p className="text-lg font-bold opacity-90 mt-1">Freeze &amp; Submit Appraisal</p>
                 </div>
               </div>
             </Button>
@@ -383,18 +386,10 @@ function PartFReview({ department, userId }: PartFReviewProps) {
               further changes until the evaluation cycle is reset by the admin.
             </p>
             <div className="flex gap-3">
-              <Button
-                variant="outline"
-                className="flex-1 text-base font-bold uppercase border-2"
-                onClick={() => setShowFreezeModal(false)}
-              >
+              <Button variant="outline" className="flex-1 text-base font-bold uppercase border-2" onClick={() => setShowFreezeModal(false)}>
                 Cancel
               </Button>
-              <Button
-                variant="destructive"
-                className="flex-1 text-base font-bold uppercase"
-                onClick={handleFreeze}
-              >
+              <Button variant="destructive" className="flex-1 text-base font-bold uppercase" onClick={handleFreeze}>
                 Lock &amp; Submit
               </Button>
             </div>
@@ -420,29 +415,17 @@ function PartFReview({ department, userId }: PartFReviewProps) {
                   className="flex items-center justify-between gap-4 p-4 rounded-xl border-2 border-indigo-100 bg-indigo-50 hover:bg-indigo-100 transition-colors"
                 >
                   <div className="min-w-0">
-                    <p className="text-base font-bold text-indigo-900 truncate uppercase">
-                      {pdf.filename || `Archive_${i + 1}`}
-                    </p>
+                    <p className="text-base font-bold text-indigo-900 truncate uppercase">{pdf.filename || `Archive_${i + 1}`}</p>
                     <p className="text-sm text-indigo-700 uppercase opacity-80 font-semibold">
                       {pdf.appraisal_year} &bull;{" "}
                       {pdf.upload_date ? new Date(pdf.upload_date).toLocaleDateString() : "N/A"}
                     </p>
                   </div>
                   <div className="flex gap-2 flex-shrink-0">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-10 w-10 p-0 hover:bg-indigo-200"
-                      onClick={() => handleViewSaved(pdf._id)}
-                    >
+                    <Button size="sm" variant="ghost" className="h-10 w-10 p-0 hover:bg-indigo-200" onClick={() => handleViewSaved(pdf._id)}>
                       <Eye size={18} />
                     </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-10 w-10 p-0 text-destructive hover:text-destructive hover:bg-destructive/15"
-                      onClick={() => setSelectedPdfForDelete(pdf._id)}
-                    >
+                    <Button size="sm" variant="ghost" className="h-10 w-10 p-0 text-destructive hover:text-destructive hover:bg-destructive/15" onClick={() => setSelectedPdfForDelete(pdf._id)}>
                       <Trash2 size={18} />
                     </Button>
                   </div>
@@ -459,28 +442,17 @@ function PartFReview({ department, userId }: PartFReviewProps) {
       </Dialog>
 
       {/* Delete Confirm Dialog */}
-      <Dialog
-        open={!!selectedPdfForDelete}
-        onOpenChange={(open) => !open && setSelectedPdfForDelete(null)}
-      >
+      <Dialog open={!!selectedPdfForDelete} onOpenChange={(open) => !open && setSelectedPdfForDelete(null)}>
         <DialogContent className="max-w-xs bg-card border-2 border-indigo-200">
-          <p className="text-base font-bold text-center uppercase py-6">
-            Permanently delete this record?
-          </p>
+          <p className="text-base font-bold text-center uppercase py-6">Permanently delete this record?</p>
           <div className="flex gap-3">
-            <Button
-              variant="outline"
-              className="flex-1 h-10 text-base font-bold uppercase border-2"
-              onClick={() => setSelectedPdfForDelete(null)}
-            >
+            <Button variant="outline" className="flex-1 h-10 text-base font-bold uppercase border-2" onClick={() => setSelectedPdfForDelete(null)}>
               No
             </Button>
             <Button
               variant="destructive"
               className="flex-1 h-10 text-base font-bold uppercase"
-              onClick={() =>
-                selectedPdfForDelete && handleDeleteSaved(selectedPdfForDelete)
-              }
+              onClick={() => selectedPdfForDelete && handleDeleteSaved(selectedPdfForDelete)}
               disabled={deletingPdf}
             >
               {deletingPdf ? "..." : "Yes, Delete"}

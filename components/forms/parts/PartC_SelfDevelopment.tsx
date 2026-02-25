@@ -9,8 +9,9 @@ import ScoreCard from "../shared/ScoreCard";
 import FormProgressBar from "../shared/FormProgressBar";
 import FormLockedModal from "../shared/FormLockedModal";
 import Loader from "@/components/loader";
-import { appraisalApi } from "@/lib/appraisalApi";
-import { AxiosError } from "axios";
+import axios, { AxiosError } from "axios";
+
+const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000").replace(/\/$/, "");
 
 // --- CONSTANTS ---
 const FORMULAS = {
@@ -190,7 +191,7 @@ function PartCSelfDevelopment({ userId, userDesignation }: PartCSelfDevelopmentP
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const resp = await appraisalApi.getAppraisal(userId);
+        const resp = await axios.get(`${BACKEND}/appraisal/${userId}`, { withCredentials: true });
         // Backend wraps: { success, data: IFacultyAppraisal, message }
         const appraisal = resp.data?.data;
         const d = appraisal?.partC;
@@ -276,7 +277,7 @@ function PartCSelfDevelopment({ userId, userDesignation }: PartCSelfDevelopmentP
         },
         totalMarks: totalScore,
       };
-      await appraisalApi.updatePartC(userId, payload);
+      await axios.put(`${BACKEND}/appraisal/${userId}/part-c`, payload, { withCredentials: true });
       setSubmitSuccess(true);
     } catch (err) {
       const axErr = err as AxiosError<{ message?: string }>;

@@ -746,7 +746,7 @@ function PartAAcademicInvolvement({
                   Role Factor ({userDesignation})
                 </td>
                 <td className="px-6 py-4 text-right text-indigo-900 tabular-nums font-extrabold">
-                  × {factor.toFixed(3)}
+                   {factor.toFixed(2)}
                 </td>
                 <td className="px-6 py-4 text-right text-indigo-700 tabular-nums font-bold">
                   —

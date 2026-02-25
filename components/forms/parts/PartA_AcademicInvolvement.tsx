@@ -641,7 +641,7 @@ function PartAAcademicInvolvement({
                     className="w-6 h-6 rounded border-indigo-300 text-indigo-700 focus:ring-indigo-400 disabled:opacity-50"
                   />
                   <div>
-                    <p className="text-xs text-indigo-700 opacity-90">(Are You Ph.D Supervisor Having Scholars Enrolled at PCCOE Research Center)</p>
+                    <p className="text-sm text-indigo-700 opacity-90">(Are You Ph.D Supervisor Having Scholars Enrolled at PCCOE Research Center)</p>
                   </div>
                 </label>
               </div>

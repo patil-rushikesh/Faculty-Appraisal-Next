@@ -12,7 +12,7 @@ import PartEExtra from "@/components/forms/parts/PartE_Extra";
 import PartFReview from "@/components/forms/parts/PartF_Review";
 import { GraduationCap } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { DesignationValue } from "@/lib/constants";
+import { DesignationValue, RoleValue, DepartmentValue } from "@/lib/constants";
 
 const API_BASE = process.env.NEXT_PUBLIC_BACKEND_URL ?? "";
 
@@ -49,11 +49,11 @@ function AppraisalContent() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchParams]);
 
-    const department = user?.department ?? "";
+    const department = (user?.department as DepartmentValue) ?? "computer";
     const userId = user?.id ?? "";
-    const userRole = user?.role ?? "";
+    const userRole = (user?.role as RoleValue) ?? "Faculty";
     const userDesignation = (user?.designation as DesignationValue) ?? "Assistant Professor";
-    const isAdminFromDesignation = ["Director", "Dean", "Associate Dean", "HOD", "Associate Director"].includes(userDesignation);
+    const isAdminFromDesignation = ["Director", "Dean", "Associate Dean", "HOD"].includes(userRole);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5">

@@ -9,6 +9,8 @@ import SectionCard from "../shared/SectionCard";
 import FormProgressBar from "../shared/FormProgressBar";
 import CourseManagementHeader from "../shared/CourseManagementHeader";
 import Loader from "@/components/loader";
+import { appraisalApi } from "@/lib/appraisalApi";
+import { AxiosError } from "axios";
 
 // --- CONSTANTS ---
 const ACADEMIC_SECTIONS: {
@@ -19,45 +21,44 @@ const ACADEMIC_SECTIONS: {
     {
       title: "Result Analysis",
       field: "resultAnalysis",
-      formula: "Marks = 10 * [(Students > 60% * 5 + Students 50-59% * 4 + Students 40-49% * 3) / Total Students]"
+      formula: "Marks = 10 * [(Students > 60% * 5 + Students 50-59% * 4 + Students 40-49% * 3) / Total Students]",
     },
     {
       title: "Course Outcome Analysis",
       field: "courseOutcome",
-      formula: "Marks = 20 + (Avg CO % * 30 / 100) [for timely submission]"
+      formula: "Marks = 20 + (Avg CO % * 30 / 100) [for timely submission]",
     },
     {
       title: "E-Learning Content Development",
       field: "eLearning",
-      formula: "Marks = Number of instances * 10"
+      formula: "Marks = Number of instances * 10",
     },
     {
       title: "Academic Engagement",
       field: "academicEngagement",
-      formula: "Marks = 50 * (Present Students / Enrolled Students Total)"
+      formula: "Marks = 50 * (Present Students / Enrolled Students Total)",
     },
     {
       title: "Teaching Load",
       field: "teachingLoad",
-      formula: "Marks = Min(50, 50 * [(Avg Load + E) / Min Load]) [Min Load: Prof=12, Assoc=14, Asst=16]"
+      formula: "Marks = Min(50, 50 * [(Avg Load + E) / Min Load]) [Min Load: Prof=12, Assoc=14, Asst=16]",
     },
     {
       title: "UG Projects / PG Dissertations Guided",
       field: "projectsGuided",
-      formula: "Marks = Min(40, Count * 20)"
+      formula: "Marks = Min(40, Count * 20)",
     },
     {
       title: "Feedback of Faculty by Student",
       field: "studentFeedback",
-      formula: "Marks = Average Feedback Performance Index"
+      formula: "Marks = Average Feedback Performance Index",
     },
     {
       title: "Guardian / PTG Meetings",
       field: "ptgMeetings",
-      formula: "Marks = (Meetings * 50) / 6 [Max 50]"
+      formula: "Marks = (Meetings * 50) / 6 [Max 50]",
     },
   ];
-
 
 // --- TYPES ---
 interface CourseData {
@@ -85,15 +86,28 @@ interface ScoreState {
 
 interface PartAAcademicInvolvementProps {
   userDesignation?: DesignationValue;
-  apiBase: string;
-  department: string;
   userId: string;
 }
 
 // --- HELPERS ---
-const MetricInputField = ({ label, value, onChange, className = "", placeholder = "Enter value" }: { label: string; value: string | undefined; onChange: (v: string) => void; className?: string; placeholder?: string }) => (
+const MetricInputField = ({
+  label,
+  value,
+  onChange,
+  className = "",
+  placeholder = "Enter value",
+}: {
+  label: string;
+  value?: string | number | null;
+  onChange: (v: string) => void;
+  className?: string;
+  placeholder?: string;
+}) => (
   <div className={`space-y-2 ${className}`}>
-    <label className="text-base uppercase font-extrabold text-indigo-900 tracking-wider block px-0.5" style={{letterSpacing: '0.08em'}}>
+    <label
+      className="text-base uppercase font-extrabold text-indigo-900 tracking-wider block px-0.5"
+      style={{ letterSpacing: "0.08em" }}
+    >
       {label}
     </label>
     <input
@@ -102,7 +116,7 @@ const MetricInputField = ({ label, value, onChange, className = "", placeholder 
       aria-label={label}
       onWheel={(e) => e.currentTarget.blur()}
       onKeyDown={(e) => e.key === "-" && e.preventDefault()}
-      value={value}
+      value={value ?? ""}
       onChange={(e) => onChange(e.target.value)}
       placeholder={placeholder}
       className="w-full rounded-lg border-2 border-indigo-200 bg-white px-4 py-2 text-lg font-bold text-slate-900 focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-600 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-sm placeholder:text-xs placeholder:font-normal placeholder:text-slate-900"
@@ -113,16 +127,16 @@ const MetricInputField = ({ label, value, onChange, className = "", placeholder 
 // --- COMPONENT ---
 function PartAAcademicInvolvement({
   userDesignation = "Professor",
-  apiBase,
-  department,
-  userId
+  userId,
 }: PartAAcademicInvolvementProps) {
   const { courses, isInitialized, setCourses } = useCourses();
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  const [manualSections, setManualSections] = useState<Record<PartAScoreKey, boolean>>({
+  const [manualSections, setManualSections] = useState<
+    Record<PartAScoreKey, boolean>
+  >({
     resultAnalysis: false,
     courseOutcome: false,
     eLearning: false,
@@ -144,10 +158,10 @@ function PartAAcademicInvolvement({
     ptgMeetings: 0,
   });
 
-  // Per-course data state
-  const [courseMetrics, setCourseMetrics] = useState<Record<string, CourseData>>({});
+  const [courseMetrics, setCourseMetrics] = useState<
+    Record<string, CourseData>
+  >({});
 
-  // Global metric state
   const [globalMetrics, setGlobalMetrics] = useState({
     eLearningInstances: "",
     weeklyLoadSem1: "",
@@ -160,7 +174,6 @@ function PartAAcademicInvolvement({
   // --- LOCAL STORAGE PERSISTENCE ---
   const STORAGE_KEY = `partA_data_${userId}`;
 
-  // Load from local storage on mount (as fallback)
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -176,104 +189,120 @@ function PartAAcademicInvolvement({
     }
   }, [STORAGE_KEY]);
 
-  // Save to local storage on change
   useEffect(() => {
     if (!isLoading) {
-      const dataToSave = {
-        courseMetrics,
-        globalMetrics,
-        manualSections,
-        scores
-      };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify({ courseMetrics, globalMetrics, manualSections, scores })
+      );
     }
   }, [courseMetrics, globalMetrics, manualSections, scores, STORAGE_KEY, isLoading]);
 
-  // Load data from backend
+  // Load from backend — GET /appraisal/:userId  → read partA field
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch(`${apiBase}/${department}/${userId}/A`);
-        if (res.ok) {
-          const data = await res.json();
+        const resp = await appraisalApi.getAppraisal(userId);
+        // Backend wraps: { success, data: IFacultyAppraisal, message }
+        const { data } = resp;
+        const partA = data?.data?.partA;
+        if (!partA) return;
 
-          // Check if we have local data already. If we do, we might want to be careful.
-          // For now, let's merge or only load if local is empty.
-          const saved = localStorage.getItem(STORAGE_KEY);
-          if (saved) {
-            const parsed = JSON.parse(saved);
-            // If there's non-empty local data, we prefer it as the active draft
-            if (Object.keys(parsed.courseMetrics || {}).length > 0 || parsed.globalMetrics?.eLearningInstances) {
-              setIsLoading(false);
-              return;
-            }
-          }
-
-          // 1. Manual scoring status
-          if (data.isManualScoring) {
-            const ms: any = {};
-            ACADEMIC_SECTIONS.forEach((s) => {
-              ms[s.field] = true;
-            });
-            setManualSections(ms);
-          }
-
-          // 2. Load global metrics
-          setGlobalMetrics({
-            eLearningInstances: data["3"]?.elearningInstances?.toString() || "",
-            weeklyLoadSem1: data["5"]?.weeklyLoadSem1?.toString() || "",
-            weeklyLoadSem2: data["5"]?.weeklyLoadSem2?.toString() || "",
-            adminResponsibility: data["5"]?.adminResponsibility === 1,
-            projectsGuided: data["6"]?.projectsGuided?.toString() || "",
-            ptgMeetings: data["8"]?.ptgMeetings?.toString() || "",
-          });
-
-          // 3. Load course metrics
-          if (data["1"]?.courses) {
-            const newMetrics: Record<string, CourseData> = {};
-            const loadedCourses: any[] = [];
-
-            Object.entries(data["1"].courses).forEach(([code, cData]: [string, any]) => {
-              const id = Math.random().toString(36).substr(2, 9);
-              loadedCourses.push({
-                id,
-                code,
-                semester: data["2"]?.courses[code]?.semester || "Sem I"
-              });
-              newMetrics[id] = {
-                studentsAbove60: cData.studentsAbove60?.toString() || "",
-                students50to59: cData.students50to59?.toString() || "",
-                students40to49: cData.students40to49?.toString() || "",
-                totalStudents: cData.totalStudents?.toString() || "",
-                coAttainment: data["2"]?.courses[code]?.coAttainment?.toString() || "",
-                timelySubmissionCO: data["2"]?.courses[code]?.timelySubmissionCO || false,
-                studentsPresent: data["4"]?.courses[code]?.studentsPresent?.toString() || "",
-                totalEnrolledStudents: data["4"]?.courses[code]?.totalEnrolledStudents?.toString() || "",
-                feedbackPercentage: data["7"]?.courses[code]?.feedbackPercentage?.toString() || "",
-              };
-            });
-
-            if (loadedCourses.length > 0) {
-              setCourses(loadedCourses);
-              setCourseMetrics(newMetrics);
-            }
+        // Prefer existing local draft data when available
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (
+            Object.keys(parsed.courseMetrics ?? {}).length > 0 ||
+            parsed.globalMetrics?.eLearningInstances
+          ) {
+            return;
           }
         }
+
+        // ── Map backend schema fields → local shapes ───────────────────────
+        const newManualSections: Record<PartAScoreKey, boolean> = {
+          resultAnalysis: false, courseOutcome: false, eLearning: false,
+          academicEngagement: false, teachingLoad: false, projectsGuided: false,
+          studentFeedback: false, ptgMeetings: false,
+        };
+
+        // Read from schema fields: eLearningInstances, weeklyLoadSem1, etc.
+        const newGlobalMetrics = {
+          eLearningInstances: (partA.eLearningInstances ?? 0).toString(),
+          weeklyLoadSem1: (partA.weeklyLoadSem1 ?? 0).toString(),
+          weeklyLoadSem2: (partA.weeklyLoadSem2 ?? 0).toString(),
+          adminResponsibility: partA.adminResponsibility ?? false,
+          projectsGuided: (partA.projectsGuided ?? 0).toString(),
+          ptgMeetings: (partA.ptgMeetings ?? 0).toString(),
+        };
+
+        let newCourseMetrics: Record<string, CourseData> = {};
+        const loadedCourses: { id: string; code: string; semester: "Sem I" | "Sem II" }[] = [];
+
+        // partA.courses is an ICourseMetric[] array
+        if (Array.isArray(partA.courses)) {
+          partA.courses.forEach((cData: any) => {
+            const id = Math.random().toString(36).substr(2, 9);
+            const semester = cData.semester === "Sem II" ? "Sem II" : "Sem I";
+            loadedCourses.push({ id, code: cData.code ?? "", semester });
+            newCourseMetrics[id] = {
+              studentsAbove60: (cData.studentsAbove60 ?? 0).toString(),
+              students50to59: (cData.students50to59 ?? 0).toString(),
+              students40to49: (cData.students40to49 ?? 0).toString(),
+              totalStudents: (cData.totalStudents ?? 0).toString(),
+              coAttainment: (cData.coAttainment ?? 0).toString(),
+              timelySubmissionCO: cData.timelySubmissionCO ?? false,
+              studentsPresent: (cData.studentsPresent ?? 0).toString(),
+              totalEnrolledStudents: (cData.totalEnrolledStudents ?? 0).toString(),
+              feedbackPercentage: (cData.feedbackPercentage ?? 0).toString(),
+            };
+          });
+        }
+
+        // ── KEY FIX: write to localStorage BEFORE setting state ────────────
+        localStorage.setItem(
+          STORAGE_KEY,
+          JSON.stringify({
+            courseMetrics: newCourseMetrics,
+            globalMetrics: newGlobalMetrics,
+            manualSections: newManualSections,
+            scores: {
+              resultAnalysis: partA.sectionMarks?.resultAnalysis ?? 0,
+              courseOutcome: partA.sectionMarks?.courseOutcome ?? 0,
+              eLearning: partA.sectionMarks?.eLearning ?? 0,
+              academicEngagement: partA.sectionMarks?.academicEngagement ?? 0,
+              teachingLoad: partA.sectionMarks?.teachingLoad ?? 0,
+              projectsGuided: partA.sectionMarks?.projectsGuided ?? 0,
+              studentFeedback: partA.sectionMarks?.studentFeedback ?? 0,
+              ptgMeetings: partA.sectionMarks?.ptgMeetings ?? 0,
+            },
+          })
+        );
+
+        // ── Update React state ─────────────────────────────────────────────
+        setManualSections(newManualSections);
+        setGlobalMetrics(newGlobalMetrics);
+        if (loadedCourses.length > 0) {
+          setCourses(loadedCourses);
+          setCourseMetrics(newCourseMetrics);
+        }
       } catch (e) {
-        console.error("Fetch A failed", e);
+        console.error("Fetch Part A failed", e);
       } finally {
         setIsLoading(false);
       }
     };
-    if (isInitialized) fetchData();
-  }, [apiBase, department, userId, isInitialized, setCourses, STORAGE_KEY]);
 
-  // Sync courseMetrics when courses change (ID maintenance)
+    if (isInitialized) fetchData();
+  }, [userId, isInitialized, setCourses, STORAGE_KEY]);
+
+  // Sync courseMetrics when courses change
   useEffect(() => {
-    setCourseMetrics(prev => {
+    setCourseMetrics((prev) => {
       const next = { ...prev };
       let changed = false;
-      courses.forEach(c => {
+      courses.forEach((c) => {
         if (!next[c.id]) {
           next[c.id] = {
             studentsAbove60: "",
@@ -293,11 +322,115 @@ function PartAAcademicInvolvement({
     });
   }, [courses]);
 
+  // --- SCORE CALCULATIONS ---
+  useEffect(() => {
+    const activeCourseIds = courses.map((c) => c.id);
+    const relevantMetrics = activeCourseIds
+      .map((id) => courseMetrics[id])
+      .filter(Boolean);
+
+    setScores((prev) => {
+      const next = { ...prev };
+
+      if (!manualSections.resultAnalysis) {
+        const total = relevantMetrics.reduce((sum, m) => {
+          const t = Number(m.totalStudents) || 1;
+          return (
+            sum +
+            (10 *
+              ((Number(m.studentsAbove60) || 0) * 5 +
+                (Number(m.students50to59) || 0) * 4 +
+                (Number(m.students40to49) || 0) * 3)) /
+            t
+          );
+        }, 0);
+        next.resultAnalysis = Math.min(PART_A_MAXES.resultAnalysis, total / Math.max(1, relevantMetrics.length));
+      }
+
+      if (!manualSections.courseOutcome) {
+        const total = relevantMetrics.reduce((sum, m) => {
+          return (
+            sum +
+            (Number(m.coAttainment) || 0) * 30 / 100 +
+            (m.timelySubmissionCO ? 20 : 0)
+          );
+        }, 0);
+        next.courseOutcome = Math.min(PART_A_MAXES.courseOutcome, total / Math.max(1, relevantMetrics.length));
+      }
+
+      if (!manualSections.eLearning) {
+        next.eLearning = Math.min(
+          PART_A_MAXES.eLearning,
+          (Number(globalMetrics.eLearningInstances) || 0) * 10
+        );
+      }
+
+      if (!manualSections.academicEngagement) {
+        const total = relevantMetrics.reduce((sum, m) => {
+          const enrolled = Number(m.totalEnrolledStudents) || 1;
+          return sum + 50 * ((Number(m.studentsPresent) || 0) / enrolled);
+        }, 0);
+        next.academicEngagement = Math.min(
+          PART_A_MAXES.academicEngagement,
+          total / Math.max(1, relevantMetrics.length)
+        );
+      }
+
+      if (!manualSections.teachingLoad) {
+        const minLoad =
+          userDesignation === "Professor" ? 12 : userDesignation === "Associate Professor" ? 14 : 16;
+        const avgLoad =
+          ((Number(globalMetrics.weeklyLoadSem1) || 0) +
+            (Number(globalMetrics.weeklyLoadSem2) || 0)) /
+          2;
+        const E = globalMetrics.adminResponsibility ? 2 : 0;
+        next.teachingLoad = Math.min(50, 50 * ((avgLoad + E) / minLoad));
+      }
+
+      if (!manualSections.projectsGuided) {
+        next.projectsGuided = Math.min(
+          PART_A_MAXES.projectsGuided,
+          (Number(globalMetrics.projectsGuided) || 0) * 20
+        );
+      }
+
+      if (!manualSections.studentFeedback) {
+        const total = relevantMetrics.reduce(
+          (sum, m) => sum + (Number(m.feedbackPercentage) || 0),
+          0
+        );
+        next.studentFeedback = Math.min(
+          PART_A_MAXES.studentFeedback,
+          total / Math.max(1, relevantMetrics.length)
+        );
+      }
+
+      if (!manualSections.ptgMeetings) {
+        next.ptgMeetings = Math.min(
+          PART_A_MAXES.ptgMeetings,
+          ((Number(globalMetrics.ptgMeetings) || 0) * 50) / 6
+        );
+      }
+
+      return next;
+    });
+  }, [courseMetrics, globalMetrics, manualSections, courses, userDesignation]);
+
+  // --- DERIVED TOTALS ---
+  const rawSum = Object.values(scores).reduce((a, b) => a + b, 0);
+  const factor = ROLE_FACTOR[userDesignation] ?? 1;
+  const maxScore = ROLE_MAX[userDesignation] ?? 300;
+  const finalScore = Math.min(maxScore, rawSum * factor).toFixed(1);
+
   // --- HELPERS ---
-  const handleCourseMetricChange = (courseId: string, field: keyof CourseData, value: string | boolean) => {
-    setCourseMetrics(prev => ({
+  const handleCourseMetricChange = (
+    courseId: string,
+    field: keyof CourseData,
+    value: string | boolean
+  ) => {
+    setCourseMetrics((prev) => ({
       ...prev,
-      [courseId]: { ...prev[courseId], [field]: value }
+      [courseId]: { ...prev[courseId], [field]: value },
     }));
   };
 
@@ -312,381 +445,382 @@ function PartAAcademicInvolvement({
     }));
   };
 
+  // Progress
+  const interactedCount = [
+    Object.values(courseMetrics).some((m) => m.totalStudents),
+    globalMetrics.eLearningInstances,
+    globalMetrics.weeklyLoadSem1,
+    globalMetrics.projectsGuided,
+    globalMetrics.ptgMeetings,
+  ].filter(Boolean).length;
+  const progressPercent = (interactedCount / 5) * 100;
+
+  // --- SUBMIT → PUT /appraisal/:userId/part-a ---
   const handleSubmit = async () => {
     setIsSubmitting(true);
     setSubmitError(null);
     try {
-      const activeCourseIds = courses.map(c => c.id);
-      const relevantCourseMetrics = activeCourseIds.map(id => ({ ...courseMetrics[id], code: courses.find(c => c.id === id)?.code, sem: courses.find(c => c.id === id)?.semester }));
+      const activeCourseIds = courses.map((c) => c.id);
 
-      const payload: any = {
-        isManualScoring: Object.values(manualSections).some(v => v), // Legacy bridge
-        1: {
-          courses: Object.fromEntries(relevantCourseMetrics.map(m => [m.code, {
-            studentsAbove60: Number(m.studentsAbove60) || 0,
-            students50to59: Number(m.students50to59) || 0,
-            students40to49: Number(m.students40to49) || 0,
-            totalStudents: Number(m.totalStudents) || 0,
-            marks: (10 * ((Number(m.studentsAbove60) || 0) * 5 + (Number(m.students50to59) || 0) * 4 + (Number(m.students40to49) || 0) * 3)) / (Number(m.totalStudents) || 1)
-          }])),
-          total_marks: scores.resultAnalysis
+      // Build the courses array matching ICourseMetric schema
+      const coursesPayload = activeCourseIds.map((id) => {
+        const m = courseMetrics[id] ?? {};
+        const c = courses.find((x) => x.id === id)!;
+        const above60 = Number(m.studentsAbove60) || 0;
+        const s50 = Number(m.students50to59) || 0;
+        const s40 = Number(m.students40to49) || 0;
+        const total = Number(m.totalStudents) || 1;
+        const coAtt = Number(m.coAttainment) || 0;
+        const present = Number(m.studentsPresent) || 0;
+        const enrolled = Number(m.totalEnrolledStudents) || 1;
+        const feedback = Number(m.feedbackPercentage) || 0;
+
+        return {
+          code: c.code ?? "",
+          semester: c.semester ?? "Sem I",
+          // Section 1 – Result Analysis
+          studentsAbove60: above60,
+          students50to59: s50,
+          students40to49: s40,
+          totalStudents: total,
+          resultMarks: Math.min(PART_A_MAXES.resultAnalysis, (10 * (above60 * 5 + s50 * 4 + s40 * 3)) / total),
+          // Section 2 – Course Outcome
+          coAttainment: coAtt,
+          timelySubmissionCO: m.timelySubmissionCO ?? false,
+          coMarks: Math.min(PART_A_MAXES.courseOutcome, coAtt * 30 / 100 + (m.timelySubmissionCO ? 20 : 0)),
+          // Section 4 – Academic Engagement
+          studentsPresent: present,
+          totalEnrolledStudents: enrolled,
+          engagementMarks: Math.min(PART_A_MAXES.academicEngagement, 50 * (present / enrolled)),
+          // Section 7 – Student Feedback
+          feedbackPercentage: feedback,
+          feedbackMarks: Math.min(PART_A_MAXES.studentFeedback, feedback),
+        };
+      });
+
+      // Shape must exactly match partA in the Mongoose schema
+      const payload = {
+        courses: coursesPayload,
+        eLearningInstances: Number(globalMetrics.eLearningInstances) || 0,
+        weeklyLoadSem1: Number(globalMetrics.weeklyLoadSem1) || 0,
+        weeklyLoadSem2: Number(globalMetrics.weeklyLoadSem2) || 0,
+        adminResponsibility: globalMetrics.adminResponsibility,
+        projectsGuided: Number(globalMetrics.projectsGuided) || 0,
+        ptgMeetings: Number(globalMetrics.ptgMeetings) || 0,
+        sectionMarks: {
+          resultAnalysis: scores.resultAnalysis,
+          courseOutcome: scores.courseOutcome,
+          eLearning: scores.eLearning,
+          academicEngagement: scores.academicEngagement,
+          teachingLoad: scores.teachingLoad,
+          projectsGuided: scores.projectsGuided,
+          studentFeedback: scores.studentFeedback,
+          ptgMeetings: scores.ptgMeetings,
         },
-        2: {
-          courses: Object.fromEntries(relevantCourseMetrics.map(m => [m.code, {
-            coAttainment: Number(m.coAttainment) || 0,
-            timelySubmissionCO: m.timelySubmissionCO,
-            semester: m.sem,
-            marks: (Number(m.coAttainment) || 0) * 30 / 100 + (m.timelySubmissionCO ? 20 : 0)
-          }])),
-          total_marks: scores.courseOutcome
-        },
-        3: {
-          elearningInstances: Number(globalMetrics.eLearningInstances) || 0,
-          total_marks: scores.eLearning
-        },
-        4: {
-          courses: Object.fromEntries(relevantCourseMetrics.map(m => [m.code, {
-            studentsPresent: Number(m.studentsPresent) || 0,
-            totalEnrolledStudents: Number(m.totalEnrolledStudents) || 0,
-            marks: 50 * ((Number(m.studentsPresent) || 0) / (Number(m.totalEnrolledStudents) || 1))
-          }])),
-          total_marks: scores.academicEngagement
-        },
-        5: {
-          weeklyLoadSem1: Number(globalMetrics.weeklyLoadSem1) || 0,
-          weeklyLoadSem2: Number(globalMetrics.weeklyLoadSem2) || 0,
-          adminResponsibility: globalMetrics.adminResponsibility ? 1 : 0,
-          cadre: userDesignation,
-          total_marks: scores.teachingLoad
-        },
-        6: {
-          projectsGuided: Number(globalMetrics.projectsGuided) || 0,
-          total_marks: scores.projectsGuided
-        },
-        7: {
-          courses: Object.fromEntries(relevantCourseMetrics.map(m => [m.code, {
-            feedbackPercentage: Number(m.feedbackPercentage) || 0,
-            marks: Number(m.feedbackPercentage) || 0
-          }])),
-          total_marks: scores.studentFeedback
-        },
-        8: {
-          ptgMeetings: Number(globalMetrics.ptgMeetings) || 0,
-          total_marks: scores.ptgMeetings
-        },
-        total_marks: finalScore
+        totalMarks: Number(finalScore),
       };
 
-      const res = await fetch(`${apiBase}/${department}/${userId}/A`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error("Save Failed");
+      await appraisalApi.updatePartA(userId, payload);
       alert("Performance data saved successfully!");
     } catch (e) {
-      setSubmitError((e as Error).message);
+      const err = e as AxiosError<{ message?: string }>;
+      setSubmitError(
+        err.response?.data?.message ?? err.message ?? "Save Failed"
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  // --- AUTOMATED CALCULATION LOGIC ---
-  useEffect(() => {
-    const activeCourseIds = courses.map(c => c.id);
-    const relevantCourseMetrics = activeCourseIds.map(id => courseMetrics[id]).filter(Boolean);
-
-    setScores(prevScores => {
-      const nextScores = { ...prevScores };
-
-      // A. Course-based Metrics
-      if (relevantCourseMetrics.length > 0) {
-        // 1. Result Analysis
-        if (!manualSections.resultAnalysis) {
-          let totalVal = 0;
-          relevantCourseMetrics.forEach(m => {
-            const above60 = Number(m.studentsAbove60) || 0;
-            const s50 = Number(m.students50to59) || 0;
-            const s40 = Number(m.students40to49) || 0;
-            const total = Number(m.totalStudents) || 1;
-            totalVal += (10 * (above60 * 5 + s50 * 4 + s40 * 3)) / total;
-          });
-          nextScores.resultAnalysis = totalVal / relevantCourseMetrics.length;
-        }
-
-        // 2. Course Outcome
-        if (!manualSections.courseOutcome) {
-          let totalVal = 0;
-          relevantCourseMetrics.forEach(m => {
-            const attainment = Number(m.coAttainment) || 0;
-            const bonus = m.timelySubmissionCO ? 20 : 0;
-            totalVal += (attainment * 30 / 100) + bonus;
-          });
-          nextScores.courseOutcome = totalVal / relevantCourseMetrics.length;
-        }
-
-        // 4. Academic Engagement
-        if (!manualSections.academicEngagement) {
-          let totalVal = 0;
-          relevantCourseMetrics.forEach(m => {
-            const present = Number(m.studentsPresent) || 0;
-            const total = Number(m.totalEnrolledStudents) || 1;
-            totalVal += 50 * (present / total);
-          });
-          nextScores.academicEngagement = totalVal / relevantCourseMetrics.length;
-        }
-
-        // 7. Student Feedback
-        if (!manualSections.studentFeedback) {
-          let totalVal = 0;
-          relevantCourseMetrics.forEach(m => {
-            totalVal += Number(m.feedbackPercentage) || 0;
-          });
-          nextScores.studentFeedback = totalVal / relevantCourseMetrics.length;
-        }
-      }
-
-      // B. Global Metrics
-
-      // 3. E-Learning
-      if (!manualSections.eLearning) {
-        nextScores.eLearning = Math.min(50, (Number(globalMetrics.eLearningInstances) || 0) * 10);
-      }
-
-      // 5. Teaching Load
-      if (!manualSections.teachingLoad) {
-        const loadSem1 = Number(globalMetrics.weeklyLoadSem1) || 0;
-        const loadSem2 = Number(globalMetrics.weeklyLoadSem2) || 0;
-        const avgLoad = (loadSem1 + loadSem2) / 2;
-        const e = globalMetrics.adminResponsibility ? 2 : 0;
-
-        let minLoad = 16;
-        if (userDesignation === "Professor") minLoad = 12;
-        else if (userDesignation === "Associate Professor") minLoad = 14;
-
-        nextScores.teachingLoad = Math.min(50, 50 * ((avgLoad + e) / minLoad));
-      }
-
-      // 6. Projects Guided
-      if (!manualSections.projectsGuided) {
-        nextScores.projectsGuided = Math.min(40, (Number(globalMetrics.projectsGuided) || 0) * 20);
-      }
-
-      // 8. PTG Meetings
-      if (!manualSections.ptgMeetings) {
-        nextScores.ptgMeetings = Math.min(50, (Number(globalMetrics.ptgMeetings) || 0) * 50 / 6);
-      }
-
-      return nextScores;
-    });
-  }, [courseMetrics, globalMetrics, manualSections, courses, userDesignation]);
-
-  const rawSum = Object.values(scores).reduce((a, b) => a + b, 0);
-  const factor = ROLE_FACTOR[userDesignation] ?? 1.0;
-  const maxScore = ROLE_MAX[userDesignation] ?? 440;
-  const finalScore = Math.round(Math.min(maxScore, rawSum * factor));
-
-  // Progress Calculation
-  const interactedCount = Object.values(scores).filter((v) => v > 0).length;
-  const totalFields = Object.keys(scores).length;
-  const progressPercent = (interactedCount / totalFields) * 100;
-
-  if (isLoading) return <Loader message="Loading Academic Performance..." />;
+  if (isLoading) return <Loader message="Loading academic data…" />;
 
   return (
-    <div className="max-w-4xl mx-auto py-8 space-y-6 text-[1.15rem]" style={{lineHeight: 1.7}}>
-      <CourseManagementHeader />
+    <div
+      className="max-w-4xl mx-auto py-8 space-y-6 text-[1.15rem]"
+      style={{ lineHeight: 1.7 }}
+    >
       <FormProgressBar progress={progressPercent} label="Part A Completion" />
+      <CourseManagementHeader />
 
-      <div className="flex items-center justify-between rounded-2xl border-2 border-indigo-200 bg-card px-7 py-5 shadow-md">
-        <span className="text-lg font-extrabold text-indigo-800 tracking-tight uppercase">
-          Part A: Academic Involvement
-        </span>
-        <div className="flex items-center gap-3">
-          <span className="text-base text-indigo-900 uppercase font-extrabold tracking-widest bg-indigo-50 px-3 py-1.5 rounded-lg">
-            Designation: {userDesignation}
-          </span>
-        </div>
-      </div>
+      {ACADEMIC_SECTIONS.map(({ title, field, formula }) => (
+        <SectionCard key={field} title={title}>
+          <div className="space-y-5">
+            {/* Guideline */}
+            <div className="p-4 rounded-xl bg-indigo-50 border-2 border-indigo-100 shadow-sm">
+              <p className="text-base font-extrabold text-indigo-700 uppercase tracking-widest mb-2 opacity-90">
+                Computation Guidelines
+              </p>
+              <p className="text-lg text-indigo-900 leading-relaxed italic font-semibold">
+                {formula}
+              </p>
+            </div>
 
-      <div className="space-y-6">
-        {ACADEMIC_SECTIONS.map(({ title, field, formula }) => (
-          <SectionCard
-            key={field}
-            title={title}
-            actions={
-              <button
-                type="button"
-                aria-pressed={manualSections[field]}
-                aria-label={manualSections[field] ? `Manual entry enabled for ${title}` : `Enable manual entry for ${title}`}
-                onClick={() => toggleManual(field)}
-                className={`px-4 py-2 rounded-lg text-xs uppercase tracking-wider font-extrabold border-2 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-400 focus:border-indigo-700 ${manualSections[field]
-                  ? "bg-indigo-700 text-white border-indigo-700 shadow-md"
-                  : "bg-white text-indigo-700 border-indigo-300 hover:border-indigo-700 hover:text-indigo-900"
-                  }`}
-              >
-                {manualSections[field] ? "Manual Entry On" : "Enable Manual Entry"}
-              </button>
-            }
-          >
-            <div className="space-y-5">
-              <div className="p-4 rounded-xl bg-indigo-50 border-2 border-indigo-100 shadow-sm">
-                <p className="text-xs font-extrabold text-indigo-700 uppercase tracking-widest mb-1 opacity-80">
-                  Computation Guidelines
-                </p>
-                <p className="text-base text-indigo-900 leading-relaxed italic font-semibold">
-                  {formula}
-                </p>
-              </div>
+            {/* Manual override toggle */}
+            <label className="flex items-center gap-3 cursor-pointer w-fit">
+              <input
+                type="checkbox"
+                checked={manualSections[field]}
+                onChange={() => toggleManual(field)}
+                className="w-5 h-5 rounded border-indigo-300 text-indigo-700 focus:ring-indigo-400"
+              />
+              <span className="text-base font-bold text-indigo-800 uppercase tracking-tight">
+                Enter marks manually
+              </span>
+            </label>
 
-              {/* Data Entry Fields */}
-              {!manualSections[field] && (
-                <div className="space-y-5">
-                  {/* Result Analysis Per Subject */}
-                  {field === "resultAnalysis" && courses.map(c => (
-                    <div key={c.id} className="p-5 rounded-xl border-2 border-indigo-100 bg-indigo-50 space-y-5">
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="text-xs font-black text-indigo-800 uppercase tracking-widest bg-indigo-100 px-3 py-1 rounded border border-indigo-200">
-                          Subject: {c.code || "Unnamed"}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-5">
-                        <MetricInputField label="Students > 60%" value={courseMetrics[c.id]?.studentsAbove60} onChange={(v) => handleCourseMetricChange(c.id, "studentsAbove60", v)} placeholder="Enter number of students" />
-                        <MetricInputField label="Students 50-59%" value={courseMetrics[c.id]?.students50to59} onChange={(v) => handleCourseMetricChange(c.id, "students50to59", v)} placeholder="Enter number of students" />
-                        <MetricInputField label="Students 40-49%" value={courseMetrics[c.id]?.students40to49} onChange={(v) => handleCourseMetricChange(c.id, "students40to49", v)} placeholder="Enter number of students" />
-                        <MetricInputField label="Total Students" value={courseMetrics[c.id]?.totalStudents} onChange={(v) => handleCourseMetricChange(c.id, "totalStudents", v)} placeholder="Enter total number of students" />
-                      </div>
+            {/* Per-course inputs */}
+            {(field === "resultAnalysis" ||
+              field === "courseOutcome" ||
+              field === "academicEngagement") &&
+              courses.map((c) => (
+                <div
+                  key={c.id}
+                  className="p-5 rounded-xl border-2 border-indigo-100 bg-indigo-50 space-y-4"
+                >
+                  <span className="text-base font-black text-indigo-800 uppercase tracking-widest bg-indigo-100 px-3 py-1 rounded border border-indigo-200">
+                    Subject: {c.code || "Unnamed"}
+                  </span>
+
+                  {field === "resultAnalysis" && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <MetricInputField
+                        label="Students > 60%"
+                        value={courseMetrics[c.id]?.studentsAbove60}
+                        onChange={(v) =>
+                          handleCourseMetricChange(c.id, "studentsAbove60", v)
+                        }
+                      />
+                      <MetricInputField
+                        label="Students 50-59%"
+                        value={courseMetrics[c.id]?.students50to59}
+                        onChange={(v) =>
+                          handleCourseMetricChange(c.id, "students50to59", v)
+                        }
+                      />
+                      <MetricInputField
+                        label="Students 40-49%"
+                        value={courseMetrics[c.id]?.students40to49}
+                        onChange={(v) =>
+                          handleCourseMetricChange(c.id, "students40to49", v)
+                        }
+                      />
+                      <MetricInputField
+                        label="Total Students"
+                        value={courseMetrics[c.id]?.totalStudents}
+                        onChange={(v) =>
+                          handleCourseMetricChange(c.id, "totalStudents", v)
+                        }
+                      />
                     </div>
-                  ))}
-
-                  {/* Course Outcome Analysis Per Subject */}
-                  {field === "courseOutcome" && courses.map(c => (
-                    <div key={c.id} className="p-5 rounded-xl border-2 border-indigo-100 bg-indigo-50 space-y-5">
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="text-base font-black text-indigo-800 uppercase tracking-widest bg-indigo-100 px-3 py-1 rounded border border-indigo-200">
-                          Subject: {c.code || "Unnamed"} ({c.semester})
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-5">
-                        <MetricInputField label="Avg CO Attainment (%)" value={courseMetrics[c.id]?.coAttainment} onChange={(v) => handleCourseMetricChange(c.id, "coAttainment", v)} placeholder="Enter CO attainment percentage" />
-                        <div className="flex flex-col gap-2 justify-center">
-                          <label className="text-base uppercase font-extrabold text-indigo-900 tracking-wider">Timely Submission</label>
-                          <label className="flex items-center gap-3 cursor-pointer group">
-                            <input type="checkbox" checked={courseMetrics[c.id]?.timelySubmissionCO} onChange={(e) => handleCourseMetricChange(c.id, "timelySubmissionCO", e.target.checked)} className="w-5 h-5 rounded border-indigo-300 text-indigo-700 focus:ring-indigo-400" aria-label="Timely Submission" />
-                            <span className="text-base font-semibold text-indigo-800 group-hover:text-indigo-900 transition-colors">Submitted on time</span>
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-
-                  {/* E-Learning Global */}
-                  {field === "eLearning" && (
-                    <MetricInputField label="Number of E-Learning Content Instances" value={globalMetrics.eLearningInstances} onChange={(v) => setGlobalMetrics(p => ({ ...p, eLearningInstances: v }))} className="max-w-xs" placeholder="Enter number of instances" />
                   )}
 
-                  {/* Academic Engagement Per Subject */}
-                  {field === "academicEngagement" && courses.map(c => (
-                    <div key={c.id} className="p-5 rounded-xl border-2 border-indigo-100 bg-indigo-50 space-y-5">
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="text-base font-black text-indigo-800 uppercase tracking-widest bg-indigo-100 px-3 py-1 rounded border border-indigo-200">
-                          Subject: {c.code || "Unnamed"}
+                  {field === "courseOutcome" && (
+                    <div className="space-y-4">
+                      <MetricInputField
+                        label="CO Attainment (%)"
+                        value={courseMetrics[c.id]?.coAttainment}
+                        onChange={(v) =>
+                          handleCourseMetricChange(c.id, "coAttainment", v)
+                        }
+                      />
+                      <label className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={
+                            courseMetrics[c.id]?.timelySubmissionCO ?? false
+                          }
+                          onChange={(e) =>
+                            handleCourseMetricChange(
+                              c.id,
+                              "timelySubmissionCO",
+                              e.target.checked
+                            )
+                          }
+                          className="w-5 h-5 rounded border-indigo-300 text-indigo-700"
+                        />
+                        <span className="text-base font-bold text-indigo-900 uppercase">
+                          Timely CO Submission
                         </span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-5">
-                        <MetricInputField label="Students Present" value={courseMetrics[c.id]?.studentsPresent} onChange={(v) => handleCourseMetricChange(c.id, "studentsPresent", v)} placeholder="Enter number of students present" />
-                        <MetricInputField label="Total Enrolled Students" value={courseMetrics[c.id]?.totalEnrolledStudents} onChange={(v) => handleCourseMetricChange(c.id, "totalEnrolledStudents", v)} placeholder="Enter total enrolled students" />
-                      </div>
-                    </div>
-                  ))}
-
-                  {/* Teaching Load Global */}
-                  {field === "teachingLoad" && (
-                    <div className="space-y-5 max-w-lg">
-                      <div className="grid grid-cols-2 gap-5">
-                        <MetricInputField label="Weekly Load Sem I" value={globalMetrics.weeklyLoadSem1} onChange={(v) => setGlobalMetrics(p => ({ ...p, weeklyLoadSem1: v }))} placeholder="e.g. 18 hours/week" />
-                        <MetricInputField label="Weekly Load Sem II" value={globalMetrics.weeklyLoadSem2} onChange={(v) => setGlobalMetrics(p => ({ ...p, weeklyLoadSem2: v }))} placeholder="e.g. 16 hours/week" />
-                      </div>
-                      <label className="flex items-center gap-4 p-4 rounded-xl border-2 border-indigo-100 bg-indigo-50 cursor-pointer group">
-                        <input type="checkbox" checked={globalMetrics.adminResponsibility} onChange={(e) => setGlobalMetrics(p => ({ ...p, adminResponsibility: e.target.checked }))} className="w-6 h-6 rounded border-indigo-300 text-indigo-700 focus:ring-indigo-400" aria-label="Admin Responsibility" />
-                        <div>
-                          <p className="text-base font-extrabold text-indigo-900 group-hover:text-indigo-700 transition-colors uppercase tracking-tight">Admin Responsibility</p>
-                          <p className="text-xs text-indigo-700 opacity-90">(Held Dean/HOD/HOD and HOD roles)</p>
-                        </div>
                       </label>
                     </div>
                   )}
 
-                  {/* Projects Guided Global */}
-                  {field === "projectsGuided" && (
-                    <MetricInputField label="Number of Projects/Dissertations Guided" value={globalMetrics.projectsGuided} onChange={(v) => setGlobalMetrics(p => ({ ...p, projectsGuided: v }))} className="max-w-xs" placeholder="Enter count" />
-                  )}
-
-                  {/* Student Feedback Per Subject */}
-                  {field === "studentFeedback" && courses.map(c => (
-                    <div key={c.id} className="p-5 rounded-xl border-2 border-indigo-100 bg-indigo-50 flex items-center justify-between">
-                      <span className="text-base font-black text-indigo-800 uppercase tracking-widest bg-indigo-100 px-3 py-1 rounded border border-indigo-200">
-                        Subject: {c.code || "Unnamed"}
-                      </span>
-                      <MetricInputField label="Feedback (%)" value={courseMetrics[c.id]?.feedbackPercentage} onChange={(v) => handleCourseMetricChange(c.id, "feedbackPercentage", v)} className="w-40" placeholder="Enter feedback %" />
+                  {field === "academicEngagement" && (
+                    <div className="grid grid-cols-2 gap-4">
+                      <MetricInputField
+                        label="Students Present"
+                        value={courseMetrics[c.id]?.studentsPresent}
+                        onChange={(v) =>
+                          handleCourseMetricChange(c.id, "studentsPresent", v)
+                        }
+                      />
+                      <MetricInputField
+                        label="Total Enrolled Students"
+                        value={courseMetrics[c.id]?.totalEnrolledStudents}
+                        onChange={(v) =>
+                          handleCourseMetricChange(
+                            c.id,
+                            "totalEnrolledStudents",
+                            v
+                          )
+                        }
+                      />
                     </div>
-                  ))}
-
-                  {/* PTG Meetings Global */}
-                  {field === "ptgMeetings" && (
-                    <MetricInputField label="Number of PTG Meetings Conducted" value={globalMetrics.ptgMeetings} onChange={(v) => setGlobalMetrics(p => ({ ...p, ptgMeetings: v }))} className="max-w-xs" placeholder="Enter number of meetings" />
                   )}
                 </div>
-              )}
+              ))}
 
-              {/* Parameters & Marks Summary */}
-              <div className="flex items-center justify-between px-2 pt-3 border-t-2 border-indigo-100">
-                <span className="text-indigo-900 text-lg font-black uppercase tracking-widest opacity-90">
-                  Calculated Mark (Section Total)
-                </span>
-                {manualSections[field] ? (
-                  <div className="flex items-center gap-3 shrink-0">
-                    <input
-                      type="number"
-                      min={0}
-                      max={PART_A_MAXES[field]}
-                      aria-label={`Manual score for ${title}`}
-                      onWheel={(e) => e.currentTarget.blur()}
-                      onKeyDown={(e) => e.key === "-" && e.preventDefault()}
-                      value={scores[field] === 0 ? "" : scores[field]}
-                      onChange={(e) => setScore(field, Number(e.target.value))}
-                      placeholder="0"
-                      className="w-24 rounded-lg border-2 border-indigo-300 bg-white px-4 py-2 text-lg text-right font-black text-indigo-900 focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-700 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-sm placeholder:text-xs placeholder:font-normal placeholder:text-slate-900"
-                    />
-                    <span className="text-base font-bold text-indigo-700 tabular-nums uppercase">
-                      / {PART_A_MAXES[field]}
-                    </span>
+            {/* Global inputs */}
+            {field === "eLearning" && (
+              <MetricInputField
+                label="E-Learning Instances Developed"
+                value={globalMetrics.eLearningInstances}
+                onChange={(v) =>
+                  setGlobalMetrics((p) => ({ ...p, eLearningInstances: v }))
+                }
+                className="max-w-xs"
+                placeholder="Enter count"
+              />
+            )}
+
+            {field === "teachingLoad" && (
+              <div className="space-y-5 max-w-lg">
+                <div className="grid grid-cols-2 gap-5">
+                  <MetricInputField
+                    label="Weekly Load Sem I"
+                    value={globalMetrics.weeklyLoadSem1}
+                    onChange={(v) =>
+                      setGlobalMetrics((p) => ({ ...p, weeklyLoadSem1: v }))
+                    }
+                    placeholder="e.g. 18 hours/week"
+                  />
+                  <MetricInputField
+                    label="Weekly Load Sem II"
+                    value={globalMetrics.weeklyLoadSem2}
+                    onChange={(v) =>
+                      setGlobalMetrics((p) => ({ ...p, weeklyLoadSem2: v }))
+                    }
+                    placeholder="e.g. 16 hours/week"
+                  />
+                </div>
+                <label className="flex items-center gap-4 p-4 rounded-xl border-2 border-indigo-100 bg-indigo-50 cursor-pointer group">
+                  <input
+                    type="checkbox"
+                    checked={globalMetrics.adminResponsibility}
+                    onChange={(e) =>
+                      setGlobalMetrics((p) => ({
+                        ...p,
+                        adminResponsibility: e.target.checked,
+                      }))
+                    }
+                    className="w-6 h-6 rounded border-indigo-300 text-indigo-700 focus:ring-indigo-400"
+                    aria-label="Admin Responsibility"
+                  />
+                  <div>
+                    <p className="text-base font-extrabold text-indigo-900 group-hover:text-indigo-700 transition-colors uppercase tracking-tight">
+                      Admin Responsibility
+                    </p>
+                    <p className="text-xs text-indigo-700 opacity-90">
+                      (Held Dean/HOD/HOD and HOD roles)
+                    </p>
                   </div>
-                ) : (
-                  <span className="font-black text-indigo-900 text-lg tabular-nums">
-                    {scores[field].toFixed(1)}
-                    <span className="font-bold text-indigo-700 text-lg uppercase ml-2 tracking-tighter opacity-80">
-                      / {PART_A_MAXES[field]}
-                    </span>
-                  </span>
-                )}
+                </label>
               </div>
-              {/* Score After Verification — hidden until enabled by verification team */}
-              <div className="hidden">
-                <div className="flex items-center justify-between px-2 pt-2 border-t border-green-100">
-                  <span className="text-green-700 text-sm font-black uppercase tracking-widest">
-                    Score After Verification
+            )}
+
+            {field === "projectsGuided" && (
+              <MetricInputField
+                label="Number of Projects/Dissertations Guided"
+                value={globalMetrics.projectsGuided}
+                onChange={(v) =>
+                  setGlobalMetrics((p) => ({ ...p, projectsGuided: v }))
+                }
+                className="max-w-xs"
+                placeholder="Enter count"
+              />
+            )}
+
+            {field === "studentFeedback" &&
+              courses.map((c) => (
+                <div
+                  key={c.id}
+                  className="p-5 rounded-xl border-2 border-indigo-100 bg-indigo-50 flex items-center justify-between"
+                >
+                  <span className="text-base font-black text-indigo-800 uppercase tracking-widest bg-indigo-100 px-3 py-1 rounded border border-indigo-200">
+                    Subject: {c.code || "Unnamed"}
                   </span>
-                  <span className="font-black text-green-700 text-sm tabular-nums px-3 py-1 rounded border border-green-200 bg-green-50">
-                    Pending
+                  <MetricInputField
+                    label="Feedback (%)"
+                    value={courseMetrics[c.id]?.feedbackPercentage}
+                    onChange={(v) =>
+                      handleCourseMetricChange(c.id, "feedbackPercentage", v)
+                    }
+                    className="w-40"
+                    placeholder="Enter feedback %"
+                  />
+                </div>
+              ))}
+
+            {field === "ptgMeetings" && (
+              <MetricInputField
+                label="Number of PTG Meetings Conducted"
+                value={globalMetrics.ptgMeetings}
+                onChange={(v) =>
+                  setGlobalMetrics((p) => ({ ...p, ptgMeetings: v }))
+                }
+                className="max-w-xs"
+                placeholder="Enter number of meetings"
+              />
+            )}
+
+            {/* Section score */}
+            <div className="flex items-center justify-between px-2 pt-3 border-t-2 border-indigo-100">
+              <span className="text-indigo-900 text-lg font-black uppercase tracking-widest opacity-90">
+                Calculated Mark (Section Total)
+              </span>
+              {manualSections[field] ? (
+                <div className="flex items-center gap-3 shrink-0">
+                  <input
+                    type="number"
+                    min={0}
+                    max={PART_A_MAXES[field]}
+                    aria-label={`Manual score for ${title}`}
+                    onWheel={(e) => e.currentTarget.blur()}
+                    onKeyDown={(e) => e.key === "-" && e.preventDefault()}
+                    value={scores[field] === 0 ? "" : scores[field]}
+                    onChange={(e) => setScore(field, Number(e.target.value))}
+                    placeholder="0"
+                    className="w-24 rounded-lg border-2 border-indigo-300 bg-white px-4 py-2 text-lg text-right font-black text-indigo-900 focus:outline-none focus:ring-4 focus:ring-indigo-300 focus:border-indigo-700 transition [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none shadow-sm"
+                  />
+                  <span className="text-base font-bold text-indigo-700 tabular-nums uppercase">
+                    / {PART_A_MAXES[field]}
                   </span>
                 </div>
+              ) : (
+                <span className="font-black text-indigo-900 text-lg tabular-nums">
+                  {scores[field].toFixed(1)}
+                  <span className="font-bold text-indigo-700 text-lg uppercase ml-2 tracking-tighter opacity-80">
+                    / {PART_A_MAXES[field]}
+                  </span>
+                </span>
+              )}
+            </div>
+            {/* Score After Verification — hidden until enabled */}
+            <div className="hidden">
+              <div className="flex items-center justify-between px-2 pt-2 border-t border-green-100">
+                <span className="text-green-700 text-sm font-black uppercase tracking-widest">
+                  Score After Verification
+                </span>
+                <span className="font-black text-green-700 text-sm tabular-nums px-3 py-1 rounded border border-green-200 bg-green-50">
+                  Pending
+                </span>
               </div>
             </div>
-          </SectionCard>
-        ))}
-      </div>
+          </div>
+        </SectionCard>
+      ))}
 
+      {/* Final Score Table */}
       <SectionCard title="Final Score Calculation">
         <div className="overflow-hidden rounded-xl border-2 border-indigo-200">
           <table className="min-w-full divide-y divide-indigo-200 text-base">
@@ -744,7 +878,11 @@ function PartAAcademicInvolvement({
       </SectionCard>
 
       <div className="flex flex-col items-end gap-3 pt-3">
-        {submitError && <p className="text-base font-extrabold text-destructive uppercase tracking-tight">Error: {submitError}</p>}
+        {submitError && (
+          <p className="text-base font-extrabold text-destructive uppercase tracking-tight">
+            Error: {submitError}
+          </p>
+        )}
         <Button
           onClick={handleSubmit}
           disabled={isSubmitting}
@@ -756,12 +894,13 @@ function PartAAcademicInvolvement({
               <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
               Saving...
             </div>
-          ) : "Save Performance"}
+          ) : (
+            "Save Performance"
+          )}
         </Button>
       </div>
     </div>
   );
 }
-
 
 export default PartAAcademicInvolvement;

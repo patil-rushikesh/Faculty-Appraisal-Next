@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server"
+import axios from "axios"
 
 export async function GET(req: Request) {
   try {
@@ -11,16 +12,15 @@ export async function GET(req: Request) {
       )
     }
 
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/admin/faculties`, {
-      method: "GET",
+    const res = await axios.get(`${process.env.NEXT_PUBLIC_BACKEND_URL}/admin/faculties`, {
       headers: {
         "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json",
       },
+      validateStatus: () => true,
     })
 
-    const data = await res.json()
-    return NextResponse.json(data, { status: res.status })
+    return NextResponse.json(res.data, { status: res.status })
   } catch (error) {
     console.error("Faculty API Error:", error)
     return NextResponse.json(
@@ -43,17 +43,16 @@ export async function DELETE(req: Request) {
 
     const body = await req.json()
     
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/admin/delete-user`, {
-      method: "DELETE",
+    const res = await axios.delete(`${process.env.NEXT_PUBLIC_BACKEND_URL}/admin/delete-user`, {
       headers: {
         "Authorization": `Bearer ${token}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(body),
+      data: body,
+      validateStatus: () => true,
     })
 
-    const data = await res.json()
-    return NextResponse.json(data, { status: res.status })
+    return NextResponse.json(res.data, { status: res.status })
   } catch (error) {
     console.error("Delete Faculty API Error:", error)
     return NextResponse.json(

@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { tokenManager } from "@/lib/api-client";
+import axios from "axios";
 import { Badge } from "@/components/ui/badge";
 
 interface Faculty {
@@ -88,13 +89,14 @@ export default function AssignDeanToDepartmentPage() {
         headers["Authorization"] = `Bearer ${token}`;
       }
 
-      const response = await fetch("/api/all-faculties", {
+      const response = await axios.get("/api/all-faculties", {
         headers,
-        credentials: "include",
+        withCredentials: true,
+        validateStatus: () => true,
       });
 
-      if (!response.ok) throw new Error("Failed to fetch faculty data");
-      const data = await response.json();
+      if (response.status < 200 || response.status >= 300) throw new Error("Failed to fetch faculty data");
+      const data = response.data;
 
       const facultyList = data.data || [];
       const deanFaculty = facultyList.filter(
@@ -129,17 +131,17 @@ export default function AssignDeanToDepartmentPage() {
             headers["Authorization"] = `Bearer ${token}`;
           }
 
-          const response = await fetch(
+          const response = await axios.get(
             `/api/interaction-deans/${department.value}`,
             {
               headers,
-              credentials: "include",
+              withCredentials: true,
+              validateStatus: () => true,
             }
           );
 
-          if (response.ok) {
-            const data = await response.json();
-            deansData[department.value] = data;
+          if (response.status >= 200 && response.status < 300) {
+            deansData[department.value] = response.data;
           }
         } catch (error) {
           console.error(
@@ -241,21 +243,19 @@ export default function AssignDeanToDepartmentPage() {
         headers["Authorization"] = `Bearer ${token}`;
       }
 
-      const response = await fetch(
+      const response = await axios.post(
         `/api/interaction-deans/${selectedDepartment}`,
+        { dean_ids: deanIds },
         {
-          method: "POST",
           headers,
-          credentials: "include",
-          body: JSON.stringify({
-            dean_ids: deanIds,
-          }),
+          withCredentials: true,
+          validateStatus: () => true,
         }
       );
 
-      const data = await response.json();
+      const data = response.data;
 
-      if (!response.ok) {
+      if (response.status < 200 || response.status >= 300) {
         throw new Error(
           data.error || "Failed to assign interaction deans to department"
         );

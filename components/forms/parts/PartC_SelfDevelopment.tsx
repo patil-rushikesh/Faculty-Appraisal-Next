@@ -20,6 +20,16 @@ const FORMULAS = {
   phdGuided: "Marks: Awarded=50, Thesis Submitted=25, Guiding=10 (No limit)",
 };
 
+// --- SECTION MANDATORY CONFIG ---
+// Defines which sections of Part C are mandatory for form submission.
+// Qualification status must be declared; training/PhD sections are optional.
+const SECTION_CONFIG = [
+  { name: "Qualification (PhD Status)", key: "qualification" as const, mandatory: true },
+  { name: "Training Programs Attended", key: "trainingAttended" as const, mandatory: false },
+  { name: "Training Programs Organized", key: "trainingOrganized" as const, mandatory: false },
+  { name: "PhD Guided", key: "phdGuided" as const, mandatory: false },
+];
+
 // --- TYPES ---
 interface SelfDevData {
   pdfCompleted: boolean;
@@ -410,3 +420,4 @@ function PartCSelfDevelopment({ userId, userDesignation }: PartCSelfDevelopmentP
 }
 
 export default PartCSelfDevelopment;
+

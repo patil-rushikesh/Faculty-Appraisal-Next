@@ -28,6 +28,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/app/AuthProvider";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 import { DEPARTMENTS, ROLES } from "@/lib/constants";
 
 interface User {
@@ -59,16 +60,16 @@ export default function FacultyListPage() {
     const getUsers = async () => {
       setLoading(true);
       try {
-        const res = await fetch(
+        const { data, status } = await axios.get(
           `/api/admin/faculty`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
+            validateStatus: () => true,
           },
         );
-        if (res.ok) {
-          const data = await res.json();
+        if (status >= 200 && status < 300) {
           setUsers(data);
         } else {
           toast({
@@ -105,18 +106,18 @@ export default function FacultyListPage() {
 
     setIsDeleting(true);
     try {
-      const res = await fetch(
+      const { status: delStatus } = await axios.delete(
         `/api/admin/faculty`,
         {
-          method: "DELETE",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ userId: userToDelete.userId }),
+          data: { userId: userToDelete.userId },
+          validateStatus: () => true,
         },
       );
-      if (res.ok) {
+      if (delStatus >= 200 && delStatus < 300) {
         setUsers((prev) => prev.filter((u) => u.userId !== userToDelete.userId));
         toast({
           title: "Success",

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import axios from "axios";
 import { Button } from "@/components/ui/button";
 import { ROLE_FACTOR, ROLE_MAX, PART_A_MAXES, PartAScoreKey } from "@/lib/forms/constants";
 import { DesignationValue } from "@/lib/constants";
@@ -59,6 +60,21 @@ const ACADEMIC_SECTIONS: {
       formula: "Marks = (Meetings * 50) / 6 [Max 50]",
     },
   ];
+
+// --- SECTION MANDATORY CONFIG ---
+// Defines which sections of Part A are mandatory for form submission.
+// If a mandatory section has zero score (indicating no data was entered),
+// the form will not be submitted until it is filled.
+const SECTION_CONFIG: { name: string; field: PartAScoreKey; mandatory: boolean }[] = [
+  { name: "Result Analysis", field: "resultAnalysis", mandatory: true },
+  { name: "Course Outcome Analysis", field: "courseOutcome", mandatory: true },
+  { name: "E-Learning Content Development", field: "eLearning", mandatory: false },
+  { name: "Academic Engagement", field: "academicEngagement", mandatory: true },
+  { name: "Teaching Load", field: "teachingLoad", mandatory: true },
+  { name: "UG Projects / PG Dissertations Guided", field: "projectsGuided", mandatory: false },
+  { name: "Feedback of Faculty by Student", field: "studentFeedback", mandatory: true },
+  { name: "Guardian / PTG Meetings", field: "ptgMeetings", mandatory: false },
+];
 
 // --- TYPES ---
 interface CourseData {
@@ -166,7 +182,7 @@ function PartAAcademicInvolvement({
     eLearningInstances: "",
     weeklyLoadSem1: "",
     weeklyLoadSem2: "",
-    adminResponsibility: false,
+    phdScholar: false,
     projectsGuided: "",
     ptgMeetings: "",
   });
@@ -202,43 +218,45 @@ function PartAAcademicInvolvement({
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const resp = await appraisalApi.getAppraisal(userId);
-        // Backend wraps: { success, data: IFacultyAppraisal, message }
-        const { data } = resp;
-        const partA = data?.data?.partA;
-        if (!partA) return;
+        const res = await fetch(`${apiBase}/${department}/${userId}/A`);
+        if (res.ok) {
+          const data = await res.json();
 
-        // Prefer existing local draft data when available
-        const saved = localStorage.getItem(STORAGE_KEY);
-        if (saved) {
-          const parsed = JSON.parse(saved);
-          if (
-            Object.keys(parsed.courseMetrics ?? {}).length > 0 ||
-            parsed.globalMetrics?.eLearningInstances
-          ) {
-            return;
+          // Check if we have local data already. If we do, we might want to be careful.
+          // For now, let's merge or only load if local is empty.
+          const saved = localStorage.getItem(STORAGE_KEY);
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            // If there's non-empty local data, we prefer it as the active draft
+            if (Object.keys(parsed.courseMetrics || {}).length > 0 || parsed.globalMetrics?.eLearningInstances) {
+              setIsLoading(false);
+              return;
+            }
           }
-        }
 
-        // ── Map backend schema fields → local shapes ───────────────────────
-        const newManualSections: Record<PartAScoreKey, boolean> = {
-          resultAnalysis: false, courseOutcome: false, eLearning: false,
-          academicEngagement: false, teachingLoad: false, projectsGuided: false,
-          studentFeedback: false, ptgMeetings: false,
-        };
+          // 1. Manual scoring status
+          if (data.isManualScoring) {
+            const ms: any = {};
+            ACADEMIC_SECTIONS.forEach((s) => {
+              ms[s.field] = true;
+            });
+            setManualSections(ms);
+          }
 
-        // Read from schema fields: eLearningInstances, weeklyLoadSem1, etc.
-        const newGlobalMetrics = {
-          eLearningInstances: (partA.eLearningInstances ?? 0).toString(),
-          weeklyLoadSem1: (partA.weeklyLoadSem1 ?? 0).toString(),
-          weeklyLoadSem2: (partA.weeklyLoadSem2 ?? 0).toString(),
-          adminResponsibility: partA.adminResponsibility ?? false,
-          projectsGuided: (partA.projectsGuided ?? 0).toString(),
-          ptgMeetings: (partA.ptgMeetings ?? 0).toString(),
-        };
+          // 2. Load global metrics
+          setGlobalMetrics({
+            eLearningInstances: data["3"]?.elearningInstances?.toString() || "",
+            weeklyLoadSem1: data["5"]?.weeklyLoadSem1?.toString() || "",
+            weeklyLoadSem2: data["5"]?.weeklyLoadSem2?.toString() || "",
+            adminResponsibility: data["5"]?.adminResponsibility === 1,
+            projectsGuided: data["6"]?.projectsGuided?.toString() || "",
+            ptgMeetings: data["8"]?.ptgMeetings?.toString() || "",
+          });
 
-        let newCourseMetrics: Record<string, CourseData> = {};
-        const loadedCourses: { id: string; code: string; semester: "Sem I" | "Sem II" }[] = [];
+          // 3. Load course metrics
+          if (data["1"]?.courses) {
+            const newMetrics: Record<string, CourseData> = {};
+            const loadedCourses: any[] = [];
 
         // partA.courses is an ICourseMetric[] array
         if (Array.isArray(partA.courses)) {
@@ -457,70 +475,86 @@ function PartAAcademicInvolvement({
 
   // --- SUBMIT → PUT /appraisal/:userId/part-a ---
   const handleSubmit = async () => {
+    // Validate mandatory sections before submission
+    const unfilledMandatory = SECTION_CONFIG.filter(
+      (s) => s.mandatory && scores[s.field] === 0
+    );
+    if (unfilledMandatory.length > 0) {
+      setSubmitError(
+        `Please fill the following mandatory sections before saving: ${unfilledMandatory.map((s) => s.name).join(", ")}`
+      );
+      return;
+    }
     setIsSubmitting(true);
     setSubmitError(null);
     try {
-      const activeCourseIds = courses.map((c) => c.id);
+      const activeCourseIds = courses.map(c => c.id);
+      const relevantCourseMetrics = activeCourseIds.map(id => ({ ...courseMetrics[id], code: courses.find(c => c.id === id)?.code, sem: courses.find(c => c.id === id)?.semester }));
 
-      // Build the courses array matching ICourseMetric schema
-      const coursesPayload = activeCourseIds.map((id) => {
-        const m = courseMetrics[id] ?? {};
-        const c = courses.find((x) => x.id === id)!;
-        const above60 = Number(m.studentsAbove60) || 0;
-        const s50 = Number(m.students50to59) || 0;
-        const s40 = Number(m.students40to49) || 0;
-        const total = Number(m.totalStudents) || 1;
-        const coAtt = Number(m.coAttainment) || 0;
-        const present = Number(m.studentsPresent) || 0;
-        const enrolled = Number(m.totalEnrolledStudents) || 1;
-        const feedback = Number(m.feedbackPercentage) || 0;
-
-        return {
-          code: c.code ?? "",
-          semester: c.semester ?? "Sem I",
-          // Section 1 – Result Analysis
-          studentsAbove60: above60,
-          students50to59: s50,
-          students40to49: s40,
-          totalStudents: total,
-          resultMarks: Math.min(PART_A_MAXES.resultAnalysis, (10 * (above60 * 5 + s50 * 4 + s40 * 3)) / total),
-          // Section 2 – Course Outcome
-          coAttainment: coAtt,
-          timelySubmissionCO: m.timelySubmissionCO ?? false,
-          coMarks: Math.min(PART_A_MAXES.courseOutcome, coAtt * 30 / 100 + (m.timelySubmissionCO ? 20 : 0)),
-          // Section 4 – Academic Engagement
-          studentsPresent: present,
-          totalEnrolledStudents: enrolled,
-          engagementMarks: Math.min(PART_A_MAXES.academicEngagement, 50 * (present / enrolled)),
-          // Section 7 – Student Feedback
-          feedbackPercentage: feedback,
-          feedbackMarks: Math.min(PART_A_MAXES.studentFeedback, feedback),
-        };
-      });
-
-      // Shape must exactly match partA in the Mongoose schema
-      const payload = {
-        courses: coursesPayload,
-        eLearningInstances: Number(globalMetrics.eLearningInstances) || 0,
-        weeklyLoadSem1: Number(globalMetrics.weeklyLoadSem1) || 0,
-        weeklyLoadSem2: Number(globalMetrics.weeklyLoadSem2) || 0,
-        adminResponsibility: globalMetrics.adminResponsibility,
-        projectsGuided: Number(globalMetrics.projectsGuided) || 0,
-        ptgMeetings: Number(globalMetrics.ptgMeetings) || 0,
-        sectionMarks: {
-          resultAnalysis: scores.resultAnalysis,
-          courseOutcome: scores.courseOutcome,
-          eLearning: scores.eLearning,
-          academicEngagement: scores.academicEngagement,
-          teachingLoad: scores.teachingLoad,
-          projectsGuided: scores.projectsGuided,
-          studentFeedback: scores.studentFeedback,
-          ptgMeetings: scores.ptgMeetings,
+      const payload: any = {
+        isManualScoring: Object.values(manualSections).some(v => v), // Legacy bridge
+        1: {
+          courses: Object.fromEntries(relevantCourseMetrics.map(m => [m.code, {
+            studentsAbove60: Number(m.studentsAbove60) || 0,
+            students50to59: Number(m.students50to59) || 0,
+            students40to49: Number(m.students40to49) || 0,
+            totalStudents: Number(m.totalStudents) || 0,
+            marks: (10 * ((Number(m.studentsAbove60) || 0) * 5 + (Number(m.students50to59) || 0) * 4 + (Number(m.students40to49) || 0) * 3)) / (Number(m.totalStudents) || 1)
+          }])),
+          total_marks: scores.resultAnalysis
         },
-        totalMarks: Number(finalScore),
+        2: {
+          courses: Object.fromEntries(relevantCourseMetrics.map(m => [m.code, {
+            coAttainment: Number(m.coAttainment) || 0,
+            timelySubmissionCO: m.timelySubmissionCO,
+            semester: m.sem,
+            marks: (Number(m.coAttainment) || 0) * 30 / 100 + (m.timelySubmissionCO ? 20 : 0)
+          }])),
+          total_marks: scores.courseOutcome
+        },
+        3: {
+          elearningInstances: Number(globalMetrics.eLearningInstances) || 0,
+          total_marks: scores.eLearning
+        },
+        4: {
+          courses: Object.fromEntries(relevantCourseMetrics.map(m => [m.code, {
+            studentsPresent: Number(m.studentsPresent) || 0,
+            totalEnrolledStudents: Number(m.totalEnrolledStudents) || 0,
+            marks: 50 * ((Number(m.studentsPresent) || 0) / (Number(m.totalEnrolledStudents) || 1))
+          }])),
+          total_marks: scores.academicEngagement
+        },
+        5: {
+          weeklyLoadSem1: Number(globalMetrics.weeklyLoadSem1) || 0,
+          weeklyLoadSem2: Number(globalMetrics.weeklyLoadSem2) || 0,
+          adminResponsibility: globalMetrics.adminResponsibility ? 1 : 0,
+          cadre: userDesignation,
+          total_marks: scores.teachingLoad
+        },
+        6: {
+          projectsGuided: Number(globalMetrics.projectsGuided) || 0,
+          total_marks: scores.projectsGuided
+        },
+        7: {
+          courses: Object.fromEntries(relevantCourseMetrics.map(m => [m.code, {
+            feedbackPercentage: Number(m.feedbackPercentage) || 0,
+            marks: Number(m.feedbackPercentage) || 0
+          }])),
+          total_marks: scores.studentFeedback
+        },
+        8: {
+          ptgMeetings: Number(globalMetrics.ptgMeetings) || 0,
+          total_marks: scores.ptgMeetings
+        },
+        total_marks: finalScore
       };
 
-      await appraisalApi.updatePartA(userId, payload);
+      const res = await fetch(`${apiBase}/${department}/${userId}/A`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error("Save Failed");
       alert("Performance data saved successfully!");
     } catch (e) {
       const err = e as AxiosError<{ message?: string }>;
@@ -532,7 +566,107 @@ function PartAAcademicInvolvement({
     }
   };
 
-  if (isLoading) return <Loader message="Loading academic data…" />;
+  // --- AUTOMATED CALCULATION LOGIC ---
+  useEffect(() => {
+    const activeCourseIds = courses.map(c => c.id);
+    const relevantCourseMetrics = activeCourseIds.map(id => courseMetrics[id]).filter(Boolean);
+
+    setScores(prevScores => {
+      const nextScores = { ...prevScores };
+
+      // A. Course-based Metrics
+      if (relevantCourseMetrics.length > 0) {
+        // 1. Result Analysis
+        if (!manualSections.resultAnalysis) {
+          let totalVal = 0;
+          relevantCourseMetrics.forEach(m => {
+            const above60 = Number(m.studentsAbove60) || 0;
+            const s50 = Number(m.students50to59) || 0;
+            const s40 = Number(m.students40to49) || 0;
+            const total = Number(m.totalStudents) || 1;
+            totalVal += (10 * (above60 * 5 + s50 * 4 + s40 * 3)) / total;
+          });
+          nextScores.resultAnalysis = totalVal / relevantCourseMetrics.length;
+        }
+
+        // 2. Course Outcome
+        if (!manualSections.courseOutcome) {
+          let totalVal = 0;
+          relevantCourseMetrics.forEach(m => {
+            const attainment = Number(m.coAttainment) || 0;
+            const bonus = m.timelySubmissionCO ? 20 : 0;
+            totalVal += (attainment * 30 / 100) + bonus;
+          });
+          nextScores.courseOutcome = totalVal / relevantCourseMetrics.length;
+        }
+
+        // 4. Academic Engagement
+        if (!manualSections.academicEngagement) {
+          let totalVal = 0;
+          relevantCourseMetrics.forEach(m => {
+            const present = Number(m.studentsPresent) || 0;
+            const total = Number(m.totalEnrolledStudents) || 1;
+            totalVal += 50 * (present / total);
+          });
+          nextScores.academicEngagement = totalVal / relevantCourseMetrics.length;
+        }
+
+        // 7. Student Feedback
+        if (!manualSections.studentFeedback) {
+          let totalVal = 0;
+          relevantCourseMetrics.forEach(m => {
+            totalVal += Number(m.feedbackPercentage) || 0;
+          });
+          nextScores.studentFeedback = totalVal / relevantCourseMetrics.length;
+        }
+      }
+
+      // B. Global Metrics
+
+      // 3. E-Learning
+      if (!manualSections.eLearning) {
+        nextScores.eLearning = Math.min(50, (Number(globalMetrics.eLearningInstances) || 0) * 10);
+      }
+
+      // 5. Teaching Load
+      if (!manualSections.teachingLoad) {
+        const loadSem1 = Number(globalMetrics.weeklyLoadSem1) || 0;
+        const loadSem2 = Number(globalMetrics.weeklyLoadSem2) || 0;
+        const avgLoad = (loadSem1 + loadSem2) / 2;
+        const e = globalMetrics.adminResponsibility ? 2 : 0;
+
+        let minLoad = 16;
+        if (userDesignation === "Professor") minLoad = 12;
+        else if (userDesignation === "Associate Professor") minLoad = 14;
+
+        nextScores.teachingLoad = Math.min(50, 50 * ((avgLoad + e) / minLoad));
+      }
+
+      // 6. Projects Guided
+      if (!manualSections.projectsGuided) {
+        nextScores.projectsGuided = Math.min(40, (Number(globalMetrics.projectsGuided) || 0) * 20);
+      }
+
+      // 8. PTG Meetings
+      if (!manualSections.ptgMeetings) {
+        nextScores.ptgMeetings = Math.min(50, (Number(globalMetrics.ptgMeetings) || 0) * 50 / 6);
+      }
+
+      return nextScores;
+    });
+  }, [courseMetrics, globalMetrics, manualSections, courses, userDesignation]);
+
+  const rawSum = Object.values(scores).reduce((a, b) => a + b, 0);
+  const factor = ROLE_FACTOR[userDesignation] ?? 1.0;
+  const maxScore = ROLE_MAX[userDesignation] ?? 440;
+  const finalScore = Math.round(Math.min(maxScore, rawSum * factor));
+
+  // Progress Calculation
+  const interactedCount = Object.values(scores).filter((v) => v > 0).length;
+  const totalFields = Object.keys(scores).length;
+  const progressPercent = (interactedCount / totalFields) * 100;
+
+  if (isLoading) return <Loader message="Loading Academic Performance..." />;
 
   return (
     <div
@@ -670,63 +804,22 @@ function PartAAcademicInvolvement({
                 </div>
               ))}
 
-            {/* Global inputs */}
-            {field === "eLearning" && (
-              <MetricInputField
-                label="E-Learning Instances Developed"
-                value={globalMetrics.eLearningInstances}
-                onChange={(v) =>
-                  setGlobalMetrics((p) => ({ ...p, eLearningInstances: v }))
-                }
-                className="max-w-xs"
-                placeholder="Enter count"
-              />
-            )}
-
-            {field === "teachingLoad" && (
-              <div className="space-y-5 max-w-lg">
-                <div className="grid grid-cols-2 gap-5">
-                  <MetricInputField
-                    label="Weekly Load Sem I"
-                    value={globalMetrics.weeklyLoadSem1}
-                    onChange={(v) =>
-                      setGlobalMetrics((p) => ({ ...p, weeklyLoadSem1: v }))
-                    }
-                    placeholder="e.g. 18 hours/week"
-                  />
-                  <MetricInputField
-                    label="Weekly Load Sem II"
-                    value={globalMetrics.weeklyLoadSem2}
-                    onChange={(v) =>
-                      setGlobalMetrics((p) => ({ ...p, weeklyLoadSem2: v }))
-                    }
-                    placeholder="e.g. 16 hours/week"
-                  />
-                </div>
-                <label className="flex items-center gap-4 p-4 rounded-xl border-2 border-indigo-100 bg-indigo-50 cursor-pointer group">
-                  <input
-                    type="checkbox"
-                    checked={globalMetrics.adminResponsibility}
-                    onChange={(e) =>
-                      setGlobalMetrics((p) => ({
-                        ...p,
-                        adminResponsibility: e.target.checked,
-                      }))
-                    }
-                    className="w-6 h-6 rounded border-indigo-300 text-indigo-700 focus:ring-indigo-400"
-                    aria-label="Admin Responsibility"
-                  />
-                  <div>
-                    <p className="text-base font-extrabold text-indigo-900 group-hover:text-indigo-700 transition-colors uppercase tracking-tight">
-                      Admin Responsibility
-                    </p>
-                    <p className="text-xs text-indigo-700 opacity-90">
-                      (Held Dean/HOD/HOD and HOD roles)
-                    </p>
-                  </div>
-                </label>
-              </div>
-            )}
+                  {/* Teaching Load Global */}
+                  {field === "teachingLoad" && (
+                    <div className="space-y-5 max-w-lg">
+                      <div className="grid grid-cols-2 gap-5">
+                        <MetricInputField label="Weekly Load Sem I" value={globalMetrics.weeklyLoadSem1} onChange={(v) => setGlobalMetrics(p => ({ ...p, weeklyLoadSem1: v }))} placeholder="e.g. 18 hours/week" />
+                        <MetricInputField label="Weekly Load Sem II" value={globalMetrics.weeklyLoadSem2} onChange={(v) => setGlobalMetrics(p => ({ ...p, weeklyLoadSem2: v }))} placeholder="e.g. 16 hours/week" />
+                      </div>
+                      <label className="flex items-center gap-4 p-4 rounded-xl border-2 border-indigo-100 bg-indigo-50 cursor-pointer group">
+                        <input type="checkbox" checked={globalMetrics.adminResponsibility} onChange={(e) => setGlobalMetrics(p => ({ ...p, adminResponsibility: e.target.checked }))} className="w-6 h-6 rounded border-indigo-300 text-indigo-700 focus:ring-indigo-400" aria-label="Admin Responsibility" />
+                        <div>
+                          <p className="text-base font-extrabold text-indigo-900 group-hover:text-indigo-700 transition-colors uppercase tracking-tight">Admin Responsibility</p>
+                          <p className="text-xs text-indigo-700 opacity-90">(Held Dean/HOD/HOD and HOD roles)</p>
+                        </div>
+                      </label>
+                    </div>
+                  )}
 
             {field === "projectsGuided" && (
               <MetricInputField
@@ -855,7 +948,7 @@ function PartAAcademicInvolvement({
                   Role Factor ({userDesignation})
                 </td>
                 <td className="px-6 py-4 text-right text-indigo-900 tabular-nums font-extrabold">
-                  × {factor.toFixed(3)}
+                   {factor.toFixed(2)}
                 </td>
                 <td className="px-6 py-4 text-right text-indigo-700 tabular-nums font-bold">
                   —

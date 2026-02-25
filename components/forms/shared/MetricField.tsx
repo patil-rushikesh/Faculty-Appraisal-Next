@@ -21,9 +21,6 @@ interface MetricFieldProps {
     disabled?: boolean;
 }
 
-/**
- * Reusable field for metrics that require both a count/value and a proof document link.
- */
 export default function MetricField({
     label,
     hint,
@@ -52,7 +49,7 @@ export default function MetricField({
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 md:w-2/3 lg:w-3/5">
                     {/* Numeric Value Input */}
                     <div className="w-full sm:w-28 shrink-0">
-                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 hidden sm:block">Count / Value</p>
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1 hidden sm:block">{placeholder}</p>
                         <input
                             type="number"
                             name={name}

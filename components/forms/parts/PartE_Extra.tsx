@@ -35,6 +35,14 @@ const TransparencyGuideline = ({ formula }: { formula: string }) => (
 const PART_E_GUIDELINE =
   "Faculty may list extra-ordinary or other contributions (not listed in Parts A, B, or C) for the academic year in bulleted form. Maximum marks self-awarded: 50.";
 
+// --- SECTION MANDATORY CONFIG ---
+// Defines which sections of Part E are mandatory for form submission.
+// Both fields are optional since Part E covers extra-ordinary contributions only.
+const SECTION_CONFIG = [
+  { name: "Contributions Description", key: "contributions" as const, mandatory: false },
+  { name: "Self-Awarded Marks", key: "selfAwardedMarks" as const, mandatory: false },
+];
+
 // --- COMPONENT ---
 function PartEExtra({ userId }: PartEExtraProps) {
   const [formData, setFormData] = useState<ExtraFormData>({
@@ -93,20 +101,20 @@ function PartEExtra({ userId }: PartEExtraProps) {
           } catch { /* ignore, proceed to fetch */ }
         }
 
-        const { data } = await appraisalApi.getAppraisal(userId);
-        const d = data?.partE;
+        const resp = await appraisalApi.getAppraisal(userId);
+        // Backend wraps: { success, data: IFacultyAppraisal, message }
+        const appraisal = resp.data?.data;
+        const d = appraisal?.partE;
         if (d) {
           const newFormData: ExtraFormData = {
             contributions: d.bullet_points ?? "",
             selfAwardedMarks: d.total_marks ?? 0,
           };
 
-          // ── KEY FIX: seed localStorage before setting state ──────────────
           localStorage.setItem(STORAGE_KEY, JSON.stringify(newFormData));
-
           setFormData(newFormData);
         }
-        setFormStatus(data?.status ?? "DRAFT");
+        setFormStatus(appraisal?.status ?? "DRAFT");
       } catch (err) {
         console.error("Fetch Part E failed", err);
       } finally {

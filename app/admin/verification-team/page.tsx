@@ -10,6 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useToast } from '@/hooks/use-toast'
 import { DEPARTMENTS } from '@/lib/constants'
 import { apiClient } from '@/lib/api-client'
+import axios from 'axios'
 import type { User } from '@/lib/types'
 import { useAuth } from '@/app/AuthProvider'
 
@@ -48,7 +49,7 @@ export default function VerificationTeamPage() {
     setIsLoadingFaculties(true)
     const fetchFaculties = async () => {
       try {
-        const res = await fetch(
+        const { data } = await axios.get(
           `/api/admin/faculty`,
           {
             headers: {
@@ -56,7 +57,6 @@ export default function VerificationTeamPage() {
             },
           }
         );
-        const data = await res.json()
         console.log('All Faculties Response:', data)
         setAllFaculties(data || [])
       } catch (error) {

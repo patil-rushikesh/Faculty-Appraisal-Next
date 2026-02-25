@@ -34,6 +34,29 @@ const FORMULAS = {
   placement: "Marks: Offer=10 (No limit)",
 };
 
+// --- SECTION MANDATORY CONFIG ---
+// Defines which sections of Part B are mandatory for form submission.
+// Research contributions are optional – faculty fill what is applicable.
+const SECTION_CONFIG: { name: string; key: keyof ResearchFormData; mandatory: boolean }[] = [
+  { name: "Papers Published in Quality Journal", key: "journal", mandatory: false },
+  { name: "Papers Published in Conference Proceedings", key: "conference", mandatory: false },
+  { name: "Book Chapters Published", key: "bookChapter", mandatory: false },
+  { name: "Books Authored / Edited", key: "books", mandatory: false },
+  { name: "Citations", key: "citations", mandatory: false },
+  { name: "Copyrights (Individual)", key: "copyrightIndiv", mandatory: false },
+  { name: "Copyrights (Institution)", key: "copyrightInst", mandatory: false },
+  { name: "Patents (Individual)", key: "patentIndiv", mandatory: false },
+  { name: "Patents (Institution)", key: "patentInst", mandatory: false },
+  { name: "Research / Sponsored Grants", key: "grantResearch", mandatory: false },
+  { name: "Revenue from Training / Consultancy", key: "revenueTraining", mandatory: false },
+  { name: "Non-Research Grants", key: "grantNonResearch", mandatory: false },
+  { name: "Products / Technology Developed", key: "product", mandatory: false },
+  { name: "Startup", key: "startup", mandatory: false },
+  { name: "Awards & Fellowships", key: "award", mandatory: false },
+  { name: "Industry-Academia Interaction", key: "interaction", mandatory: false },
+  { name: "Placement Activity", key: "placement", mandatory: false },
+];
+
 // --- TYPES ---
 interface MetricData {
   value: number;
@@ -357,6 +380,7 @@ function PartBResearch({ userId, userDesignation }: PartBResearchProps) {
     });
   };
 
+
   // PUT /appraisal/:userId/part-b
   const handleSubmit = async () => {
     if (formStatus !== "DRAFT") {
@@ -463,6 +487,7 @@ function PartBResearch({ userId, userDesignation }: PartBResearchProps) {
     0
   );
   const progressPercent = (interactedCount / totalFields) * 100;
+
 
   if (isLoading) return <Loader message="Loading research data..." />;
   const locked = formStatus !== "DRAFT";

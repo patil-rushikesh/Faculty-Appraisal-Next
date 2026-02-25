@@ -40,6 +40,13 @@ interface PartFReviewProps {
   userId: string;
 }
 
+// --- SECTION MANDATORY CONFIG ---
+const SECTION_CONFIG = [
+  { name: "Generate PDF", key: "pdfGenerated" as const, mandatory: true },
+  { name: "Form Status Check", key: "statusChecked" as const, mandatory: true },
+  { name: "Save PDF Snapshot", key: "savedPdf" as const, mandatory: false },
+];
+
 // --- COMPONENT ---
 function PartFReview({ department, userId }: PartFReviewProps) {
   const [pdfUrl, setPdfUrl] = useState("");
@@ -64,16 +71,17 @@ function PartFReview({ department, userId }: PartFReviewProps) {
   const fetchFormStatus = useCallback(async () => {
     try {
       const { data } = await appraisalApi.getAppraisal(userId);
-      setFormStatus(data?.status ?? "DRAFT");
-      if (data?.status && data.status !== "DRAFT") setIsFormFrozen(true);
+      // Backend wraps: { success, data: IFacultyAppraisal, message }
+      const appraisal = (data as any)?.data ?? data;
+      setFormStatus(appraisal?.status ?? "DRAFT");
+      if (appraisal?.status && appraisal.status !== "DRAFT") setIsFormFrozen(true);
     } catch (err) {
       console.error("Fetch status failed", err);
     }
   }, [userId]);
 
   // -----------------------------------------------------------------------
-  // PDF helpers — these still call legacy PDF endpoints via raw axios
-  // Update the paths below if you move these endpoints into /appraisal as well.
+  // PDF helpers — use pdfApi (raw axios internally, backed by legacy PDF routes)
   // -----------------------------------------------------------------------
   const fetchPdfMetadata = useCallback(async () => {
     try {
@@ -193,7 +201,7 @@ function PartFReview({ department, userId }: PartFReviewProps) {
       const axErr = err as AxiosError<{ message?: string }>;
       setSubmitError(
         axErr.response?.data?.message ??
-          "Submission failed. Please check your connection and try again."
+        "Submission failed. Please check your connection and try again."
       );
     }
   };

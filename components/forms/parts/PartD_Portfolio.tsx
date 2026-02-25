@@ -15,6 +15,14 @@ import { AxiosError } from "axios";
 // --- CONSTANTS ---
 const PORTFOLIO_TYPES = ["institute", "department", "both"] as const;
 
+// --- SECTION MANDATORY CONFIG ---
+// Defines which sections of Part D are mandatory for form submission.
+// Faculty must declare a portfolio type and provide self-awarded marks.
+const SECTION_CONFIG = [
+  { name: "Portfolio Type Selection", key: "portfolioType" as const, mandatory: true },
+  { name: "Self-Awarded Marks", key: "selfAwardedMarks" as const, mandatory: true },
+];
+
 // --- TYPES ---
 interface PortfolioFormData {
   portfolioType: "institute" | "department" | "both";
@@ -246,13 +254,13 @@ function PartDPortfolio({
     }
   };
 
+
   if (isLoading) return <Loader message="Loading portfolio data…" />;
 
   return (
     <div className="max-w-4xl mx-auto py-8 space-y-6 text-[1.15rem]" style={{ lineHeight: 1.7 }}>
       <FormProgressBar progress={progressPercent} label="Part D Completion" />
 
-      {/* Portfolio Type Selector */}
       {!formData.isAdministrativeRole && (
         <SectionCard title="Portfolio Selection">
           <div className="flex gap-4 mb-5">

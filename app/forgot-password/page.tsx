@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import axios from "axios"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -24,15 +25,12 @@ export default function ForgotPasswordPage() {
     setIsLoading(true)
 
     try {
-      const response = await fetch("/api/auth/forgot-password", {
-        method: "POST",
+      const { data, status } = await axios.post("/api/auth/forgot-password", { email }, {
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email }),
+        validateStatus: () => true,
       })
 
-      const data = await response.json()
-
-      if (!response.ok) {
+      if (status < 200 || status >= 300) {
         setError(data.message || "Failed to send password reset link")
         return
       }

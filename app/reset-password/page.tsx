@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import axios from "axios"
 import { useRouter, useSearchParams } from "next/navigation"
 import { motion } from "framer-motion"
 import { Button } from "@/components/ui/button"
@@ -39,15 +40,12 @@ export default function ResetPasswordPage() {
 
     try {
       const token = searchParams.get("token")
-      const response = await fetch("/api/auth/reset-password", {
-        method: "POST",
+      const { data, status } = await axios.post("/api/auth/reset-password", { newPassword, token }, {
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ newPassword, token }),
+        validateStatus: () => true,
       })
 
-      const data = await response.json()
-
-      if (!response.ok) {
+      if (status < 200 || status >= 300) {
         setError(data.message || "Failed to reset password")
         return
       }

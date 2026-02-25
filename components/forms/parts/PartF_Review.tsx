@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import axios from "axios";
 import {
     Download,
     RefreshCw,
@@ -38,6 +39,15 @@ interface PartFReviewProps {
     userId: string;
 }
 
+// --- SECTION MANDATORY CONFIG ---
+// Defines which review/submission actions of Part F are mandatory.
+// Faculty must generate the PDF and check their form status before submitting.
+const SECTION_CONFIG = [
+    { name: "Generate PDF", key: "pdfGenerated" as const, mandatory: true },
+    { name: "Form Status Check", key: "statusChecked" as const, mandatory: true },
+    { name: "Save PDF Snapshot", key: "savedPdf" as const, mandatory: false },
+];
+
 // --- COMPONENT ---
 function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
     const [pdfUrl, setPdfUrl] = useState("");
@@ -58,9 +68,9 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
 
     const fetchPdfMetadata = useCallback(async () => {
         try {
-            const res = await fetch(`${apiBase}/${department}/${userId}/pdf-metadata`);
-            if (res.ok) {
-                setPdfMetadata(await res.json());
+            const res = await axios.get(`${apiBase}/${department}/${userId}/pdf-metadata`, { validateStatus: () => true });
+            if (res.status >= 200 && res.status < 300) {
+                setPdfMetadata(res.data);
                 setPdfExists(true);
             } else {
                 setPdfMetadata(null);
@@ -75,8 +85,8 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
     const fetchSavedPdfs = useCallback(async () => {
         setLoadingSavedPdfs(true);
         try {
-            const res = await fetch(`${apiBase}/${department}/${userId}/saved-pdfs`);
-            setSavedPdfs(res.ok ? (await res.json()).pdfs ?? [] : []);
+            const res = await axios.get(`${apiBase}/${department}/${userId}/saved-pdfs`, { validateStatus: () => true });
+            setSavedPdfs((res.status >= 200 && res.status < 300) ? res.data.pdfs ?? [] : []);
         } catch {
             setSavedPdfs([]);
         } finally {
@@ -90,23 +100,29 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
             setLoadingProgress(0);
             const tick = setInterval(() => setLoadingProgress((p) => (p >= 90 ? 90 : p + 10)), 500);
             try {
-                const res = await fetch(
-                    `${apiBase}/${department}/${userId}/${force ? "generate-doc" : "faculty-pdf"}`
-                );
-                clearInterval(tick);
-                setLoadingProgress(100);
-                const process = async (r: Response) => {
-                    const b = await r.blob();
-                    setPdfUrl(URL.createObjectURL(b));
+                const processBlob = (blobData: Blob) => {
+                    setPdfUrl(URL.createObjectURL(blobData));
                     setPdfExists(true);
                     fetchPdfMetadata();
                 };
-                if (res.ok) await process(res);
-                else if (!force) {
-                    const gen = await fetch(`${apiBase}/${department}/${userId}/generate-doc`);
-                    if (gen.ok) await process(gen);
+                const res = await axios.get(
+                    `${apiBase}/${department}/${userId}/${force ? "generate-doc" : "faculty-pdf"}`,
+                    { responseType: "blob", validateStatus: () => true }
+                );
+                clearInterval(tick);
+                setLoadingProgress(100);
+                if (res.status >= 200 && res.status < 300) {
+                    processBlob(res.data);
+                } else if (!force) {
+                    const gen = await axios.get(
+                        `${apiBase}/${department}/${userId}/generate-doc`,
+                        { responseType: "blob", validateStatus: () => true }
+                    );
+                    if (gen.status >= 200 && gen.status < 300) processBlob(gen.data);
                     else setPdfExists(false);
-                } else setPdfExists(false);
+                } else {
+                    setPdfExists(false);
+                }
             } catch {
                 clearInterval(tick);
                 setPdfExists(false);
@@ -120,9 +136,9 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
 
     const fetchFormStatus = useCallback(async () => {
         try {
-            const res = await fetch(`${apiBase}/${department}/${userId}/get-status`);
-            if (res.ok) {
-                const d = await res.json();
+            const res = await axios.get(`${apiBase}/${department}/${userId}/get-status`, { validateStatus: () => true });
+            if (res.status >= 200 && res.status < 300) {
+                const d = res.data;
                 setFormStatus(d.status);
                 if (d.status !== "pending") setIsFormFrozen(true);
             }
@@ -141,11 +157,11 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
     const handleSavePdf = async () => {
         setSavingPdf(true);
         try {
-            const res = await fetch(`${apiBase}/${department}/${userId}/save-pdf`, {
-                method: "POST",
+            const res = await axios.post(`${apiBase}/${department}/${userId}/save-pdf`, {}, {
                 headers: { "Content-Type": "application/json" },
+                validateStatus: () => true,
             });
-            if (res.ok) {
+            if (res.status >= 200 && res.status < 300) {
                 fetchPdfMetadata();
                 generatePDF();
                 fetchSavedPdfs();
@@ -159,8 +175,11 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
 
     const handleViewSaved = async (id: string) => {
         try {
-            const res = await fetch(`${apiBase}/${department}/${userId}/view-saved-pdf/${id}`);
-            if (res.ok) window.open(URL.createObjectURL(await res.blob()), "_blank");
+            const res = await axios.get(`${apiBase}/${department}/${userId}/view-saved-pdf/${id}`, {
+                responseType: "blob",
+                validateStatus: () => true,
+            });
+            if (res.status >= 200 && res.status < 300) window.open(URL.createObjectURL(res.data), "_blank");
         } catch (err) {
             console.error("View PDF failed", err);
         }
@@ -169,8 +188,8 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
     const handleDeleteSaved = async (id: string) => {
         setDeletingPdf(true);
         try {
-            await fetch(`${apiBase}/${department}/${userId}/delete-saved-pdf/${id}`, {
-                method: "DELETE",
+            await axios.delete(`${apiBase}/${department}/${userId}/delete-saved-pdf/${id}`, {
+                validateStatus: () => true,
             });
             setSelectedPdfForDelete(null);
             fetchSavedPdfs();
@@ -183,9 +202,16 @@ function PartFReview({ apiBase, department, userId }: PartFReviewProps) {
 
     const handleFreeze = async () => {
         setSubmitError(null);
+        // Validate mandatory sections before submission
+        if (SECTION_CONFIG.find((s) => s.key === "pdfGenerated" && s.mandatory) && !pdfExists) {
+            setSubmitError("Please generate and review your PDF before submitting the form.");
+            return;
+        }
         try {
-            const res = await fetch(`${apiBase}/${department}/${userId}/submit-form`, { method: "POST" });
-            if (res.ok) {
+            const res = await axios.post(`${apiBase}/${department}/${userId}/submit-form`, {}, {
+                validateStatus: () => true,
+            });
+            if (res.status >= 200 && res.status < 300) {
                 setIsFormFrozen(true);
                 setShowFreezeModal(false);
                 fetchFormStatus();

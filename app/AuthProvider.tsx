@@ -8,6 +8,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
+import axios from "axios";
 import type { User } from "@/lib/types";
 import { tokenManager } from "@/lib/api-client";
 
@@ -87,15 +88,13 @@ export default function AuthProvider({
           ? { userId, password }
           : { userId: email, password };
 
-        const res = await fetch(`/api/login`, {
-          method: "POST",
+        const { data, status } = await axios.post(`/api/login`, loginPayload, {
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(loginPayload),
-          credentials: "include",
+          withCredentials: true,
+          validateStatus: () => true,
         });
 
-        const data = await res.json().catch(() => ({}));
-        if (!res.ok) {
+        if (status < 200 || status >= 300) {
           return { ok: false, error: data?.message || "Invalid credentials" };
         }
 
@@ -132,12 +131,9 @@ export default function AuthProvider({
   const logout = useCallback(async () => {
     try {
       setIsLoading(true);
-      await fetch("/api/logout", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        credentials: "include",
+      await axios.post("/api/logout", {}, {
+        headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
       });
 
       // Clear token from memory

@@ -102,7 +102,7 @@ interface GlobalMetrics {
   eLearningInstances: string;
   weeklyLoadSem1: string;
   weeklyLoadSem2: string;
-  adminResponsibility: boolean;
+  phdScholar: boolean;
   projectsGuided: string;
   ptgMeetings: string;
 }
@@ -190,7 +190,7 @@ function PartAAcademicInvolvement({
     eLearningInstances: "",
     weeklyLoadSem1: "",
     weeklyLoadSem2: "",
-    adminResponsibility: false,
+    phdScholar: false,
     projectsGuided: "",
     ptgMeetings: "",
   });
@@ -269,7 +269,7 @@ function PartAAcademicInvolvement({
           eLearningInstances: (partA.eLearningInstances ?? 0).toString(),
           weeklyLoadSem1: (partA.weeklyLoadSem1 ?? 0).toString(),
           weeklyLoadSem2: (partA.weeklyLoadSem2 ?? 0).toString(),
-          adminResponsibility: partA.adminResponsibility ?? false,
+          phdScholar: partA.phdScholar ?? false,
           projectsGuided: (partA.projectsGuided ?? 0).toString(),
           ptgMeetings: (partA.ptgMeetings ?? 0).toString(),
         };
@@ -400,7 +400,7 @@ function PartAAcademicInvolvement({
       if (!manualSections.teachingLoad) {
         const minLoad = userDesignation === "Professor" ? 12 : userDesignation === "Associate Professor" ? 14 : 16;
         const avgLoad = ((Number(globalMetrics.weeklyLoadSem1) || 0) + (Number(globalMetrics.weeklyLoadSem2) || 0)) / 2;
-        const E = globalMetrics.adminResponsibility ? 2 : 0;
+        const E = globalMetrics.phdScholar ? 2 : 0;
         next.teachingLoad = Math.min(50, 50 * ((avgLoad + E) / minLoad));
       }
 
@@ -511,7 +511,7 @@ function PartAAcademicInvolvement({
         eLearningInstances: Number(globalMetrics.eLearningInstances) || 0,
         weeklyLoadSem1: Number(globalMetrics.weeklyLoadSem1) || 0,
         weeklyLoadSem2: Number(globalMetrics.weeklyLoadSem2) || 0,
-        adminResponsibility: globalMetrics.adminResponsibility,
+        phdScholar: globalMetrics.phdScholar,
         projectsGuided: Number(globalMetrics.projectsGuided) || 0,
         ptgMeetings: Number(globalMetrics.ptgMeetings) || 0,
         sectionMarks: {
@@ -635,17 +635,13 @@ function PartAAcademicInvolvement({
                 <label className="flex items-center gap-4 p-4 rounded-xl border-2 border-indigo-100 bg-indigo-50 cursor-pointer group">
                   <input
                     type="checkbox"
-                    checked={globalMetrics.adminResponsibility}
+                    checked={globalMetrics.phdScholar}
                     disabled={locked}
-                    onChange={(e) => setGlobalMetrics((p) => ({ ...p, adminResponsibility: e.target.checked }))}
+                    onChange={(e) => setGlobalMetrics((p) => ({ ...p, phdScholar: e.target.checked }))}
                     className="w-6 h-6 rounded border-indigo-300 text-indigo-700 focus:ring-indigo-400 disabled:opacity-50"
-                    aria-label="Admin Responsibility"
                   />
                   <div>
-                    <p className="text-base font-extrabold text-indigo-900 group-hover:text-indigo-700 transition-colors uppercase tracking-tight">
-                      Admin Responsibility
-                    </p>
-                    <p className="text-xs text-indigo-700 opacity-90">(Held Dean/HOD/HOD and HOD roles)</p>
+                    <p className="text-sm text-indigo-700 opacity-90">(Are You Ph.D Supervisor Having Scholars Enrolled at PCCOE Research Center)</p>
                   </div>
                 </label>
               </div>

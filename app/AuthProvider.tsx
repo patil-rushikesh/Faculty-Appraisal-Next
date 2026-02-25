@@ -111,6 +111,8 @@ export default function AuthProvider({
           name: receivedUser.name || receivedUser.email.split("@")[0],
           role: receivedUser.role as Role,
         };
+        //clear everything related to auth in localStorage to prevent stale data issues
+        localStorage.clear();
 
         // Store token in memory via tokenManager
         setUser(nextUser);
@@ -135,7 +137,7 @@ export default function AuthProvider({
         headers: { Authorization: `Bearer ${token}` },
         withCredentials: true,
       });
-
+      localStorage.clear();
       // Clear token from memory
       setUser(null);
       setToken(null);

@@ -168,7 +168,7 @@ function PartAAcademicInvolvement({
     eLearningInstances: "",
     weeklyLoadSem1: "",
     weeklyLoadSem2: "",
-    adminResponsibility: false,
+    phdScholar: false,
     projectsGuided: "",
     ptgMeetings: "",
   });
@@ -239,7 +239,7 @@ function PartAAcademicInvolvement({
             eLearningInstances: data["3"]?.elearningInstances?.toString() || "",
             weeklyLoadSem1: data["5"]?.weeklyLoadSem1?.toString() || "",
             weeklyLoadSem2: data["5"]?.weeklyLoadSem2?.toString() || "",
-            adminResponsibility: data["5"]?.adminResponsibility === 1,
+            phdScholar: data["5"]?.phdScholar === 1,
             projectsGuided: data["6"]?.projectsGuided?.toString() || "",
             ptgMeetings: data["8"]?.ptgMeetings?.toString() || "",
           });
@@ -381,7 +381,7 @@ function PartAAcademicInvolvement({
         5: {
           weeklyLoadSem1: Number(globalMetrics.weeklyLoadSem1) || 0,
           weeklyLoadSem2: Number(globalMetrics.weeklyLoadSem2) || 0,
-          adminResponsibility: globalMetrics.adminResponsibility ? 1 : 0,
+          phdScholar: globalMetrics.phdScholar ? 1 : 0,
           cadre: userDesignation,
           total_marks: scores.teachingLoad
         },
@@ -483,7 +483,7 @@ function PartAAcademicInvolvement({
         const loadSem1 = Number(globalMetrics.weeklyLoadSem1) || 0;
         const loadSem2 = Number(globalMetrics.weeklyLoadSem2) || 0;
         const avgLoad = (loadSem1 + loadSem2) / 2;
-        const e = globalMetrics.adminResponsibility ? 2 : 0;
+        const e = globalMetrics.phdScholar ? 2 : 0;
 
         let minLoad = 16;
         if (userDesignation === "Professor") minLoad = 12;
@@ -633,10 +633,9 @@ function PartAAcademicInvolvement({
                         <MetricInputField label="Weekly Load Sem II" value={globalMetrics.weeklyLoadSem2} onChange={(v) => setGlobalMetrics(p => ({ ...p, weeklyLoadSem2: v }))} placeholder="e.g. 16 hours/week" />
                       </div>
                       <label className="flex items-center gap-4 p-4 rounded-xl border-2 border-indigo-100 bg-indigo-50 cursor-pointer group">
-                        <input type="checkbox" checked={globalMetrics.adminResponsibility} onChange={(e) => setGlobalMetrics(p => ({ ...p, adminResponsibility: e.target.checked }))} className="w-6 h-6 rounded border-indigo-300 text-indigo-700 focus:ring-indigo-400" aria-label="Admin Responsibility" />
+                        <input type="checkbox" checked={globalMetrics.phdScholar} onChange={(e) => setGlobalMetrics(p => ({ ...p, phdScholar: e.target.checked }))} className="w-6 h-6 rounded border-indigo-300 text-indigo-700 focus:ring-indigo-400"/>
                         <div>
-                          <p className="text-base font-extrabold text-indigo-900 group-hover:text-indigo-700 transition-colors uppercase tracking-tight">Admin Responsibility</p>
-                          <p className="text-xs text-indigo-700 opacity-90">(Held Dean/HOD/HOD and HOD roles)</p>
+                          <p className="text-sm text-indigo-700 opacity-90">(Are You Ph.D Supervisor Having Scholars Enrolled at PCCOE Research Center)</p>
                         </div>
                       </label>
                     </div>
@@ -746,7 +745,7 @@ function PartAAcademicInvolvement({
                   Role Factor ({userDesignation})
                 </td>
                 <td className="px-6 py-4 text-right text-indigo-900 tabular-nums font-extrabold">
-                  × {factor.toFixed(3)}
+                   {factor.toFixed(2)}
                 </td>
                 <td className="px-6 py-4 text-right text-indigo-700 tabular-nums font-bold">
                   —

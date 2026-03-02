@@ -34,21 +34,19 @@ const BACKEND = (process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000")
 type StatusKey =
   | "pending"
   | "verification_pending"
-  | "authority_verification_pending"
+  | "marks_verification_pending"
   | "interaction_pending"
   | "portfolio_mark_pending"
-  | "portfolio_mark_dean_pending"
-  | "done"
+  | "completed"
   | "sent_to_director";
 
 const STATUS_CONFIG: Record<StatusKey, { label: string; variant: "default" | "secondary" | "destructive" | "outline" | null; className: string }> = {
   pending:                         { label: "Pending",                    variant: "outline",      className: "border-gray-400 text-gray-600" },
   verification_pending:            { label: "Verification Pending",       variant: "secondary",    className: "bg-yellow-100 text-yellow-800 border-yellow-300" },
-  authority_verification_pending:  { label: "Authority Verify Pending",   variant: "secondary",    className: "bg-orange-100 text-orange-800 border-orange-300" },
+  marks_verification_pending:      { label: "Marks Verification Pending", variant: "secondary",    className: "bg-orange-100 text-orange-800 border-orange-300" },
   interaction_pending:             { label: "Interaction Pending",        variant: "secondary",    className: "bg-blue-100 text-blue-800 border-blue-300" },
-  portfolio_mark_pending:          { label: "Portfolio Mark Pending",     variant: "secondary",    className: "bg-purple-100 text-purple-800 border-purple-300" },
-  portfolio_mark_dean_pending:     { label: "Dean Mark Pending",          variant: "secondary",    className: "bg-pink-100 text-pink-800 border-pink-300" },
-  done:                            { label: "Done",                       variant: "default",      className: "bg-green-100 text-green-800 border-green-300" },
+  portfolio_mark_pending:          { label: "Portfolio Marks Pending",    variant: "secondary",    className: "bg-purple-100 text-purple-800 border-purple-300" },
+  completed:                       { label: "Completed",                  variant: "default",      className: "bg-green-100 text-green-800 border-green-300" },
   sent_to_director:                { label: "Sent to Director",           variant: "default",      className: "bg-indigo-100 text-indigo-800 border-indigo-300" },
 };
 
@@ -91,11 +89,10 @@ export default function HodFacultyPage() {
   useEffect(() => {
     const fetchAppraisals = async () => {
       
-      // if (!user?.department || !token) {
-      //   console.log("Missing user department or token, skipping fetch", { department: user, token: !!token });
-      //   setLoading(false);
-      //   return;
-      // }
+      if (!user?.department || !token) {
+        setLoading(false);
+        return;
+      }
 
       setLoading(true);
       setError(null);
@@ -116,19 +113,29 @@ export default function HodFacultyPage() {
         if (response.data.success) {
           // Map backend data to FacultyRow format
           const appraisals = response.data.data || [];
+          console.log("Raw appraisals data:", appraisals.map((a: any) => ({ userId: a.userId, status: a.status })));
+          
           const facultyRows: FacultyRow[] = appraisals.map((appraisal: any) => {
-            // Map status to StatusKey
-            const statusMap: Record<string, StatusKey> = {
-              "Pending": "pending",
-              "Verification Pending": "verification_pending",
-              "Portfolio Marks Pending": "portfolio_mark_pending",
-              "Interaction Pending": "interaction_pending",
-              "Marks Verification Pending": "authority_verification_pending",
-              "Completed": "done",
-              "Sent to Director": "sent_to_director",
+            // Normalize status string and map to StatusKey
+            const normalizeStatus = (status: string): StatusKey => {
+              if (!status) return "pending";
+              const normalized = status.toLowerCase().trim().replace(/\s+/g, "_");
+              
+              // Map normalized backend status to frontend StatusKey
+              const statusMap: Record<string, StatusKey> = {
+                "pending": "pending",
+                "verification_pending": "verification_pending",
+                "portfolio_marks_pending": "portfolio_mark_pending",
+                "interaction_pending": "interaction_pending",
+                "marks_verification_pending": "marks_verification_pending",
+                "completed": "completed",
+                "sent_to_director": "sent_to_director",
+              };
+              
+              return statusMap[normalized] || "pending";
             };
 
-            const status = statusMap[appraisal.status] || "pending";
+            const status = normalizeStatus(appraisal.status);
 
             return {
               id: appraisal.userId,
@@ -195,7 +202,7 @@ export default function HodFacultyPage() {
 
   const summaryCards = [
     { label: "Total Faculty", value: summary.total ?? 0, cls: "bg-card border" },
-    { label: "Done",          value: summary.done ?? 0,  cls: "bg-green-50 dark:bg-green-900/20 border-green-200" },
+    { label: "Completed",     value: summary.completed ?? 0,  cls: "bg-green-50 dark:bg-green-900/20 border-green-200" },
     { label: "Pending",       value: summary.pending ?? 0, cls: "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200" },
     { label: "Sent to Director", value: summary.sent_to_director ?? 0, cls: "bg-indigo-50 dark:bg-indigo-900/20 border-indigo-200" },
   ];
@@ -331,9 +338,16 @@ export default function HodFacultyPage() {
                     {f.marks !== null ? f.marks.toFixed(2) : "—"}
                   </TableCell>
                   <TableCell className="text-right">
-                    <Button size="sm" variant="outline" className="gap-1.5">
-                      <Eye size={14} /> View
-                    </Button>
+                    {f.status === "portfolio_mark_pending" && (
+                      <Button size="sm" variant="default" className="gap-1.5">
+                        Mark Portfolio
+                      </Button>
+                    )}
+                    {f.status === "marks_verification_pending" && (
+                      <Button size="sm" className="gap-1.5 bg-green-600 hover:bg-green-700 text-white">
+                        Verify Marks
+                      </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))

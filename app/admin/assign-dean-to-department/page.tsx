@@ -28,24 +28,23 @@ import { Badge } from "@/components/ui/badge";
 
 interface Faculty {
   _id: string;
+  userId: string;
   name: string;
   department: string;
   designation: string;
+  role: string;
   dept?: string;
 }
 
 interface Dean {
   _id: string;
+  userId: string;
   name: string;
   dept?: string;
 }
 
-interface DepartmentDeansData {
-  deans: Dean[];
-}
-
 interface DepartmentDeans {
-  [department: string]: DepartmentDeansData;
+  [department: string]: Dean[];
 }
 
 export default function AssignDeanToDepartmentPage() {
@@ -89,23 +88,29 @@ export default function AssignDeanToDepartmentPage() {
         headers["Authorization"] = `Bearer ${token}`;
       }
 
-      const response = await axios.get("/api/all-faculties", {
-        headers,
-        withCredentials: true,
-        validateStatus: () => true,
-      });
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/admin/faculties`,
+        {
+          headers,
+          withCredentials: true,
+          validateStatus: () => true,
+        }
+      );
 
-      if (response.status < 200 || response.status >= 300) throw new Error("Failed to fetch faculty data");
+      if (response.status < 200 || response.status >= 300)
+        throw new Error("Failed to fetch faculty data");
       const data = response.data;
 
-      const facultyList = data.data || [];
+      const facultyList = data || [];
       const deanFaculty = facultyList.filter(
-        (faculty: Faculty) => faculty.designation === "Dean"
+        (faculty: Faculty) => faculty.role === "dean"
       );
       setAllFaculty(deanFaculty);
+      console.log("Dean faculty loaded:", deanFaculty.length);
     } catch (err) {
-      const errorMessage = `Error loading faculty data: ${err instanceof Error ? err.message : String(err)
-        }`;
+      const errorMessage = `Error loading faculty data: ${
+        err instanceof Error ? err.message : String(err)
+      }`;
       setError(errorMessage);
       toast({
         title: "Error",
@@ -118,44 +123,33 @@ export default function AssignDeanToDepartmentPage() {
   const fetchAllInteractionDeans = async () => {
     setIsLoading(true);
     try {
-      const deansData: DepartmentDeans = {};
+      const token = tokenManager.getToken();
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      };
 
-      const promises = departments.map(async (department) => {
-        try {
-          const token = tokenManager.getToken();
-          const headers: HeadersInit = {
-            "Content-Type": "application/json",
-          };
+      if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+      }
 
-          if (token) {
-            headers["Authorization"] = `Bearer ${token}`;
-          }
-
-          const response = await axios.get(
-            `/api/interaction-deans/${department.value}`,
-            {
-              headers,
-              withCredentials: true,
-              validateStatus: () => true,
-            }
-          );
-
-          if (response.status >= 200 && response.status < 300) {
-            deansData[department.value] = response.data;
-          }
-        } catch (error) {
-          console.error(
-            `Error fetching ${department.value} interaction deans:`,
-            error
-          );
+      const response = await axios.get(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/admin/interaction-deans`,
+        {
+          headers,
+          withCredentials: true,
+          validateStatus: () => true,
         }
-      });
+      );
 
-      await Promise.all(promises);
-      setDepartmentDeans(deansData);
+      if (response.status >= 200 && response.status < 300) {
+        setDepartmentDeans(response.data.data || {});
+      } else {
+        throw new Error("Failed to fetch interaction deans");
+      }
     } catch (err) {
-      const errorMessage = `Error loading interaction deans: ${err instanceof Error ? err.message : String(err)
-        }`;
+      const errorMessage = `Error loading interaction deans: ${
+        err instanceof Error ? err.message : String(err)
+      }`;
       setError(errorMessage);
       toast({
         title: "Error",
@@ -178,24 +172,32 @@ export default function AssignDeanToDepartmentPage() {
     setDeanIds(newDeanIds);
     setActiveInputIndex(index);
 
+    console.log("Typing:", value, "Available faculty:", allFaculty.length);
+
     if (value.trim()) {
+      // Filter based on typed text
       const filtered = allFaculty
         .filter(
           (faculty) =>
-            (faculty._id.toLowerCase().includes(value.toLowerCase()) ||
+            (faculty.userId.toLowerCase().includes(value.toLowerCase()) ||
               faculty.name.toLowerCase().includes(value.toLowerCase())) &&
-            !deanIds.includes(faculty._id)
+            !deanIds.includes(faculty.userId)
         )
-        .slice(0, 5);
+        .slice(0, 10);
+      console.log("Filtered suggestions:", filtered.length);
       setSuggestions(filtered);
     } else {
-      setSuggestions([]);
+      // Show all available deans when input is empty
+      const availableDeans = allFaculty
+        .filter((faculty) => !deanIds.includes(faculty.userId))
+        .slice(0, 10);
+      setSuggestions(availableDeans);
     }
   };
 
   const handleSuggestionClick = (index: number, faculty: Faculty) => {
     const newDeanIds = [...deanIds];
-    newDeanIds[index] = faculty._id;
+    newDeanIds[index] = faculty.userId;
     setDeanIds(newDeanIds);
     setSuggestions([]);
     setActiveInputIndex(null);
@@ -205,6 +207,17 @@ export default function AssignDeanToDepartmentPage() {
     const newDeanIds = deanIds.filter((_, i) => i !== index);
     setDeanIds(newDeanIds);
     setSuggestions([]);
+  };
+
+  const handleInputFocus = (index: number, currentValue: string) => {
+    setActiveInputIndex(index);
+    if (!currentValue.trim()) {
+      // Show all available deans when focused with empty input
+      const availableDeans = allFaculty
+        .filter((faculty) => !deanIds.includes(faculty.userId))
+        .slice(0, 10);
+      setSuggestions(availableDeans);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -244,7 +257,7 @@ export default function AssignDeanToDepartmentPage() {
       }
 
       const response = await axios.post(
-        `/api/interaction-deans/${selectedDepartment}`,
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/admin/interaction-deans/${selectedDepartment}`,
         { dean_ids: deanIds },
         {
           headers,
@@ -288,7 +301,7 @@ export default function AssignDeanToDepartmentPage() {
   };
 
   const getFacultyName = (id: string) => {
-    const faculty = allFaculty.find((f) => f._id === id);
+    const faculty = allFaculty.find((f) => f.userId === id);
     return faculty ? faculty.name : id;
   };
 
@@ -342,6 +355,8 @@ export default function AssignDeanToDepartmentPage() {
                       onChange={(e) =>
                         handleDeanIdChange(index, e.target.value)
                       }
+                      onFocus={() => handleInputFocus(index, id)}
+                      onBlur={() => setTimeout(() => setActiveInputIndex(null), 200)}
                       placeholder="Enter faculty ID or name"
                       required
                       className="flex-1"
@@ -370,7 +385,7 @@ export default function AssignDeanToDepartmentPage() {
                           className="px-4 py-2 hover:bg-accent cursor-pointer flex justify-between items-center"
                         >
                           <div>
-                            <span className="font-medium">{faculty._id}</span>
+                            <span className="font-medium">{faculty.userId}</span>
                             <span className="text-muted-foreground ml-2">
                               ({faculty.name})
                             </span>
@@ -467,15 +482,13 @@ export default function AssignDeanToDepartmentPage() {
                       </h3>
                     </div>
                     <div className="p-4">
-                      {!deansData ||
-                        !deansData.deans ||
-                        deansData.deans.length === 0 ? (
+                      {!deansData || deansData.length === 0 ? (
                         <p className="text-muted-foreground text-sm italic">
                           No interaction deans assigned
                         </p>
                       ) : (
                         <ul className="space-y-3">
-                          {deansData.deans.map((dean, index) => (
+                          {deansData.map((dean, index) => (
                             <li key={index} className="flex items-start gap-2">
                               <span className="w-6 h-6 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center text-blue-600 dark:text-blue-400 text-xs font-medium flex-shrink-0 mt-0.5">
                                 {index + 1}
@@ -483,10 +496,10 @@ export default function AssignDeanToDepartmentPage() {
                               <div className="flex flex-col flex-1 min-w-0">
                                 <div className="flex items-center gap-2 flex-wrap">
                                   <span className="font-medium text-sm">
-                                    {dean.name || getFacultyName(dean._id)}
+                                    {dean.name || getFacultyName(dean.userId)}
                                   </span>
                                   <span className="text-muted-foreground text-xs">
-                                    ({dean._id})
+                                    ({dean.userId})
                                   </span>
                                 </div>
                                 {dean.dept && (

@@ -57,7 +57,6 @@ export default function VerificationTeamPage() {
             },
           }
         );
-        console.log('All Faculties Response:', data)
         setAllFaculties(data || [])
       } catch (error) {
         toast({ title: 'Error', description: 'Failed to fetch faculties' })

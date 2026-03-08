@@ -36,6 +36,10 @@ export default function HodLayout({ children }: { children: ReactNode }) {
         if (pathname.startsWith("/hod/verify-marks/")) {
           return { title: "Verify Faculty Marks", description: "Review and verify marks for each section" };
         }
+        // Handle evaluate dynamic routes
+        if (pathname.startsWith("/hod/evaluate/")) {
+          return { title: "Interaction Evaluation", description: "Evaluate faculty member on interaction criteria" };
+        }
         return { title: "HOD Dashboard", description: "Overview of your department's appraisal progress" };
     }
   }, [pathname]);

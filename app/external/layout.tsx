@@ -10,7 +10,10 @@ export default function ExternalLayout({ children }: { children: ReactNode }) {
 
   const header = useMemo(() => {
     if (pathname === "/external/dashboard") {
-      return { title: "External Reviewer Dashboard", description: "Faculty assigned to you for interaction evaluation" };
+      return { title: "External Reviewer Dashboard", description: "Overview of your evaluation assignments" };
+    }
+    if (pathname === "/external/interaction-marks") {
+      return { title: "Give Interaction Marks", description: "Evaluate faculty members assigned to you" };
     }
     return { title: "External Reviewer", description: "Interaction evaluation portal" };
   }, [pathname]);

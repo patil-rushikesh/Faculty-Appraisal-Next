@@ -8,6 +8,7 @@ import SectionCard from "../shared/SectionCard";
 import ScoreCard from "../shared/ScoreCard";
 import FormProgressBar from "../shared/FormProgressBar";
 import FormLockedModal from "../shared/FormLockedModal";
+import SuccessModal from "../shared/SuccessModal";
 import Loader from "@/components/loader";
 import axios, { AxiosError } from "axios";
 
@@ -132,7 +133,7 @@ function PartCSelfDevelopment({ userId, userDesignation }: PartCSelfDevelopmentP
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formStatus, setFormStatus] = useState(APPRAISAL_STATUS.PEDING);
   const [showStatusModal, setShowStatusModal] = useState(false);
-  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const STORAGE_KEY = `partC_data_${userId}`;
@@ -279,7 +280,7 @@ function PartCSelfDevelopment({ userId, userDesignation }: PartCSelfDevelopmentP
         totalVerified: 0,
       };
       await axios.put(`${BACKEND}/appraisal/${userId}/part-c`, payload, { withCredentials: true });
-      setSubmitSuccess(true);
+      setShowSuccessModal(true);
     } catch (err) {
       const axErr = err as AxiosError<{ message?: string }>;
       setSubmitError(axErr.response?.data?.message ?? axErr.message ?? "Save Failed");
@@ -394,11 +395,6 @@ function PartCSelfDevelopment({ userId, userDesignation }: PartCSelfDevelopmentP
         </div>
       </SectionCard>
 
-      {submitSuccess && (
-        <p className="text-base text-center text-indigo-700 font-semibold italic">
-          Changes saved successfully.
-        </p>
-      )}
       {submitError && (
         <p className="text-base text-center text-destructive font-extrabold">{submitError}</p>
       )}
@@ -417,6 +413,11 @@ function PartCSelfDevelopment({ userId, userDesignation }: PartCSelfDevelopmentP
       {showStatusModal && (
         <FormLockedModal formStatus={formStatus} onClose={() => setShowStatusModal(false)} />
       )}
+      <SuccessModal
+        isOpen={showSuccessModal}
+        onClose={() => setShowSuccessModal(false)}
+        message="Self-development details saved successfully!"
+      />
     </div>
   );
 }

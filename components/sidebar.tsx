@@ -171,8 +171,8 @@ const ROLE_CONFIG: Record<User["role"], RoleConfig> = {
         items: [{ icon: LayoutDashboard, label: "Dashboard", href: "/external/dashboard" }],
       },
       {
-        key: "external-evaluate",
-        items: [{ icon: ClipboardList, label: "Evaluate Faculty", href: "/external/dashboard" }],
+        key: "external-interaction",
+        items: [{ icon: ClipboardList, label: "Give Interaction Marks", href: "/external/interaction-marks" }],
       },
     ],
   },

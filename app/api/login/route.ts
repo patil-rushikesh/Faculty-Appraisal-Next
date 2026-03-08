@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     const response = NextResponse.json(data, { status: res.status });
 
     if (setCookieHeader) {
-      const cookies = Array.isArray(setCookieHeader) ? setCookieHeader : setCookieHeader.split(/,(?=[^;]+?=)/g);
+      const cookies: string[] = Array.isArray(setCookieHeader) ? setCookieHeader : [setCookieHeader as string];
       for (const cookie of cookies) {
         response.headers.append("Set-Cookie", cookie);
       }

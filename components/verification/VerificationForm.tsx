@@ -184,8 +184,8 @@ export default function VerificationForm() {
                         const weight = WEIGHTS[fieldName] || 0;
                         const calculatedClaimed = (item?.count || 0) * weight;
                         // Use verified if exists and not 0, otherwise use calculated claimed
-                        const marks = (item?.verified !== undefined && item.verified !== 0) 
-                            ? item.verified 
+                        const marks = (item?.verified !== undefined && item.verified !== 0)
+                            ? item.verified
                             : calculatedClaimed;
                         existing[fieldName] = { marks };
                     });
@@ -197,8 +197,8 @@ export default function VerificationForm() {
                         const fieldName = `conferences_${key}`;
                         const weight = WEIGHTS[fieldName] || 0;
                         const calculatedClaimed = (item?.count || 0) * weight;
-                        const marks = (item?.verified !== undefined && item.verified !== 0) 
-                            ? item.verified 
+                        const marks = (item?.verified !== undefined && item.verified !== 0)
+                            ? item.verified
                             : calculatedClaimed;
                         existing[fieldName] = { marks };
                     });
@@ -210,8 +210,8 @@ export default function VerificationForm() {
                         const fieldName = `bookChapters_${key}`;
                         const weight = WEIGHTS[fieldName] || 0;
                         const calculatedClaimed = (item?.count || 0) * weight;
-                        const marks = (item?.verified !== undefined && item.verified !== 0) 
-                            ? item.verified 
+                        const marks = (item?.verified !== undefined && item.verified !== 0)
+                            ? item.verified
                             : calculatedClaimed;
                         existing[fieldName] = { marks };
                     });
@@ -223,8 +223,8 @@ export default function VerificationForm() {
                         const fieldName = `books_${key}`;
                         const weight = WEIGHTS[fieldName] || 0;
                         const calculatedClaimed = (item?.count || 0) * weight;
-                        const marks = (item?.verified !== undefined && item.verified !== 0) 
-                            ? item.verified 
+                        const marks = (item?.verified !== undefined && item.verified !== 0)
+                            ? item.verified
                             : calculatedClaimed;
                         existing[fieldName] = { marks };
                     });
@@ -236,8 +236,8 @@ export default function VerificationForm() {
                         const fieldName = `citations_${key}`;
                         const weight = WEIGHTS[fieldName] || 0;
                         const calculatedClaimed = (item?.count || 0) * weight;
-                        const marks = (item?.verified !== undefined && item.verified !== 0) 
-                            ? item.verified 
+                        const marks = (item?.verified !== undefined && item.verified !== 0)
+                            ? item.verified
                             : calculatedClaimed;
                         existing[fieldName] = { marks };
                     });
@@ -249,8 +249,8 @@ export default function VerificationForm() {
                         const fieldName = `copyrights_${key}`;
                         const weight = WEIGHTS[fieldName] || 0;
                         const calculatedClaimed = (item?.count || 0) * weight;
-                        const marks = (item?.verified !== undefined && item.verified !== 0) 
-                            ? item.verified 
+                        const marks = (item?.verified !== undefined && item.verified !== 0)
+                            ? item.verified
                             : calculatedClaimed;
                         existing[fieldName] = { marks };
                     });
@@ -262,8 +262,8 @@ export default function VerificationForm() {
                         const fieldName = `patents_${key}`;
                         const weight = WEIGHTS[fieldName] || 0;
                         const calculatedClaimed = (item?.count || 0) * weight;
-                        const marks = (item?.verified !== undefined && item.verified !== 0) 
-                            ? item.verified 
+                        const marks = (item?.verified !== undefined && item.verified !== 0)
+                            ? item.verified
                             : calculatedClaimed;
                         existing[fieldName] = { marks };
                     });
@@ -275,8 +275,8 @@ export default function VerificationForm() {
                         const fieldName = `grants_${key}`;
                         const weight = WEIGHTS[fieldName] || 0;
                         const calculatedClaimed = (item?.count || 0) * weight;
-                        const marks = (item?.verified !== undefined && item.verified !== 0) 
-                            ? item.verified 
+                        const marks = (item?.verified !== undefined && item.verified !== 0)
+                            ? item.verified
                             : calculatedClaimed;
                         existing[fieldName] = { marks };
                     });
@@ -286,8 +286,8 @@ export default function VerificationForm() {
                     const fieldName = 'revenueTraining';
                     const weight = WEIGHTS[fieldName] || 0;
                     const calculatedClaimed = (partB.revenueTraining.count || 0) * weight;
-                    const marks = (partB.revenueTraining.verified !== undefined && partB.revenueTraining.verified !== 0) 
-                        ? partB.revenueTraining.verified 
+                    const marks = (partB.revenueTraining.verified !== undefined && partB.revenueTraining.verified !== 0)
+                        ? partB.revenueTraining.verified
                         : calculatedClaimed;
                     existing[fieldName] = { marks };
                 }
@@ -298,8 +298,8 @@ export default function VerificationForm() {
                         const fieldName = `products_${key}`;
                         const weight = WEIGHTS[fieldName] || 0;
                         const calculatedClaimed = (item?.count || 0) * weight;
-                        const marks = (item?.verified !== undefined && item.verified !== 0) 
-                            ? item.verified 
+                        const marks = (item?.verified !== undefined && item.verified !== 0)
+                            ? item.verified
                             : calculatedClaimed;
                         existing[fieldName] = { marks };
                     });
@@ -311,8 +311,8 @@ export default function VerificationForm() {
                         const fieldName = `startup_${key}`;
                         const weight = WEIGHTS[fieldName] || 0;
                         const calculatedClaimed = (item?.count || 0) * weight;
-                        const marks = (item?.verified !== undefined && item.verified !== 0) 
-                            ? item.verified 
+                        const marks = (item?.verified !== undefined && item.verified !== 0)
+                            ? item.verified
                             : calculatedClaimed;
                         existing[fieldName] = { marks };
                     });
@@ -324,8 +324,8 @@ export default function VerificationForm() {
                         const fieldName = `awards_${key}`;
                         const weight = WEIGHTS[fieldName] || 0;
                         const calculatedClaimed = (item?.count || 0) * weight;
-                        const marks = (item?.verified !== undefined && item.verified !== 0) 
-                            ? item.verified 
+                        const marks = (item?.verified !== undefined && item.verified !== 0)
+                            ? item.verified
                             : calculatedClaimed;
                         existing[fieldName] = { marks };
                     });
@@ -337,8 +337,8 @@ export default function VerificationForm() {
                         const fieldName = `industryInteraction_${key}`;
                         const weight = WEIGHTS[fieldName] || 0;
                         const calculatedClaimed = (item?.count || 0) * weight;
-                        const marks = (item?.verified !== undefined && item.verified !== 0) 
-                            ? item.verified 
+                        const marks = (item?.verified !== undefined && item.verified !== 0)
+                            ? item.verified
                             : calculatedClaimed;
                         existing[fieldName] = { marks };
                     });
@@ -348,8 +348,8 @@ export default function VerificationForm() {
                     const fieldName = 'placement';
                     const weight = WEIGHTS[fieldName] || 0;
                     const calculatedClaimed = (partB.placement.count || 0) * weight;
-                    const marks = (partB.placement.verified !== undefined && partB.placement.verified !== 0) 
-                        ? partB.placement.verified 
+                    const marks = (partB.placement.verified !== undefined && partB.placement.verified !== 0)
+                        ? partB.placement.verified
                         : calculatedClaimed;
                     existing[fieldName] = { marks };
                 }
@@ -542,9 +542,9 @@ export default function VerificationForm() {
                 verifiedScores,
                 finalTotal: results.finalTotal
             };
-            
+
             const response = await axios.post(
-                `${BACKEND}/verification/finalize/${facultyId}`, 
+                `${BACKEND}/verification/finalize/${facultyId}`,
                 payload,
                 {
                     headers: {
@@ -642,20 +642,20 @@ export default function VerificationForm() {
                 ))}
 
                 {/* Final Action Bar */}
-                <div className="bg-slate-900 rounded-3xl p-8 shadow-2xl border-4 border-slate-800 space-y-6">
+                <div className="bg-white rounded-3xl p-8 shadow-sm border-2 border-slate-100 space-y-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div className="flex flex-col justify-center">
-                            <p className="text-indigo-400 text-[10px] font-black uppercase tracking-widest mb-1">Calculated Total</p>
-                            <p className="text-2xl font-black text-white leading-none">
+                            <p className="text-indigo-600 text-[10px] font-black uppercase tracking-widest mb-1">Calculated Total</p>
+                            <p className="text-2xl font-black text-slate-900 leading-none">
                                 {results.totalUnfiltered} <span className="text-slate-500 text-sm font-bold">(Unfiltered)</span>
                             </p>
-                            <p className="text-emerald-400 text-xs font-bold mt-2">
+                            <p className="text-emerald-600 text-xs font-bold mt-2">
                                 Auto Final: {results.calculatedFinalTotal} / {results.limit}
                             </p>
                         </div>
 
                         <div className="flex flex-col justify-center">
-                            <label className="text-amber-400 text-[10px] font-black uppercase tracking-widest mb-2 flex items-center gap-2">
+                            <label className="text-amber-500 text-[10px] font-black uppercase tracking-widest mb-2 flex items-center gap-2">
                                 <CheckSquare size={12} />
                                 Override Final Total
                             </label>
@@ -666,27 +666,27 @@ export default function VerificationForm() {
                                 value={manualFinalTotal !== null ? manualFinalTotal : ''}
                                 onChange={(e) => setManualFinalTotal(e.target.value ? Number(e.target.value) : null)}
                                 placeholder={`Auto: ${results.calculatedFinalTotal}`}
-                                className="w-full rounded-xl border-2 border-amber-500/50 bg-slate-800 px-4 py-3 text-2xl font-black text-amber-300 focus:outline-none focus:ring-4 focus:ring-amber-500/30 focus:border-amber-500 placeholder:text-slate-600"
+                                className="w-full rounded-xl border-2 border-amber-200 bg-white px-4 py-3 text-2xl font-black text-amber-600 focus:outline-none focus:ring-4 focus:ring-amber-100 focus:border-amber-400 placeholder:text-slate-300 transition-all"
                             />
                             <p className="text-slate-400 text-[9px] font-bold mt-1.5">Leave empty to use calculated value</p>
                         </div>
 
-                        <div className="flex flex-col justify-center">
-                            <p className="text-emerald-400 text-[10px] font-black uppercase tracking-widest mb-1">Final Verified Total</p>
-                            <p className="text-4xl font-black text-emerald-400 leading-none">
+                        <div className="flex flex-col justify-center text-right md:text-left">
+                            <p className="text-emerald-600 text-[10px] font-black uppercase tracking-widest mb-1">Final Verified Total</p>
+                            <p className="text-4xl font-black text-emerald-700 leading-none">
                                 {results.finalTotal}
                             </p>
-                            <p className="text-slate-500 text-xs font-bold mt-2">
+                            <p className="text-slate-400 text-xs font-bold mt-2">
                                 Max Limit: {results.limit}
                             </p>
                         </div>
                     </div>
 
-                    <div className="flex justify-end pt-4 border-t border-slate-800">
+                    <div className="flex justify-end pt-4 border-t border-slate-100">
                         <Button
                             onClick={handleSave}
                             disabled={saving}
-                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold uppercase tracking-wider h-14 px-10 rounded-2xl shadow-xl shadow-indigo-600/20 gap-2"
+                            className="bg-indigo-700 hover:bg-indigo-800 text-white font-black uppercase tracking-widest h-14 px-10 rounded-2xl shadow-lg shadow-indigo-100 gap-2 transition-all active:scale-95"
                         >
                             <CheckSquare size={20} />
                             {saving ? "Finalizing..." : "Finalize Verification"}

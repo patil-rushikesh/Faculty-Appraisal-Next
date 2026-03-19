@@ -91,7 +91,7 @@ export default function VerificationTeamPage() {
           verifierEmail: team.verifier.email,
           assignedFaculties: team.assignedFaculties || []
         }))
-        
+
         setVerifierRows(existingRows)
         toast({
           title: 'Loaded',
@@ -145,22 +145,21 @@ export default function VerificationTeamPage() {
   // Render faculty list in dialog
   const renderFacultyList = () => {
     const availableFaculties = getAvailableFacultiesForVerifier()
-    
+
     if (!editingRowId && availableFaculties.length === 0) {
       return <p className="text-sm text-muted-foreground">All faculties are already assigned to other verifiers</p>
     }
-    
+
     return availableFaculties.map(faculty => {
       const isAssignedToOther = editingRowId && verifierRows
         .filter(row => row.id !== editingRowId)
         .some(row => row.assignedFaculties.some(f => f.userId === faculty.userId))
-      
+
       return (
         <div
           key={faculty.userId}
-          className={`flex items-center gap-3 p-2 rounded ${
-            isAssignedToOther ? 'bg-amber-50' : 'hover:bg-muted'
-          }`}
+          className={`flex items-center gap-3 p-2 rounded ${isAssignedToOther ? 'bg-amber-50' : 'hover:bg-muted'
+            }`}
         >
           <input
             type="checkbox"
@@ -286,14 +285,14 @@ export default function VerificationTeamPage() {
     }
 
     // Validate that all verifiers have assigned faculties
-    const invalidRows = verifierRows.filter(row => 
+    const invalidRows = verifierRows.filter(row =>
       !row.verifierId || row.assignedFaculties.length === 0
     )
 
     if (invalidRows.length > 0) {
-      toast({ 
-        title: 'Error', 
-        description: 'Please ensure all verifiers are selected and have at least one faculty assigned' 
+      toast({
+        title: 'Error',
+        description: 'Please ensure all verifiers are selected and have at least one faculty assigned'
       })
       return
     }
@@ -302,9 +301,9 @@ export default function VerificationTeamPage() {
     const verifierIds = verifierRows.map(row => row.verifierId)
     const duplicateVerifiers = verifierIds.filter((id, index) => verifierIds.indexOf(id) !== index)
     if (duplicateVerifiers.length > 0) {
-      toast({ 
-        title: 'Error', 
-        description: 'Each verifier can only be assigned once in the committee' 
+      toast({
+        title: 'Error',
+        description: 'Each verifier can only be assigned once in the committee'
       })
       return
     }
@@ -319,7 +318,7 @@ export default function VerificationTeamPage() {
         }))
       }
       console.log('Submitting Verification Team Payload:', payload)
-      
+
       const response = await axios.post(
         `${BACKEND}/admin/verification-team`,
         payload,
@@ -338,9 +337,9 @@ export default function VerificationTeamPage() {
       }
     } catch (error: any) {
       console.error('Error creating verification committee:', error)
-      toast({ 
-        title: 'Error', 
-        description: error.message || 'Failed to create verification committee' 
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to create verification committee'
       })
     } finally {
       setIsSubmitting(false)
@@ -517,7 +516,7 @@ export default function VerificationTeamPage() {
               <div>
                 <label className="text-sm font-medium">Assign Faculties</label>
                 <p className="text-xs text-muted-foreground mt-1 mb-3">
-                  {editingRowId 
+                  {editingRowId
                     ? `Select faculties for ${selectedVerifier.name}. If a faculty is already assigned to another verifier, it will be automatically removed from them.`
                     : `Select one or more faculties from ${departmentLabel} to assign to this verifier`
                   }

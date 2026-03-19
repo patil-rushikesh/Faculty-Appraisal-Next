@@ -229,7 +229,7 @@ function DirectorVerifyContent() {
             <AlertDialogAction
               onClick={handleConfirm}
               disabled={submitting}
-              className="bg-green-600 hover:bg-green-700"
+              className="bg-green-600 hover:bg-green-700 text-white"
             >
               {submitting ? "Submitting…" : "Confirm"}
             </AlertDialogAction>

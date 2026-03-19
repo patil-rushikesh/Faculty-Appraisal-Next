@@ -188,7 +188,7 @@ function CollegeExternalEvaluateContent({ facultyId }: { facultyId: string }) {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => handleSave(true)} disabled={saving} className="bg-green-600 hover:bg-green-700">
+            <AlertDialogAction onClick={() => handleSave(true)} disabled={saving} className="bg-green-600 hover:bg-green-700 text-white">
               {saving ? "Submitting…" : "Confirm Submit"}
             </AlertDialogAction>
           </AlertDialogFooter>

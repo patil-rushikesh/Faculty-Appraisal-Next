@@ -11,7 +11,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       case "/admin/dashboard":
         return {
           title: "Super Admin Dashboard",
-          description: "Manage your hackathon platform and monitor activities",
+          description: "Manage your faculty appraisal system and monitor activities",
         };
       case "/admin/add-faculty":
         return {
@@ -41,7 +41,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       default:
         return {
           title: "Super Admin Dashboard",
-          description: "Manage your hackathon platform and monitor activities",
+          description: "Manage your faculty appraisal system and monitor activities",
         };
     }
   }, [pathname]);

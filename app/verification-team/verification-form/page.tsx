@@ -300,7 +300,7 @@ function VerificationFormContent() {
             <AlertDialogAction
               onClick={() => handleSave(true)}
               disabled={saving}
-              className="bg-green-600 hover:bg-green-700"
+              className="bg-green-600 hover:bg-green-700 text-white"
             >
               {saving ? "Submitting…" : "Confirm Submit"}
             </AlertDialogAction>

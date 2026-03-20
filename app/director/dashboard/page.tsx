@@ -39,49 +39,49 @@ const quickLinks = [
     icon: Users,
     label: "Dean Appraisals",
     description: "View and manage Dean appraisal submissions",
-    color: "bg-purple-50 dark:bg-purple-900/20 text-purple-600",
+    color: "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600",
   },
   {
     href: "/director/faculty-forms",
     icon: FileText,
     label: "Faculty Appraisals",
     description: "Faculty appraisals sent for director review",
-    color: "bg-sky-50 dark:bg-sky-900/20 text-sky-600",
+    color: "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600",
   },
   {
     href: "/director/add-external",
     icon: UserPlus,
     label: "Add External",
     description: "Register external reviewers",
-    color: "bg-green-50 dark:bg-green-900/20 text-green-600",
+    color: "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600",
   },
   {
     href: "/director/assign-external",
     icon: UserCheck,
     label: "Assign External",
     description: "Assign externals to faculty for evaluation",
-    color: "bg-amber-50 dark:bg-amber-900/20 text-amber-600",
+    color: "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600",
   },
   {
     href: "/director/director-verify",
     icon: CheckSquare,
     label: "Director Verify",
     description: "Verify and confirm portfolio evaluations",
-    color: "bg-rose-50 dark:bg-rose-900/20 text-rose-600",
+    color: "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600",
   },
   {
     href: "/director/appraisal",
     icon: BookOpen,
     label: "My Appraisal",
     description: "Fill and submit your personal appraisal",
-    color: "bg-teal-50 dark:bg-teal-900/20 text-teal-600",
+    color: "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600",
   },
   {
     href: "/director/appraisal?tab=F",
     icon: Award,
     label: "Review & Submit",
     description: "Review your appraisal before final submission",
-    color: "bg-orange-50 dark:bg-orange-900/20 text-orange-600",
+    color: "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600",
   },
 ];
 
@@ -108,9 +108,9 @@ export default function DirectorDashboardPage() {
       {/* Stats row */}
       <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <StatCard title="Total Faculty"          value={stats.totalFaculty}          icon={Users}        color="primary" />
-        <StatCard title="Verification Pending"   value={stats.verificationPending}   icon={ClipboardList} color="secondary" />
-        <StatCard title="Interaction Pending"    value={stats.interactionPending}    icon={BarChart2}    color="secondary" />
-        <StatCard title="Completed Appraisals"   value={stats.completedAppraisals}   icon={CheckSquare}  color="accent" />
+        <StatCard title="Verification Pending"   value={stats.verificationPending}   icon={ClipboardList} color="primary" />
+        <StatCard title="Interaction Pending"    value={stats.interactionPending}    icon={BarChart2}    color="primary" />
+        <StatCard title="Completed Appraisals"   value={stats.completedAppraisals}   icon={CheckSquare}  color="primary" />
       </motion.div>
 
       {/* User info */}

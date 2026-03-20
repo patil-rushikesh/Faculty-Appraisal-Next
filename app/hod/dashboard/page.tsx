@@ -38,42 +38,42 @@ const quickLinks = [
     icon: Building2,
     label: "Verification Panel",
     description: "Assign faculty to verification committee members",
-    color: "bg-sky-50 dark:bg-sky-900/20 text-sky-600",
+    color: "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600",
   },
   {
     href: "/hod/verify",
     icon: CheckSquare,
     label: "HOD Verify",
     description: "Verify submitted faculty appraisals",
-    color: "bg-green-50 dark:bg-green-900/20 text-green-600",
+    color: "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600",
   },
   {
     href: "/hod/confirm-verify",
     icon: UserCheck,
     label: "Confirm Verify",
     description: "Confirm and finalise HOD verification",
-    color: "bg-teal-50 dark:bg-teal-900/20 text-teal-600",
+    color: "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600",
   },
   {
     href: "/hod/final-marks",
     icon: Award,
     label: "Final Marks",
     description: "Review consolidated final marks",
-    color: "bg-amber-50 dark:bg-amber-900/20 text-amber-600",
+    color: "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600",
   },
   {
     href: "/hod/add-external-faculty",
     icon: UserPlus,
     label: "Add External Faculty",
     description: "Register external evaluators for your department",
-    color: "bg-purple-50 dark:bg-purple-900/20 text-purple-600",
+    color: "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600",
   },
   {
     href: "/hod/assign-faculty-external",
     icon: BookOpen,
     label: "Assign to External",
     description: "Assign faculty members to external evaluators",
-    color: "bg-rose-50 dark:bg-rose-900/20 text-rose-600",
+    color: "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600",
   },
 ];
 
@@ -143,7 +143,7 @@ export default function HodDashboardPage() {
             title="Forms Submitted"
             value={isLoading ? "..." : stats.submitted}
             icon={FileText}
-            color="secondary"
+            color="primary"
           />
         </motion.div>
         <motion.div variants={itemVariants}>
@@ -151,7 +151,7 @@ export default function HodDashboardPage() {
             title="Pending Verification"
             value={isLoading ? "..." : stats.pendingVerification}
             icon={ClipboardList}
-            color="accent"
+            color="primary"
           />
         </motion.div>
         <motion.div variants={itemVariants}>

@@ -35,35 +35,35 @@ const quickLinks = [
     icon: BookOpen,
     label: "My Appraisal",
     description: "Fill and submit your personal faculty appraisal",
-    color: "bg-green-50 dark:bg-green-900/20 text-green-600",
+    color: "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600",
   },
   {
     href: "/associate-dean/appraisal?tab=A",
     icon: FileText,
     label: "Academic Involvement",
     description: "Part A – Academic Involvement",
-    color: "bg-sky-50 dark:bg-sky-900/20 text-sky-600",
+    color: "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600",
   },
   {
     href: "/associate-dean/appraisal?tab=B",
     icon: Award,
     label: "Research (Part B)",
     description: "Research activities and publications",
-    color: "bg-purple-50 dark:bg-purple-900/20 text-purple-600",
+    color: "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600",
   },
   {
     href: "/associate-dean/appraisal?tab=D",
     icon: Users,
     label: "Portfolio (Part D)",
     description: "Manage your portfolio submission",
-    color: "bg-amber-50 dark:bg-amber-900/20 text-amber-600",
+    color: "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600",
   },
   {
     href: "/associate-dean/appraisal?tab=F",
     icon: CheckSquare,
     label: "Review & Submit",
     description: "Review your appraisal before final submission",
-    color: "bg-rose-50 dark:bg-rose-900/20 text-rose-600",
+    color: "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600",
   },
 ];
 
@@ -90,9 +90,9 @@ export default function AssociateDeanDashboardPage() {
       {/* Stats row */}
       <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <StatCard title="Total Faculty"      value={stats.totalFaculty}      icon={Users}         color="primary" />
-        <StatCard title="Appraisals Done"    value={stats.appraisalDone}     icon={CheckSquare}   color="accent" />
-        <StatCard title="Review Pending"     value={stats.reviewPending}     icon={ClipboardList} color="secondary" />
-        <StatCard title="Reviews Completed"  value={stats.reviewCompleted}   icon={Award}         color="accent" />
+        <StatCard title="Appraisals Done"    value={stats.appraisalDone}     icon={CheckSquare}   color="primary" />
+        <StatCard title="Review Pending"     value={stats.reviewPending}     icon={ClipboardList} color="primary" />
+        <StatCard title="Reviews Completed"  value={stats.reviewCompleted}   icon={Award}         color="primary" />
       </motion.div>
 
       {/* User info strip */}

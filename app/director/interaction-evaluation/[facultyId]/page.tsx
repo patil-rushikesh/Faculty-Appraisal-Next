@@ -290,7 +290,7 @@ function DirectorInteractionEvaluationContent({ facultyId }: { facultyId: string
             <AlertDialogAction
               onClick={handleSubmit}
               disabled={saving}
-              className="bg-green-600 hover:bg-green-700"
+              className="bg-green-600 hover:bg-green-700 text-white"
             >
               {saving ? "Submitting…" : "Confirm Submit"}
             </AlertDialogAction>

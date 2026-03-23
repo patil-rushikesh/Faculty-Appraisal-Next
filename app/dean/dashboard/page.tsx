@@ -37,35 +37,35 @@ const quickLinks = [
     icon: ClipboardList,
     label: "Portfolio Evaluation",
     description: "Submit portfolio evaluation marks for faculty",
-    color: "bg-purple-50 dark:bg-purple-900/20 text-purple-600",
+    color: "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600",
   },
   {
     href: "/dean/interaction-marks",
     icon: FileText,
     label: "Interaction Assessment",
     description: "Evaluate faculty assigned to you for interaction",
-    color: "bg-sky-50 dark:bg-sky-900/20 text-sky-600",
+    color: "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600",
   },
   {
     href: "/dean/appraisal",
     icon: BookOpen,
     label: "My Appraisal",
     description: "Fill and submit your personal faculty appraisal",
-    color: "bg-green-50 dark:bg-green-900/20 text-green-600",
+    color: "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600",
   },
   {
     href: "/dean/appraisal?tab=D",
     icon: Award,
     label: "Portfolio (Part D)",
     description: "Manage your own portfolio submission",
-    color: "bg-amber-50 dark:bg-amber-900/20 text-amber-600",
+    color: "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600",
   },
   {
     href: "/dean/appraisal?tab=F",
     icon: CheckSquare,
     label: "Review & Submit",
     description: "Review your appraisal before final submission",
-    color: "bg-rose-50 dark:bg-rose-900/20 text-rose-600",
+    color: "bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600",
   },
 ];
 
@@ -92,9 +92,9 @@ export default function DeanDashboardPage() {
       {/* Stats row */}
       <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <StatCard title="Associate Deans"      value={stats.totalAssociateDeans}   icon={Users}     color="primary" />
-        <StatCard title="Portfolio Evaluated"  value={stats.portfolioEvaluated}    icon={Award}     color="accent" />
-        <StatCard title="Interactions Done"    value={stats.interactionDone}       icon={UserCheck} color="accent" />
-        <StatCard title="Interactions Pending" value={stats.interactionPending}    icon={BarChart2} color="secondary" />
+        <StatCard title="Portfolio Evaluated"  value={stats.portfolioEvaluated}    icon={Award}     color="primary" />
+        <StatCard title="Interactions Done"    value={stats.interactionDone}       icon={UserCheck} color="primary" />
+        <StatCard title="Interactions Pending" value={stats.interactionPending}    icon={BarChart2} color="primary" />
       </motion.div>
 
       {/* Department info strip */}

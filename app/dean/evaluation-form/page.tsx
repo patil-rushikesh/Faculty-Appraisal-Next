@@ -291,7 +291,7 @@ function EvaluationFormContent() {
             <AlertDialogAction
               onClick={handleConfirmSubmit}
               disabled={submitting}
-              className="bg-indigo-600 hover:bg-indigo-700"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white"
             >
               {submitting ? "Submitting…" : "Confirm Submit"}
             </AlertDialogAction>

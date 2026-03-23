@@ -40,28 +40,28 @@ export default function FacultyDashboardPage() {
         userName="Faculty"
         quickLinks={[
           {
-            href: "/faculty/profile",
-            icon: <User className="w-6 h-6 text-indigo-600" />,
-            label: "Profile",
-            description: "View and update your profile",
-          },
-          {
-            href: "/faculty/teaching",
+            href: "/faculty/appraisal?tab=A",
             icon: <BookOpen className="w-6 h-6 text-indigo-600" />,
-            label: "Teaching Performance",
-            description: "Manage your teaching activities",
+            label: "Teaching & Academic",
+            description: "Part A - Academic Involvement",
           },
           {
-            href: "/faculty/research",
+            href: "/faculty/appraisal?tab=B",
             icon: <FileText className="w-6 h-6 text-indigo-600" />,
-            label: "Research",
+            label: "Research (Part B)",
             description: "Track your research work",
           },
           {
-            href: "/faculty/self-development",
+            href: "/faculty/appraisal?tab=C",
             icon: <Building2 className="w-6 h-6 text-indigo-600" />,
             label: "Self Development",
-            description: "Monitor your personal growth",
+            description: "Part C - Self Development",
+          },
+          {
+            href: "/faculty/appraisal?tab=D",
+            icon: <User className="w-6 h-6 text-indigo-600" />,
+            label: "Portfolio (Part D)",
+            description: "Manage your portfolio items",
           },
           {
             onClick: handleDownloadAppraisal,
@@ -74,9 +74,9 @@ export default function FacultyDashboardPage() {
             description: "Open your appraisal in the browser PDF viewer",
           },
           {
-            href: "/faculty/review",
+            href: "/faculty/appraisal?tab=F",
             icon: <CheckSquare className="w-6 h-6 text-indigo-600" />,
-            label: "Review",
+            label: "Review & Submit",
             description: "Complete your evaluation",
           },
         ]}
